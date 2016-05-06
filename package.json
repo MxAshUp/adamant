@@ -1,0 +1,21 @@
+{
+  "name": "proqKPI",
+  "version": "1.0.0",
+  "description": "",
+  "main": "achievements.js",
+  "dependencies": {
+    "moment": "^2.13.0",
+    "mysql": "^2.10.2",
+    "promise": "^7.1.1",
+    "request": "^2.72.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha test/test.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
