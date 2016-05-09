@@ -114,9 +114,6 @@ var Award = function(args) {
 				return Promise.resolve(false);
 			}
 		})
-		.catch(function(err) {
-			return Promise.reject('Error checking award "' + self.name + '" for user ' + user + '. Error: ' + err);
-		})
 		.then(function(shouldAward) {
 			if(shouldAward) {
 				//Award ready to be given!
@@ -128,6 +125,9 @@ var Award = function(args) {
 					};
 				});
 			}
+		})
+		.catch(function(err) {
+			return Promise.reject('Error checking award "' + self.name + '" for user ' + user + '. Error: ' + err);
 		});
 	}
 }
