@@ -1,50 +1,21 @@
-var dataGetter = require('./data-getter.js');
-var notifications = require('./notifications.js');
+var vsprintf = require("sprintf-js").vsprintf,
+	dataGetter = require('./data-getter.js'),
+	notifications = require('./notifications.js'),
+	config = require('./config.js'),
+	users = require('./user-config.js');
+
 var awardSystem = require('./award-system.js');
-awardSystem = awardSystem(dataGetter);
+	awardSystem = awardSystem(dataGetter);
 
 awardSystem
-	.loadAwards(require('./awards/example.js'));
-/*	.loadAwards(require('./awardSystem.js'))
-	.loadAwards(require('./awardSystem.js'))
-	.loadAwards(require('./awardSystem.js'));*/
+	.loadAwards('./awards/dates.js')
+	.loadAwards('./awards/new-employees.js')
+	.loadAwards('./awards/timeclock.js');
+/*	.loadAwards('./awards/example.js')
+	.loadAwards('./awards/example.js')
+	.loadAwards('./awards/example.js');*/
 
-var chat_room_id = 'd7rTWvudhEAbnhBkM';
 
-var users = [
-	{
-		userID:'101',
-		rocketchatName:'lauren'
-	},
-	{
-		userID:'067',
-		rocketchatName:'dustin.woods'
-
-	},
-	{
-		userID:'023',
-		rocketchatName:'aaronjamesyoung'
-
-	},
-	{
-		userID:'223',
-		rocketchatName:'Evan'
-
-	},
-	{
-		userID:'225',
-		rocketchatName:'rian.sigvaldsen'
-
-	}
-];
-
-function get_user(userID) {
-	for(var i in users) {
-		if(users[i].userID == userID) {
-			return users[i];
-		}
-	}
-}
 
 //Loops through all users, and checks is awards are given
 function checkAllUserAchievements() {
@@ -61,7 +32,7 @@ function checkAllUserAchievements() {
 		//Check awards given, add promise to array
 		manyPromises.push(
 			//Check all awards for user[i]
-			awardSystem.checkAll(users[i].userID).then(function(response) {
+			awardSystem.checkAll(users[i]).then(function(response) {
 				//Response consists of results of awards, and possible errors
 
 				//Loop through results and format them
@@ -69,12 +40,12 @@ function checkAllUserAchievements() {
 					var user = response.results[ii].user;
 					var award = response.results[ii].award;
 
-					if(typeof returnAwards[user] == 'undefined') {
-						returnAwards[user] = [];
+					if(typeof returnAwards[user.ID] == 'undefined') {
+						returnAwards[user.ID] = [];
 					}
 
 					//Put award result in associative array
-					returnAwards[user].push(award);
+					returnAwards[user.ID].push(award);
 
 				}
 
@@ -97,28 +68,28 @@ function main() {
 	checkAllUserAchievements().then(function(response) {
 		//loop through users
 		for (var i in response.results) {
-			var user = get_user(i);
-			if(user.rocketchatName) {
+			var user = users.filter(function(obj) {
+				return obj.ID == i;
+			});
+			user = user[0];
+
+			if(user.rocketchat.user) {
 
 				//loop through each user's achievements
 				for (var ii in response.results[i]) {
-
-					var message = response.results[i][ii].iconImage + "\n" + '@' + user.rocketchatName + ' has earned *' + response.results[i][ii].name + '*' + "\n" + '_' + response.results[i][ii].description + '_';
-
-					notifications.send_message(chat_room_id,message).catch(function(err) {
-						console.log(err);
+					var award = response.results[i][ii];
+					var message = vsprintf("@%s has earned *%s*!\n_%s_\n%s",[user.rocketchat.user,award.name,award.description,award.iconImage]);
+					notifications.send_message(config.rocketchat.roomid,message).catch(function(err) {
+						console.log("Could not send notification: ", err);
 					});
 				}
-
 			}
-
 		}
 
 		if(response.errors.length) {
-			console.log("Errors: ");
-			console.log(response.errors);
+			console.log("Errors: ", response.errors);
 		}
-		setTimeout(main, 1000);
+		setTimeout(main, config.checkInterval);
 	});
 }
 

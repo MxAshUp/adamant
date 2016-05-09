@@ -39,9 +39,9 @@ var Award = function(args) {
 	self.getAwardCount = function(user) {
 
 		//If the count is non existent or expired, we need to update it
-		if(	typeof self._getCount[user] === 'undefined' ||
-			typeof self._getCountExpiration[user] === 'undefined' ||
-			new moment() > self._getCountExpiration[user] )
+		if(	typeof self._getCount[user.ID] === 'undefined' ||
+			typeof self._getCountExpiration[user.ID] === 'undefined' ||
+			new moment() > self._getCountExpiration[user.ID] )
 		{
 
 			//Since count is expired, we need to query for the count...
@@ -56,16 +56,16 @@ var Award = function(args) {
 
 			if(self.getLimitPer == 'user') {
 				query += ' AND `awards`.`userID` = ?';
-				queryParams.push(user);
+				queryParams.push(user.ID);
 			}
 
 			//Query the database
 			return dataGetter.query(query,queryParams).then(function(res) {
-				self._getCount[user] = res[0].count;
-				self._getCountExpiration[user] = moment().endOf('day'); //This count will expire at the end of the day
+				self._getCount[user.ID] = res[0].count;
+				self._getCountExpiration[user.ID] = moment().endOf('day'); //This count will expire at the end of the day
 
 				//Return the count
-				return self._getCount[user];
+				return Promise.resolve(self._getCount[user.ID]);
 			}, function(err) {
 				//Could not update database, we're inconclusive
 				return Promise.reject(err);
@@ -75,14 +75,14 @@ var Award = function(args) {
 		} else {
 			//The count is not expired, so it's ready to return
 			//Return the count
-			return Promise.resolve(self._getCount[user]);
+			return Promise.resolve(self._getCount[user.ID]);
 		}
 	}
 
 	self.giveAward = function(user) {
 
 		var query = 'INSERT INTO `awards` (`ID`, `userID`) VALUES ( ? , ? )';
-		var queryParams = [self.uniqueID, user];
+		var queryParams = [self.uniqueID, user.ID];
 
 		return dataGetter.query(query, queryParams).then(function() {
 			//If we're successful, increment the count!
@@ -93,6 +93,15 @@ var Award = function(args) {
 
 	//Checks if user needs to be given award, returns promise
 	self.maybeGiveAward = function(user) {
+
+		//Let's make sure the user is setup correctly to be checked
+		for (var i = self.requiredData.length - 1; i >= 0; i--) {
+			if(typeof user[self.requiredData[i]] === 'undefined') {
+				//User doesn't have this connector set up! Cannot get award :(
+				return Promise.resolve();
+			}
+		};
+
 		//Get award count for the period
 		return self.getAwardCount(user)
 		.then(function(count) {
@@ -123,10 +132,13 @@ var Award = function(args) {
 	}
 }
 
+//Stores all the awards info
 var allAwards = [];
 
 //Adds more awards to the array for checking
-function loadAwards(_awards) {
+function loadAwards(path) {
+
+	var _awards = require(path);
 
 	for (var i = _awards.length - 1; i >= 0; i--) {
 		award = new Award(_awards[i]);
