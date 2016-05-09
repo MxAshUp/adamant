@@ -7,10 +7,10 @@ module.exports = [
 		rocketchat: {
 			user:'lauren'
 		},
-/*		dates: {
-			hiredate: null,
-			birthday: null 
-		},
+		dates: {
+			hiredate: '02/29/2016',
+			birthday: '11/19'
+		},/*
 		asana: {
 			refreshtoken: null,
 			user: null
@@ -23,14 +23,14 @@ module.exports = [
 	{
 		ID:2,
 		timeclock: {
-			user:'067'
+			user:'023'
 		},
 		rocketchat: {
 			user:'dustin.woods'
 		},
 		dates: {
 			hiredate: '03/01/2012',
-			birthday: '05/15' 
+			birthday: '05/15'
 		},
 /*		asana: {
 			refreshtoken: null,
@@ -44,15 +44,15 @@ module.exports = [
 	{
 		ID:3,
 		timeclock: {
-			user:'023'
+			user:'067'
 		},
 		rocketchat: {
 			user:'aaronjamesyoung'
 		},
-/*		dates: {
-			hiredate: null,
-			birthday: null 
-		},
+		dates: {
+			hiredate: '08/12/2014',
+			birthday: '09/03'
+		},/*
 		asana: {
 			refreshtoken: null,
 			user: null
@@ -70,10 +70,10 @@ module.exports = [
 		rocketchat: {
 			user:'Evan'
 		},
-/*		dates: {
-			hiredate: null,
-			birthday: null 
-		},
+		dates: {
+			hiredate: '01/01/2999',
+			birthday: '01/27'
+		},/*
 		asana: {
 			refreshtoken: null,
 			user: null
@@ -91,10 +91,10 @@ module.exports = [
 		rocketchat: {
 			user:'rian.sigvaldsen'
 		},
-/*		dates: {
-			hiredate: null,
-			birthday: null 
-		},
+		dates: {
+			hiredate: '06/15/2006',
+			birthday: '08/16'
+		},/*
 		asana: {
 			refreshtoken: null,
 			user: null

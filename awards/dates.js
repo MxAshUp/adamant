@@ -46,7 +46,7 @@ for (var i = number_words.length - 1; i >= 0; i--) {
 		awards.push({
 			uniqueID:		number_words[i].toLowerCase() + '-year-anniversary',
 			name:			number_words[i] + ' Year Award',
-			iconImage:		':'+number_words[i]+':',
+			iconImage:		':'+number_words[i].toLowerCase()+':',
 			description:	'Congratulations on your ' + number_words[i].toLowerCase() + ' year work anniversary.',
 			requiredData:	['dates'], 
 			getLimit:		1,
