@@ -240,7 +240,7 @@ module.exports = [
 			var end_s = moment().endOf('day');
 
 			//Counts the clocked in hours for the date range
-			var query = 'SELECT COUNT(*) FROM `timeclock` WHERE (MINUTE(punchInTime) = 0 OR (punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0)) AND punchInFlags = '' AND punchOutFlags = '' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
+			var query = 'SELECT COUNT(*) FROM `timeclock` WHERE (MINUTE(punchInTime) = 0 OR (punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0)) AND punchInFlags = \'\' AND punchOutFlags = \'\' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
 			var params = [start_s.format(), end_s.format(), user.timeclock.user, start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
 			.then(function(res) {
