@@ -105,7 +105,7 @@ function main() {
 			}
 
 			//Turn names into readable english list with oxford comma
-			user_string = user_names.length == 1 ? names[0] : user_names.slice(0,-1).join(', ') + ' and '+user_names[user_names.length-1];
+			user_string = user_names.length == 1 ? user_names[0] : user_names.slice(0,-1).join(', ') + ' and '+user_names[user_names.length-1];
 
 			var has_or_have = user_names.length > 1 ? 'have' : 'has';
 
