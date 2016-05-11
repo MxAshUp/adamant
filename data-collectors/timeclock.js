@@ -51,7 +51,7 @@ function timeclockReport(start_date,end_date) {
 	return new Promise(function(resolve,reject) {
 		request.get({url:url,qs:data},function(err,response,body) {
 			if(err || !body || response.statusCode == '301') {
-				reject();
+				reject('Could not get timeclock report.');
 			} else {
 				resolve(parseReport(body));
 			}
@@ -237,44 +237,33 @@ function parseReport(html) {
 
 
 
-/**
-* Run this script frequently to sync time entries to a mysql database. It's fun!
-*
-**/
 
+//TODO: Put inside new data-system object
 
-function main() {
+function initializeCallback() {
+	return timeclockLogin(config.timeclock_login.user,config.timeclock_login.password);
+}
 
-	//Decided if we need to login
-	var login_resolve;
+function syncCallback() {
+	//Set report ranges
+	var start_report = moment().startOf('week');
+	var end_report = moment();
+	//Run report
+	timeclockReport(start_report,end_report).then(function(data) {
 
-	if(initialized) {
-		login_resolve = Promise.resolve();
-	} else {
-		login_resolve = timeclockLogin(config.timeclock_login.user,config.timeclock_login.password);
-	}
+		if(data === false) {
+			//An error occured, :(
+			return Promise.reject();
+		}
 
-	return login_resolve.then(function() {
-		//Set report ranges
-		var start_report = moment().startOf('week');
-		var end_report = moment();
-		//Run report
-		timeclockReport(start_report,end_report).then(function(data) {
+		//Time to insert rows
+		var insert_promises = [];
 
-			if(data === false) {
-				//An error occured, :(
-				return Promise.reject();
-			}
+		for (var i = data.length - 1; i >= 0; i--) {
+			insert_promises.push(data.query('REPLACE INTO `proq-time-machine`.`timeclock` SET ?',data[i]));
+		}
 
-			//Time to insert rows
-			var insert_promises = [];
-
-			for (var i = data.length - 1; i >= 0; i--) {
-				insert_promises.push(data.query('REPLACE INTO `proq-time-machine`.`timeclock` SET ?',data[i]));
-			}
-
-			return Promise.all(insert_promises)
-		});
+		return Promise.all(insert_promises)
 	});
 }
 

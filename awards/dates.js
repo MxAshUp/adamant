@@ -12,7 +12,7 @@ var awards = [
 		name:			'Happy Birthday',
 		iconImage:		':birthday:',
 		description:	'Happy Birthday to you!',
-		requiredData:	['dates'], 
+		requiredData:	['dates'],
 		getLimit:		1,
 		getLimitPer:	'user',
 		getLimitTime:	'year',
@@ -22,7 +22,7 @@ var awards = [
 				return Promise.resolve(false);
 			}
 
-			//Get the Date of users birthday this year 
+			//Get the Date of users birthday this year
 			var this_year_birth_date = new Date(user.dates.birthday);
 			this_year_birth_date.setYear((new Date()).getYear() + 1900);
 
@@ -48,7 +48,7 @@ for (var i = number_words.length - 1; i >= 0; i--) {
 			name:			number_words[i] + ' Year Award',
 			iconImage:		':'+number_words[i].toLowerCase()+':',
 			description:	'Congratulations on your ' + number_words[i].toLowerCase() + ' year work anniversary.',
-			requiredData:	['dates'], 
+			requiredData:	['dates'],
 			getLimit:		1,
 			getLimitPer:	'user',
 			getLimitTime:	'ever',
@@ -58,7 +58,7 @@ for (var i = number_words.length - 1; i >= 0; i--) {
 					return Promise.resolve(false);
 				}
 
-				//Get the Date of users birthday this year 
+				//Get the Date of users birthday this year
 				var anniversary_date = new Date(user.dates.hiredate);
 				//Add i years to date of hire
 				anniversary_date.setYear(anniversary_date.getYear() + 1900 + index + 1);

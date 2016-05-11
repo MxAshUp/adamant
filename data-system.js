@@ -12,8 +12,9 @@ var DataCollector = function(args) {
 
 	};
 	self.initialized = false;
-	self.init_attempt_limit = 5;
-	self.init_time_between_attempts = 2000;
+	self.sync_attempts_limit = 5;
+	self.sync_attempts = 0;
+	self.sync_time_between_attempts = 2000;
 
 	//Set object properties from args
 	for(var i in args) {
@@ -22,7 +23,6 @@ var DataCollector = function(args) {
 
 	self.maybeSync = function() {
 
-		var init_attempts = 0;
 		var init_resolve;
 
 		//Maybe intialize
@@ -37,24 +37,25 @@ var DataCollector = function(args) {
 		.then(self.syncCallback)
 		.then(function() {
 			self.initialized = true;
+			self.sync_attempts = 0;
 		})
 		.catch(function(err) {
 			self.initialized = false;
 			//If we cannot initialize sync, check our attempt #
-			if(init_attempts < self.init_attempt_limit) {
+			if(self.sync_attempts < self.sync_attempts_limit) {
 				//Increment attemp
-				init_attempts++;
+				self.sync_attempts++;
 				//return a promise containing a timout of a retry
 				return new Promise(function(resolve,reject) {
 					setTimeout(function() {
 						//Recursive promise action here
-						//Not as copnfusing as it seems, just retrying
+						//Not as confusing as it seems, just retrying to init/sync before we give up
 						self.maybeSync().catch(function(err) {
 							reject(err);
 						}).then(function() {
 							resolve();
 						});
-					}, self.init_time_between_attempts);
+					}, self.sync_time_between_attempts);
 				});
 			} else {
 				//We tried to initialize many times, but couldn't
