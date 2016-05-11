@@ -226,6 +226,34 @@ module.exports = [
 		}
 	},
 	{
+		uniqueID:		'drinks-together',
+		name:			'Cheers',
+		iconImage:		':beers:',
+		description:	'Leave at the same time with coworker.',
+		requiredData:	['timeclock'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'day',
+		checkCallback: 	function(dataGetter, user) {
+
+			var start_s = moment().startOf('day');
+			var end_s = moment().endOf('day');
+
+			//Counts the clocked in hours for the date range
+			var query = 'SELECT COUNT(*) as res FROM `timeclock` as A LEFT JOIN `timeclock` as B ON A.`punchOutTime`=B.`punchOutTime` AND A.`pid`!=B.`pid` WHERE B.`pid` IS NOT NULL AND A.`punchOutTime` IS NOT NULL AND A.`punchInTime` BETWEEN ? AND ? AND A.employeeId = ?';
+			var params = [start_s.format(), end_s.format(), user.timeclock.user];
+			return dataGetter.query(query,params)
+			.then(function(res) {
+				//Check if we have samesies!
+				if(res[0].res > 0) {
+					return Promise.resolve(true);
+				}
+
+				return Promise.resolve(false);
+			});
+		}
+	},
+	{
 		uniqueID:		'on-the-dot',
 		name:			'On The Dot',
 		iconImage:		':dart:',
