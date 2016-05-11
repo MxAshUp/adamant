@@ -128,7 +128,7 @@ module.exports = [
 			var end_s = moment().endOf('week');
 
 			//This query counts the clock-ins on the weekend for this week
-			var query = 'SELECT COUNT(*) as res FROM `timeclock` WHERE WEEKDAY(`punchInTime`) >= 5 AND timeclock.punchOutTime BETWEEN ? AND ? AND employeeId = ?';
+			var query = 'SELECT COUNT(*) as res FROM `timeclock` WHERE WEEKDAY(`punchInTime`) >= 5 AND timeclock.punchInTime BETWEEN ? AND ? AND employeeId = ?';
 			var params = [start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
 			.then(function(res) {
@@ -156,7 +156,7 @@ module.exports = [
 			var end_s = moment().endOf('day');
 
 			//This query counts how many days you were present for the past week
-			var query = 'SELECT IF((SELECT `punchOutTime` FROM `timeclock` WHERE `employeeId` = ? ORDER BY `punchInTime` DESC LIMIT 1) IS NOT NULL, 0, 1) AS is_clocked_in, COUNT(DISTINCT DATE(`punchInTime`)) AS days_present FROM `timeclock` WHERE timeclock.punchOutTime BETWEEN ? AND ? AND `employeeId`=?';
+			var query = 'SELECT IF((SELECT `punchOutTime` FROM `timeclock` WHERE `employeeId` = ? ORDER BY `punchInTime` DESC LIMIT 1) IS NOT NULL, 0, 1) AS is_clocked_in, COUNT(DISTINCT DATE(`punchInTime`)) AS days_present FROM `timeclock` WHERE timeclock.punchInTime BETWEEN ? AND ? AND `employeeId`=?';
 			var params = [user.timeclock.user, start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
 			.then(function(res) {
@@ -184,7 +184,7 @@ module.exports = [
 			var end_s = moment().endOf('day');
 
 			//Counts the clocked in hours for the date range
-			var query = 'SELECT SUM(punchHRS) + (SELECT (UNIX_TIMESTAMP() - UNIX_TIMESTAMP(punchInTime))/3600 as elapsed FROM `timeclock` WHERE punchOutTime IS NULL AND timeclock.punchOutTime BETWEEN ? AND ? AND employeeId = ? ORDER BY punchInTime DESC LIMIT 1) as hours FROM `timeclock` WHERE punchInTime IS NOT NULL AND timeclock.punchOutTime BETWEEN ? AND ? AND employeeId = ?';
+			var query = 'SELECT SUM(punchHRS) + (SELECT (UNIX_TIMESTAMP() - UNIX_TIMESTAMP(punchInTime))/3600 as elapsed FROM `timeclock` WHERE punchOutTime IS NULL AND timeclock.punchInTime BETWEEN ? AND ? AND employeeId = ? ORDER BY punchInTime DESC LIMIT 1) as hours FROM `timeclock` WHERE punchOutTime IS NOT NULL AND timeclock.punchInTime BETWEEN ? AND ? AND employeeId = ?';
 			var params = [start_s.format(), end_s.format(), user.timeclock.user, start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
 			.then(function(res) {
@@ -197,7 +197,61 @@ module.exports = [
 			});
 		}
 	},
+	{
+		uniqueID:		'best-friends',
+		name:			'Best Friends',
+		iconImage:		':dancers:',
+		description:	'Clock in at the same time with a coworker.',
+		requiredData:	['timeclock'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'day',
+		checkCallback: 	function(dataGetter, user) {
 
+			var start_s = moment().startOf('day');
+			var end_s = moment().endOf('day');
+
+			//Counts the clocked in hours for the date range
+			var query = 'SELECT COUNT(*) as res FROM `timeclock` as A LEFT JOIN `timeclock` as B ON A.`punchInTime`=B.`punchInTime` AND A.`pid`!=B.`pid` WHERE B.`pid` IS NOT NULL AND A.`punchInTime` BETWEEN ? AND ? AND A.employeeId = ?';
+			var params = [start_s.format(), end_s.format(), user.timeclock.user];
+			return dataGetter.query(query,params)
+			.then(function(res) {
+				//Check if we have samesies!
+				if(res[0].res > 0) {
+					return Promise.resolve(true);
+				}
+
+				return Promise.resolve(false);
+			});
+		}
+	},
+	{
+		uniqueID:		'on-the-dot',
+		name:			'On The Dot',
+		iconImage:		':dart:',
+		description:	'Clock in or out on the hour.',
+		requiredData:	['timeclock'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'day',
+		checkCallback: 	function(dataGetter, user) {
+
+			var start_s = moment().startOf('day');
+			var end_s = moment().endOf('day');
+
+			//Counts the clocked in hours for the date range
+			var query = 'SELECT COUNT(*) FROM `timeclock` WHERE (MINUTE(punchInTime) = 0 OR (punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0)) AND punchInFlags = '' AND punchOutFlags = '' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
+			var params = [start_s.format(), end_s.format(), user.timeclock.user, start_s.format(), end_s.format(), user.timeclock.user];
+			return dataGetter.query(query,params)
+			.then(function(res) {
+				//Check if we have samesies!
+				if(res[0].res > 0) {
+					return Promise.resolve(true);
+				}
+
+				return Promise.resolve(false);
+			});
+		}
+	},
 ]
-
 
