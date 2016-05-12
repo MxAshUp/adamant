@@ -10,7 +10,7 @@ var rocketchat_headers = {
 };
 
 function send_message(room,message) {
-	/*console.log(message);
+/*	console.log(message);
 	return Promise.resolve();*/
 	return new Promise(function(resolve,reject) {
 		// Send to notifications room

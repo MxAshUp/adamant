@@ -66,29 +66,56 @@ function checkAllUserAchievements() {
 //Main check loop
 function main() {
 	checkAllUserAchievements().then(function(response) {
-		//loop through users
+
+		var grouped_by_award = {};
+		//Loop through user IDs
 		for (var i in response.results) {
-			var user = users.filter(function(obj) {
-				return obj.ID == i;
-			});
-			user = user[0];
-
-			if(user.rocketchat.user) {
-
-				//loop through each user's achievements
-				for (var ii in response.results[i]) {
-					var award = response.results[i][ii];
-					var message = vsprintf("@%s has earned *%s*!\n_%s_\n%s",[user.rocketchat.user,award.name,award.description,award.iconImage]);
-					notifications.send_message(config.rocketchat.roomid,message).catch(function(err) {
-						console.log("Could not send notification: ", err);
-					});
+			//loop through awards
+			for (var ii = response.results[i].length - 1; ii >= 0; ii--) {
+				var award = response.results[i][ii];
+				if(typeof grouped_by_award[award.uniqueID] == "undefined") {
+					grouped_by_award[award.uniqueID] = {
+						award: award,
+						users: []
+					}
 				}
+				grouped_by_award[award.uniqueID]['users'].push(i);
 			}
 		}
 
-		if(response.errors.length) {
-			console.log("Errors: ", response.errors);
+
+		for (var i in grouped_by_award) {
+
+			var user_string = '';
+			var user_names = [];
+			for (var ii = grouped_by_award[i].users.length - 1; ii >= 0; ii--) {
+
+				var user = users.filter(function(obj) {
+					return obj.ID == grouped_by_award[i].users[ii];
+				});
+				user = user[0];
+
+				if(user.rocketchat.user) {
+					user_names.push('@' + user.rocketchat.user);
+				}
+			}
+
+			if(user_names.length == 0) {
+				continue;
+			}
+
+			//Turn names into readable english list with oxford comma
+			user_string = user_names.length == 1 ? user_names[0] : user_names.slice(0,-1).join(', ') + ' and '+user_names[user_names.length-1];
+
+			var has_or_have = user_names.length > 1 ? 'have' : 'has';
+
+			var award = grouped_by_award[i].award;
+			var message = vsprintf("%s %s earned *%s*!\n_%s_\n%s",[user_string,has_or_have,award.name,award.description,award.iconImage]);
+			notifications.send_message(config.rocketchat.roomid,message).catch(function(err) {
+				console.log("Could not send notification: ", err);
+			});
 		}
+
 		setTimeout(main, config.checkInterval);
 	});
 }

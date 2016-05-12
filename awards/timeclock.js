@@ -90,14 +90,14 @@ module.exports = [
 		uniqueID:		'night-owl',
 		name:			'Night Owl',
 		iconImage:		':crescent_moon:',
-		description:	'Working late, clock out after 7:00.',
+		description:	'Working late, clock out after 6:00.',
 		requiredData:	['timeclock'], 
 		getLimit:		1,
 		getLimitPer:	'user',
 		getLimitTime:	'day',
 		checkCallback: 	function(dataGetter, user) {
 
-			var start_s = moment().startOf('day').set('hour',19);
+			var start_s = moment().startOf('day').set('hour',18);
 			var end_s = moment().endOf('day');
 
 			//This query will see if user is the first one to clock in between start of day and 8:30am
@@ -201,7 +201,7 @@ module.exports = [
 		uniqueID:		'best-friends',
 		name:			'Best Friends',
 		iconImage:		':dancers:',
-		description:	'Clock in at the same time with a coworker.',
+		description:	'Clocking in together.',
 		requiredData:	['timeclock'],
 		getLimit:		1,
 		getLimitPer:	'user',
@@ -213,6 +213,34 @@ module.exports = [
 
 			//Counts the clocked in hours for the date range
 			var query = 'SELECT COUNT(*) as res FROM `timeclock` as A LEFT JOIN `timeclock` as B ON A.`punchInTime`=B.`punchInTime` AND A.`pid`!=B.`pid` WHERE B.`pid` IS NOT NULL AND A.`punchInTime` BETWEEN ? AND ? AND A.employeeId = ?';
+			var params = [start_s.format(), end_s.format(), user.timeclock.user];
+			return dataGetter.query(query,params)
+			.then(function(res) {
+				//Check if we have samesies!
+				if(res[0].res > 0) {
+					return Promise.resolve(true);
+				}
+
+				return Promise.resolve(false);
+			});
+		}
+	},
+	{
+		uniqueID:		'drinks-together',
+		name:			'Let\'s Get Drinks',
+		iconImage:		':beers:',
+		description:	'Clocking out together.',
+		requiredData:	['timeclock'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'day',
+		checkCallback: 	function(dataGetter, user) {
+
+			var start_s = moment().startOf('day');
+			var end_s = moment().endOf('day');
+
+			//Counts the clocked in hours for the date range
+			var query = 'SELECT COUNT(*) as res FROM `timeclock` as A LEFT JOIN `timeclock` as B ON A.`punchOutTime`=B.`punchOutTime` AND A.`pid`!=B.`pid` WHERE B.`pid` IS NOT NULL AND A.`punchOutTime` IS NOT NULL AND A.`punchInTime` BETWEEN ? AND ? AND A.employeeId = ?';
 			var params = [start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
 			.then(function(res) {
@@ -239,7 +267,7 @@ module.exports = [
 			var start_s = moment().startOf('day');
 			var end_s = moment().endOf('day');
 
-			//Counts the clocked in hours for the date range
+			//Counts the number of on-the-dot clock-ins for the day
 			var query = 'SELECT COUNT(*) as res FROM `timeclock` WHERE (MINUTE(punchInTime) = 0 OR (punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0)) AND punchInFlags = \'\' AND punchOutFlags = \'\' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
 			var params = [start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
@@ -253,5 +281,89 @@ module.exports = [
 			});
 		}
 	},
-]
+	{
+		uniqueID:		'archery-master',
+		name:			'Archery Master',
+		iconImage:		':bow_and_arrow:',
+		description:	'You have the precision of a master archer!',
+		requiredData:	['timeclock'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'day',
+		checkCallback: 	function(dataGetter, user) {
 
+			var start_s = moment().startOf('day');
+			var end_s = moment().endOf('day');
+
+			//Counts the number of on-the-dot clock-ins for the day
+			var query = 'SELECT SUM(IF(MINUTE(punchInTime) = 0,1,0)) + SUM(IF((punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0),1,0)) as res FROM `timeclock` WHERE punchInFlags = \'\' AND punchOutFlags = \'\' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
+			var params = [start_s.format(), end_s.format(), user.timeclock.user];
+			return dataGetter.query(query,params)
+			.then(function(res) {
+				//Check if we were on the dot 4 times today (all clock-in and outs)
+				if(res[0].res >= 4) {
+					return Promise.resolve(true);
+				}
+
+				return Promise.resolve(false);
+			});
+		}
+	},
+	{
+		uniqueID:		'timeclock-dj',
+		name:			'Timeclock DJ',
+		iconImage:		':play_pause:',
+		description:	'Clocking in, in-in-in and out. Yo! Clocking in, then out, in in in then OUT.',
+		requiredData:	['timeclock'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'day',
+		checkCallback: 	function(dataGetter, user) {
+
+			var start_s = moment().startOf('day');
+			var end_s = moment().endOf('day');
+
+			//Counts the time entries for the day
+			var query = 'SELECT COUNT(*) as res FROM `timeclock` WHERE `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
+			var params = [start_s.format(), end_s.format(), user.timeclock.user];
+			return dataGetter.query(query,params)
+			.then(function(res) {
+				//Check if we have 4 or more time entries for the day
+				if(res[0].res >= 4) {
+					return Promise.resolve(true);
+				}
+
+				return Promise.resolve(false);
+			});
+		}
+	},
+	{
+		uniqueID:		'second-breakfast',
+		name:			'Second Breakfast',
+		iconImage:		':egg:',
+		description:	'What about elevenses? Luncheon? Afternoon tea? Dinner? Supper?',
+		requiredData:	['timeclock'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'day',
+		checkCallback: 	function(dataGetter, user) {
+
+			//Take lunch break before 10
+			var start_s = moment().startOf('day');
+			var end_s = moment().startOf('day').set('hour',10);;
+
+			//Counts the number of time entries before 10am
+			var query = 'SELECT COUNT(*) as res FROM `timeclock` WHERE `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
+			var params = [start_s.format(), end_s.format(), user.timeclock.user];
+			return dataGetter.query(query,params)
+			.then(function(res) {
+				//Check if there are at least 2 time entries
+				if(res[0].res >= 2) {
+					return Promise.resolve(true);
+				}
+
+				return Promise.resolve(false);
+			});
+		}
+	},
+]
