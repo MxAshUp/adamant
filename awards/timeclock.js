@@ -296,7 +296,7 @@ module.exports = [
 			var end_s = moment().endOf('day');
 
 			//Counts the number of on-the-dot clock-ins for the day
-			var query = 'SELECT COUNT(*) as res FROM `timeclock` WHERE (MINUTE(punchInTime) = 0 OR (punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0)) AND punchInFlags = \'\' AND punchOutFlags = \'\' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
+			var query = 'SELECT SUM(if(MINUTE(punchInTime) = 0,1,0)) + SUM(if((punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0),1,0)) as res FROM `timeclock` WHERE punchInFlags = \'\' AND punchOutFlags = \'\' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
 			var params = [start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
 			.then(function(res) {
