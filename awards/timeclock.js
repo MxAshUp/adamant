@@ -97,7 +97,7 @@ module.exports = [
 		getLimitTime:	'day',
 		checkCallback: 	function(dataGetter, user) {
 
-			var start_s = moment().startOf('day').set('hour',19);
+			var start_s = moment().startOf('day').set('hour',18);
 			var end_s = moment().endOf('day');
 
 			//This query will see if user is the first one to clock in between start of day and 8:30am
@@ -296,7 +296,7 @@ module.exports = [
 			var end_s = moment().endOf('day');
 
 			//Counts the number of on-the-dot clock-ins for the day
-			var query = 'SELECT SUM(if(MINUTE(punchInTime) = 0,1,0)) + SUM(if((punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0),1,0)) as res FROM `timeclock` WHERE punchInFlags = \'\' AND punchOutFlags = \'\' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
+			var query = 'SELECT SUM(IF(MINUTE(punchInTime) = 0,1,0)) + SUM(IF((punchOutTime IS NOT NULL AND Minute(punchOutTime) = 0),1,0)) as res FROM `timeclock` WHERE punchInFlags = \'\' AND punchOutFlags = \'\' AND `punchInTime` BETWEEN ? AND ? AND employeeId = ?';
 			var params = [start_s.format(), end_s.format(), user.timeclock.user];
 			return dataGetter.query(query,params)
 			.then(function(res) {
