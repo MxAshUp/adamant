@@ -90,7 +90,7 @@ module.exports = [
 		uniqueID:		'night-owl',
 		name:			'Night Owl',
 		iconImage:		':crescent_moon:',
-		description:	'Working late, clock out after 7:00.',
+		description:	'Working late, clock out after 6:00.',
 		requiredData:	['timeclock'], 
 		getLimit:		1,
 		getLimitPer:	'user',
