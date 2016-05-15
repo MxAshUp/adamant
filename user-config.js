@@ -14,11 +14,11 @@ module.exports = [
 		asana: {
 			refreshtoken: null,
 			user: null
-		},
+		},*/
 		toggl: {
-			apitoken: null,
-			user: null
-		}*/
+			apitoken: '771a871d9670b874655a25e20391640f',
+			user: '1524866'
+		}
 	},
 	{
 		ID:2,

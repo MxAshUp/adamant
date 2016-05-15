@@ -2,18 +2,56 @@
 var request = require('request');
 var cheerio = require('cheerio');
 var moment = require('moment');
-var config  = require('../config.js');
+
+
+//******MAIN DATA COLLECTOR DEFINITION*********//
+
+module.exports = function(_config, _mysql) {
+	return [
+		{
+			//data collector initialize function, which logs in
+			initialize: function(args) {
+				return timeclockLogin( _config.timeclock.url, _config.timeclock.user, _config.timeclock.password );
+			},
+			prepare: function(args) {
+				//Set report ranges
+				var start_report = moment().subtract(args.days_back_to_sync,'days');
+				var end_report = moment();
+				//Get report data Promise
+				return timeclockReport( _config.timeclock.url, start_report, end_report );
+			},
+			collect: function*(data) {
+				for(row in parseReport(data)) {
+					yield Promise.resolve(row);
+				}
+			},
+			default_args: {
+				days_back_to_sync: 7
+			},
+			//define database data will be put into
+			database: {
+				mysql_connection: _mysql,
+				mysql_table: 'timeclock'
+			},
+			//run attempt paramters
+			run_attempts_limit: 5,
+			run_time_between_attempts: 500,
+		}
+	];
+};
+
+
+//******HELPER FUNCTIONS FOR GETTING DATA*********//
+
 
 //need to use cookies for logging in
 var cjar = request.jar();
 request = request.defaults({jar: cjar});
 
-var initialized = false;
-
 //logs into mavenlink using non-api methods
-function timeclockLogin(username,password,callback) {
+function timeclockLogin(url,username,password) {
 
-    var loginPage = config.timeclock.url + '/login.html';
+    var loginPage = url + '/login.html';
 
     loginFormData = [];
     loginFormData.username = username;
@@ -25,21 +63,27 @@ function timeclockLogin(username,password,callback) {
 	    	//If we were successful, then we should get a redirect
 	        if(res && res.statusCode == '301') {
 	            //success login!
-				initialized = true;
 	            resolve();
 	        } else {
-				initialized = false;
-				reject("Could not log into time clock.");
+	        	//determine error message
+	        	var error_message = '';
+	        	if(err) {
+	        		error_message = err;
+	        	} else if(res.statusCode == '301') {
+	        		error_message = 'Double check username and password.';
+	        	} else if(!res) {
+	        		error_message = 'No data was returned from request.';
+	        	}
+				reject('Could not log into time clock: ' + error_message);
 	        }
 	    });
     });
-
 }
 
-//Gets rows of data within date range
-function timeclockReport(start_date,end_date) {
+//Gets HTML content of report from timeclock
+function timeclockReport(url,start_date,end_date) {
 
-	var url = config.timeclock.url + '/report.html';
+	var url = url + '/report.html';
 
 	data = [];
 	data.rt = "1";
@@ -50,10 +94,12 @@ function timeclockReport(start_date,end_date) {
 
 	return new Promise(function(resolve,reject) {
 		request.get({url:url,qs:data},function(err,response,body) {
-			if(err || !body || response.statusCode == '301') {
-				reject('Could not get timeclock report.');
+			if(err || !body) {
+				reject('Could not get timeclock report. Maybe reboot timeclock? ' + err);
+			} else if(response.statusCode == '301') {
+				reject('Could not get timeclock report. User session probably timed out.');
 			} else {
-				resolve(parseReport(body));
+				resolve(body);
 			}
 		});
 	});
@@ -69,7 +115,7 @@ function tryParseFloat(val) {
 }
 
 //Parses html report and returns array of data
-function parseReport(html) {
+function* parseReport(html) {
 	var $ = cheerio.load(html);
 	var entries = $('#pageContents > .noAccrual, #pageContents > .clear');
 
@@ -227,43 +273,8 @@ function parseReport(html) {
 			data_row[parse_fields[i].name] = val;
 		}
 
-		data.push(data_row);
+		yield data_row;
 	});
 
-	return data;
-}
-
-
-
-
-
-
-//TODO: Put inside new data-system object
-
-function initializeCallback() {
-	return timeclockLogin(config.timeclock_login.user,config.timeclock_login.password);
-}
-
-function syncCallback() {
-	//Set report ranges
-	var start_report = moment().startOf('week');
-	var end_report = moment();
-	//Run report
-	timeclockReport(start_report,end_report).then(function(data) {
-
-		if(data === false) {
-			//An error occured, :(
-			return Promise.reject();
-		}
-
-		//Time to insert rows
-		var insert_promises = [];
-
-		for (var i = data.length - 1; i >= 0; i--) {
-			insert_promises.push(data.query('REPLACE INTO `proq-time-machine`.`timeclock` SET ?',data[i]));
-		}
-
-		return Promise.all(insert_promises)
-	});
 }
 

@@ -4,7 +4,7 @@ var vsprintf = require("sprintf-js").vsprintf,
 	config = require('./config.js'),
 	users = require('./user-config.js');
 
-var awardSystem = require('./award-system.js');
+var awardSystem = require('./award.js');
 	awardSystem = awardSystem(dataGetter);
 
 awardSystem
