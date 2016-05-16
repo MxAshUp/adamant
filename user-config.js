@@ -51,7 +51,7 @@ module.exports = [
 		},
 		dates: {
 			hiredate: '08/12/2014',
-			birthday: '09/03'
+			birthday: '01/01'
 		},/*
 		asana: {
 			refreshtoken: null,
