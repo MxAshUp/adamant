@@ -41,12 +41,14 @@ var Award = function(args) {
 		//If the count is non existent or expired, we need to update it
 		if(	typeof self._getCount[user.ID] === 'undefined' ||
 			typeof self._getCountExpiration[user.ID] === 'undefined' ||
-			new moment() > self._getCountExpiration[user.ID] )
+			moment() >= self._getCountExpiration[user.ID] )
 		{
+
+			var next_exp =moment().add(1,'day').startOf('day');
 
 			//Since count is expired, we need to query for the count...
 			var queryParams = [];
-			var query = 'SELECT COUNT(*) as count FROM `awards` WHERE `awards`.`ID` = ? AND `awards`.`date` > ?';
+			var query = 'SELECT COUNT(*) as count FROM `awards` WHERE `awards`.`ID` = ? AND `awards`.`date` >= ?';
 
 			var start_report = self.getLimitTime === 'ever' ? moment(new Date('0')) : moment().startOf(self.getLimitTime);
 			start_report = start_report.format("YYYY-MM-DD HH:mm:ss");
@@ -62,7 +64,8 @@ var Award = function(args) {
 			//Query the database
 			return dataGetter.query(query,queryParams).then(function(res) {
 				self._getCount[user.ID] = res[0].count;
-				self._getCountExpiration[user.ID] = moment().endOf('day'); //This count will expire at the end of the day
+				//This looks excessive, but it basically resets the expiration new new_exp, only if new_exp is greater than the old expiration
+				self._getCountExpiration[user.ID] = self._getCountExpiration[user.ID] === 'undefined' || next_exp > self._getCountExpiration[user.ID] ? next_exp : self._getCountExpiration[user.ID]; //This count will expire at the start of tomorrow
 
 				//Return the count
 				return Promise.resolve(self._getCount[user.ID]);
