@@ -6,6 +6,7 @@
   "dependencies": {
     "cheerio": "^0.20.0",
     "moment": "^2.13.0",
+    "mongoose": "^4.4.17",
     "mysql": "^2.10.2",
     "request": "^2.72.0",
     "sprintf-js": "^1.0.3",

@@ -1,35 +1,5 @@
 var vsprintf = require("sprintf-js").vsprintf;
-
-
-var DatabaseStore = function(args) {
-
-	//Scope it!
-	var self = this;
-
-	//Settable properties
-	self.mysql_connection = undefined;
-	self.mysql_table = '';
-
-	//Set object properties from args
-	for(var i in args) {
-		self[i] = args[i];
-	}
-
-	//replaces a row in the database
-	self.update = function(data_row) {
-		return new Promise(function(resolve,reject) {
-			self.mysql_connection.query('REPLACE INTO ? SET ?',[self.mysql_table,data_row],
-				function (error, results, fields) {
-					if(error) {
-						reject("Error inserting MySQL row. Error: " + error.code);
-					} else {
-						resolve();//TODO: return number of rows affected/added
-					}
-				}
-			);
-		});
-	};
-}
+var mongoose = require('mongoose');
 
 var DataCollector = function(args) {
 
@@ -46,10 +16,24 @@ var DataCollector = function(args) {
 	self.collect = function*(data) {
 		yield;
 	};
+	self.remove = function*(data) {
+		yield;
+	};
+	self.onCreate = function() {
+
+	};
+	self.onUpdate = function() {
+
+	};
+	self.onRemove = function() {
+
+	};
 	self.default_args = {};
 	self.run_attempts_limit = 5;
 	self.run_time_between_attempts = 500;
-	self.database = undefined;
+	self.model_schema = {};
+	self.model_key = '';
+	self.model_name = '';
 
 	//Set object properties from args
 	for(var i in args) {
@@ -62,13 +46,16 @@ var DataCollector = function(args) {
 	self.is_initialized = Promise.reject();
 	self.run_attempts = 0;
 
+	//Prepare schema
+	self.dbSetup = function() {
+		self.model = mongooseUtilities.registerModel(self.model_name,self.model_schema);
+	}
+
 	//Runs a full data collection sync, returns promise
 	self.run = function(args) {
 
-		//Throw error if data collector is missing crucial definitions
-		if(typeof self.database === "undefined" || typeof self.collect !== "function" || typeof self.initialize !== "function") {
-			return Promise.reject('Data collector not constructed correctly.');
-		}
+		//Make sure args i mergable
+		args = args ? args : {};
 
 		//Merges args with default args
 		var args = self._merge_args(args);
@@ -77,14 +64,16 @@ var DataCollector = function(args) {
 		return self.is_initialized
 		//If not initialized, then try to initialize
 		.catch(function() {
-			return self.initialize(args)
+			return self.initialize.apply(self,args)
 			//Reformat possible error
 			.catch(function(err) {
 				return Promise.reject('Error initializing: '+err);
 			});
 		})
 		//Run collect
-		.then(self.prepare(args))
+		.then(function() {
+			return self.prepare.apply(self,args)
+		})
 		//Collect data and insert it
 		.then(self._collect_and_insert)
 		//collect is success, run success function
@@ -103,9 +92,10 @@ var DataCollector = function(args) {
 
 	//Loops through collect data, and inserts each row asynchronously into database 
 	self._collect_and_insert = function(data) {
+
 		var collect_all_rows = [];
 		//loop through collect rows, each is a promise
-		for(var collected_row in self.collect(data)) {
+		for(var collected_row of self.collect.apply(self,data)) {
 			//Push promise into array
 			collect_all_rows.push(
 				//Collect row, and then insert it
@@ -115,15 +105,30 @@ var DataCollector = function(args) {
 					return Promise.reject('Error collecting: '+err);
 				})
 				//Finally, insert row data
-				.then(self._insert_data);
+				.then(self._insert_data)
 			);
 		}
 		return Promise.all(collect_all_rows);
 	}
 
+	self.query_model = function(query) {
+		return mongooseUtilities.
+	}
+
 	//Inserts data into database
 	self._insert_data = function(data_row) {
-		return self.database.update(data_row)
+
+		if(typeof self.model === "undefined") {
+			return Promise.reject('Data collector model not defined.');
+		}
+		return mongooseUtilities.updateOrInsert(self.model,data_row,self.model_key)
+		.then(function(inserted_row) {
+			if(inserted_row === true) {
+				self.onCreate.apply(self); //Execute create event function
+			} else if(inserted_row === false) {
+				self.onUpdate.apply(self); //Execute update event function
+			}
+		})
 		//Catch database insert error
 		.catch(function(err) {
 			//If an error happens inserting rows, we won't retry
@@ -131,6 +136,49 @@ var DataCollector = function(args) {
 			//Reformat error to be more specific
 			return Promise.reject('Error inserting data: '+err);
 		});
+	}
+
+	//Find items to remove, and removes them from database
+	self._prepare_and_remove = function(data) {
+		var remove_all_rows = [];
+		//loop through remove rows, each is a promise
+		for(var removeed_row of self.remove(data)) {
+			//Push promise into array
+			remove_all_rows.push(
+				//remove row, and then insert it
+				removeed_row
+				.catch(function(err) {
+					//If an error occured, format the error more specifically
+					return Promise.reject('Error removing doc: '+err);
+				})
+				//Finally, insert row data
+				.then(self._remove_data)
+			);
+		}
+		return Promise.all(collect_all_rows);
+	}
+
+	//Loops through itmes to remove, and removes them
+	self._remove_data = function(lookup) {
+
+		if(typeof self.model === "undefined") {
+			return Promise.reject('Data collector model not defined.');
+		}
+
+		return mongooseUtilities.maybeRemove(self.model,lookup)
+		.then(function(removed_row) {
+			if(removed_row === true) {
+				self.onRemove.apply(self); //Execute create event function
+			}
+		})
+		//Catch database insert error
+		.catch(function(err) {
+			//If an error happens inserting rows, we won't retry
+			self.run_attempts = self.run_attempts_limit;
+			//Reformat error to be more specific
+			return Promise.reject('Error inserting data: '+err);
+		});
+
 	}
 
 	//Function that executes on successful run
@@ -172,7 +220,4 @@ var DataCollector = function(args) {
 }
 
 
-module.exports = {
-	DataCollector: DataCollector,
-	DatabaseStore: DatabaseStore
-}
+module.exports = DataCollector;

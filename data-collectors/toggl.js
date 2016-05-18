@@ -1,32 +1,56 @@
 //requires
-//var request = require('request');
-
+var TogglClient = require('toggl-api');
+var moment = require('moment');
 
 //******MAIN DATA COLLECTOR DEFINITION*********//
 
-module.exports = function(_config, _mysql) {
+module.exports = function() {
 	return [
 		{
 			initialize: function(args) {
-				/* Funciton here to initialize data collector, such as getting refresh token, logging in , etc... Should return a promise*/
+				var self = this;
+				self.toggl = new TogglClient({apiToken: '771a871d9670b874655a25e20391640f'});//771a871d9670b874655a25e20391640f
+				return Promise.resolve();
 			},
 			prepare: function(args) {
-				/* Function here begins the data collection, for example: get a list of data to collect. args will provide custom arguments for syncing */
+				var self = this;
+				//Set report ranges
+				var start_report = moment().subtract(args.days_back_to_sync,'days');
+				var end_report = moment();
+				//Get time entries
+				return getTimeEntries(self.toggl,start_report,end_report);
 			},
-			collect: function*(data) {
-				/* Function here is a generator, so it must yield each row of data that is to be synced. Specifically, yield a promise that will return the row of data*/
-			},
+			collect: parseTimeEntries,
 			default_args: {
 				days_back_to_sync: 7
 			},
-			//define database data will be put into
-			database: {
-				mysql_connection: _mysql,
-				mysql_table:'toggl',
+			model_schema:{
+				id: String,
+				guid: String,
+				wid: String,
+				pid: String,
+				tid: String,
+				billable: Boolean,
+				start: Date,
+				stop: Date,
+				duration: Number,
+				duronly: Boolean,
+				at: Date,
+				uid: String,
+				description: String,
+				tags: [String]
 			},
-			//run attempt paramters
-			run_attempts_limit: 5,
-			run_time_between_attempts: 500,
+			model_key:'id',
+			model_name:'toggl_timeEntry',
+			onCreate: function() {
+				console.log('Created');
+			},
+			onUpdate: function() {
+				console.log('Updated');
+			},
+			onRemove: function() {
+				console.log('Removed');
+			},		
 		}
 	];
 };
@@ -34,4 +58,29 @@ module.exports = function(_config, _mysql) {
 
 //******HELPER FUNCTIONS FOR GETTING DATA*********//
 
-//...
+//Formats the time entry data into rows ready to insert into database
+function* parseTimeEntries(data) {
+	for(var entry of data) {
+		yield Promise.resolve(entry);
+	}
+}
+
+function getTimeEntries(toggl_client, start_report, end_report) {
+	return new Promise(function(resolve,reject) {
+		toggl_client.getTimeEntries(start_report, end_report, function(err,data) {
+			//Error getting data
+			if(err) {
+				if(err.code == '403') {
+					err.data = err.data ? '' : ("Auth failed, check API token.");
+				}
+				reject("API Error (code: " + err.code + "): "+err.data);
+			} else {
+				resolve(data);
+			}
+		});
+	});
+}
+
+function getLocalTimeEntriesInRange(start_report, end_report) {
+
+}
