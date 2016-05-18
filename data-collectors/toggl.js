@@ -81,6 +81,7 @@ function getTimeEntries(toggl_client, start_report, end_report) {
 	});
 }
 
-function getLocalTimeEntriesInRange(start_report, end_report) {
-
-}
+/*function getLocalTimeEntriesInRange(start_report, end_report) {
+	this.model
+	model.find(lookup);
+}*/

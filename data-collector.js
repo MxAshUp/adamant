@@ -1,5 +1,5 @@
 var vsprintf = require("sprintf-js").vsprintf;
-var mongoose = require('mongoose');
+var mongoose = require('./mongoose-utilities').mongoose;
 
 var DataCollector = function(args) {
 
@@ -48,7 +48,7 @@ var DataCollector = function(args) {
 
 	//Prepare schema
 	self.dbSetup = function() {
-		self.model = mongooseUtilities.registerModel(self.model_name,self.model_schema);
+		self.model = mongoose.model(self.model_name, mongoose.Schema(self.model_schema));	
 	}
 
 	//Runs a full data collection sync, returns promise
@@ -64,7 +64,7 @@ var DataCollector = function(args) {
 		return self.is_initialized
 		//If not initialized, then try to initialize
 		.catch(function() {
-			return self.initialize.apply(self,args)
+			return self.initialize.call(self,args)
 			//Reformat possible error
 			.catch(function(err) {
 				return Promise.reject('Error initializing: '+err);
@@ -72,7 +72,7 @@ var DataCollector = function(args) {
 		})
 		//Run collect
 		.then(function() {
-			return self.prepare.apply(self,args)
+			return self.prepare.call(self,args)
 		})
 		//Collect data and insert it
 		.then(self._collect_and_insert)
@@ -95,7 +95,7 @@ var DataCollector = function(args) {
 
 		var collect_all_rows = [];
 		//loop through collect rows, each is a promise
-		for(var collected_row of self.collect.apply(self,data)) {
+		for(var collected_row of self.collect.call(self,data)) {
 			//Push promise into array
 			collect_all_rows.push(
 				//Collect row, and then insert it
@@ -111,22 +111,35 @@ var DataCollector = function(args) {
 		return Promise.all(collect_all_rows);
 	}
 
-	self.query_model = function(query) {
-		return mongooseUtilities.
-	}
-
 	//Inserts data into database
 	self._insert_data = function(data_row) {
 
 		if(typeof self.model === "undefined") {
 			return Promise.reject('Data collector model not defined.');
 		}
-		return mongooseUtilities.updateOrInsert(self.model,data_row,self.model_key)
-		.then(function(inserted_row) {
-			if(inserted_row === true) {
-				self.onCreate.apply(self); //Execute create event function
-			} else if(inserted_row === false) {
-				self.onUpdate.apply(self); //Execute update event function
+		return self.model.count(data_row)
+		.then(function(res) {
+			if(res > 0) {
+				//Move along, nothing to update
+				return Promise.resolve();
+			} else {
+				//Update time!
+				var find = {};
+				find[self.model_key] = data_row[self.model_key];
+
+				return self.model.findOneAndUpdate(find, data_row, {
+					upsert:true,
+					setDefaultsOnInsert:true,
+				}).then(function(oldDoc) {
+					return Promise.resolve(oldDoc == null); //return true if doc is inserted
+				});
+			}
+		})
+		.then(function(is_inserted_row) {
+			if(is_inserted_row === true) {
+				self.onCreate.call(self); //Execute create event function
+			} else if(is_inserted_row === false) {
+				self.onUpdate.call(self); //Execute update event function
 			}
 		})
 		//Catch database insert error
@@ -165,11 +178,11 @@ var DataCollector = function(args) {
 			return Promise.reject('Data collector model not defined.');
 		}
 
-		return mongooseUtilities.maybeRemove(self.model,lookup)
-		.then(function(removed_row) {
-			if(removed_row === true) {
-				self.onRemove.apply(self); //Execute create event function
+		return self.model.findOneAndRemove(lookup).then(function(res) {
+			if(res != null) {
+				self.onRemove.call(self); //Execute create event function
 			}
+			return Promise.resolve(res != null);
 		})
 		//Catch database insert error
 		.catch(function(err) {
