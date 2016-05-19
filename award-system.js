@@ -89,7 +89,7 @@ var Award = function(args) {
 
 		return dataGetter.query(query, queryParams).then(function() {
 			//If we're successful, increment the count!
-			self._getCount++;
+			self._getCount[user.ID]++;
 		});
 
 	}
