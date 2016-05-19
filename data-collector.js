@@ -13,11 +13,11 @@ var DataCollector = function(args) {
 	self.prepare = function(_args) {
 		return Promise.resolve();
 	}
-	self.collect = function*(data) {
-		yield;
+	self.collect = function(data, _args) {
+
 	};
-	self.remove = function*(data) {
-		yield;
+	self.remove = function(data, _args) {
+
 	};
 	self.onCreate = function() {
 
@@ -60,6 +60,8 @@ var DataCollector = function(args) {
 		//Merges args with default args
 		var args = self._merge_args(args);
 
+		var preparedData;
+
 		//Being the promise chain
 		return self.is_initialized
 		//If not initialized, then try to initialize
@@ -74,8 +76,18 @@ var DataCollector = function(args) {
 		.then(function() {
 			return self.prepare.call(self,args)
 		})
+		.then(function(res) {
+			preparedData = res;
+			return Promise.reoslve;
+		})
 		//Collect data and insert it
-		.then(self._collect_and_insert)
+		.then(function() {
+			return self._collect_and_insert.call(self,preparedData,args)
+		})
+		//Remove docs that may need to be removed
+		.then(function() {
+			return self._prepare_and_remove.call(self,preparedData,args)
+		})
 		//collect is success, run success function
 		.then(self._on_success)
 		//If any errors occured during collect or initialize, it's caught here
@@ -91,24 +103,14 @@ var DataCollector = function(args) {
 	}
 
 	//Loops through collect data, and inserts each row asynchronously into database 
-	self._collect_and_insert = function(data) {
+	self._collect_and_insert = function(data, args) {
 
-		var collect_all_rows = [];
-		//loop through collect rows, each is a promise
-		for(var collected_row of self.collect.call(self,data)) {
-			//Push promise into array
-			collect_all_rows.push(
-				//Collect row, and then insert it
-				collected_row
-				.catch(function(err) {
-					//If an error occured, format the error more specifically
-					return Promise.reject('Error collecting: '+err);
-				})
-				//Finally, insert row data
-				.then(self._insert_data)
-			);
-		}
-		return Promise.all(collect_all_rows);
+		return self._apply_funct_to_func(self.collect , [data, args] , self._insert_data)
+		.catch(function(err) {
+			//If an error occured, format the error more specifically
+			return Promise.reject('Error collecting doc: '+err);
+		});
+
 	}
 
 	//Inserts data into database
@@ -137,9 +139,9 @@ var DataCollector = function(args) {
 		})
 		.then(function(is_inserted_row) {
 			if(is_inserted_row === true) {
-				self.onCreate.call(self); //Execute create event function
+				self.onCreate.call(self, data_row); //Execute create event function
 			} else if(is_inserted_row === false) {
-				self.onUpdate.call(self); //Execute update event function
+				self.onUpdate.call(self, data_row); //Execute update event function
 			}
 		})
 		//Catch database insert error
@@ -147,28 +149,18 @@ var DataCollector = function(args) {
 			//If an error happens inserting rows, we won't retry
 			self.run_attempts = self.run_attempts_limit;
 			//Reformat error to be more specific
-			return Promise.reject('Error inserting data: '+err);
+			return Promise.reject('Error inserting doc: '+err);
 		});
 	}
 
 	//Find items to remove, and removes them from database
-	self._prepare_and_remove = function(data) {
-		var remove_all_rows = [];
-		//loop through remove rows, each is a promise
-		for(var removeed_row of self.remove(data)) {
-			//Push promise into array
-			remove_all_rows.push(
-				//remove row, and then insert it
-				removeed_row
-				.catch(function(err) {
-					//If an error occured, format the error more specifically
-					return Promise.reject('Error removing doc: '+err);
-				})
-				//Finally, insert row data
-				.then(self._remove_data)
-			);
-		}
-		return Promise.all(collect_all_rows);
+	self._prepare_and_remove = function(data, args) {
+
+		return self._apply_funct_to_func(self.remove , [data, args] , self._remove_data)
+		.catch(function(err) {
+			//If an error occured, format the error more specifically
+			return Promise.reject('Error removing doc: '+err);
+		});
 	}
 
 	//Loops through itmes to remove, and removes them
@@ -178,20 +170,55 @@ var DataCollector = function(args) {
 			return Promise.reject('Data collector model not defined.');
 		}
 
+		//Find doc by lookup and remove it
 		return self.model.findOneAndRemove(lookup).then(function(res) {
 			if(res != null) {
-				self.onRemove.call(self); //Execute create event function
+				self.onRemove.call(self, lookup); //Execute remove event function
 			}
 			return Promise.resolve(res != null);
-		})
-		//Catch database insert error
-		.catch(function(err) {
-			//If an error happens inserting rows, we won't retry
-			self.run_attempts = self.run_attempts_limit;
-			//Reformat error to be more specific
-			return Promise.reject('Error inserting data: '+err);
 		});
 
+	}
+
+	//This function takes the results of func1, loops through the results, and passes them to func2, finally returns a promise for when func2 is done
+	//Sometimes we get a generator, sometimes we get a promise that returns an array, sometimes we get an array
+	self._apply_funct_to_func = function(func1, args1, func2) {
+		var is_generator = (func1.constructor.name === 'GeneratorFunction');
+
+		args1 = Array.isArray(args1) ? args1 : [args1];
+
+		if(!is_generator) {
+			//promisfy, because func1 could return an array
+			return Promise.resolve(func1.apply(self, args1)).then(function(definitely_an_array) {
+				var promises = [];
+				for(var i in definitely_an_array) {
+					var args2 = Promise.resolve(definitely_an_array[i]);
+
+					promises.push(
+						//Pass results to func2, make sure it's a promise
+						args2.then(function(res) {
+							var args2 = Array.isArray(res) ? res : [res];
+							func2.apply(self, args2);
+						})
+					);
+				}
+				return Promise.all(promises);
+			});
+		} else {
+			var promises = [];
+			for(var ret of func1.apply(self, args1)) {
+				var args2 = Promise.resolve(ret);
+
+				promises.push(
+					//Pass results to func2, make sure it's a promise
+					args2.then(function(res) {
+						var args2 = Array.isArray(res) ? res : [res];
+						func2.apply(self, args2);
+					})
+				);
+			}
+			return Promise.all(promises);
+		}
 	}
 
 	//Function that executes on successful run

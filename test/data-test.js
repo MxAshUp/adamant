@@ -23,6 +23,10 @@ util.connect(config.mongodb.uri).then(function() {
 	toggl_dc.dbSetup();
 	function loop() {
 
+/*	toggl_dc.initialize(toggl_dc.default_args)
+	.then(function() {
+		return toggl_dc._prepare_and_remove(toggl_dc.default_args);
+	}).catch(console.log);*/
 	toggl_dc.run().then(function(){setTimeout(loop,1000);}).catch(console.log);
 	}
 	loop();

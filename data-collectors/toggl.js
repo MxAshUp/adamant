@@ -20,9 +20,19 @@ module.exports = function() {
 				//Get time entries
 				return getTimeEntries(self.toggl,start_report,end_report);
 			},
-			collect: parseTimeEntries,
+			collect: function* (data, args) {
+				for(var entry of data) {
+					yield Promise.resolve(entry);
+				}
+			},
+			remove: function(data, args) {
+				var self = this;
+				var start_report = moment().subtract(args.days_back_to_sync,'days');
+				var end_report = moment();
+				return getRemovedEntries.call(this,data,start_report,end_report);
+			},
 			default_args: {
-				days_back_to_sync: 7
+				days_back_to_sync: 1
 			},
 			model_schema:{
 				id: String,
@@ -42,14 +52,14 @@ module.exports = function() {
 			},
 			model_key:'id',
 			model_name:'toggl_timeEntry',
-			onCreate: function() {
-				console.log('Created');
+			onCreate: function(val) {
+				console.log('Created',val);
 			},
-			onUpdate: function() {
-				console.log('Updated');
+			onUpdate: function(val) {
+				console.log('Updated',val);
 			},
-			onRemove: function() {
-				console.log('Removed');
+			onRemove: function(val) {
+				console.log('Removed',val);
 			},		
 		}
 	];
@@ -58,13 +68,7 @@ module.exports = function() {
 
 //******HELPER FUNCTIONS FOR GETTING DATA*********//
 
-//Formats the time entry data into rows ready to insert into database
-function* parseTimeEntries(data) {
-	for(var entry of data) {
-		yield Promise.resolve(entry);
-	}
-}
-
+//Gets time entries in range
 function getTimeEntries(toggl_client, start_report, end_report) {
 	return new Promise(function(resolve,reject) {
 		toggl_client.getTimeEntries(start_report, end_report, function(err,data) {
@@ -81,7 +85,25 @@ function getTimeEntries(toggl_client, start_report, end_report) {
 	});
 }
 
-/*function getLocalTimeEntriesInRange(start_report, end_report) {
-	this.model
-	model.find(lookup);
-}*/
+
+//This function compares the entries in Toggl and the entries in local db,
+//then returns the entries that are only in the local db. These need to be removed.
+function getRemovedEntries(new_entries, start_report, end_report) {
+	var entries_to_remove
+	return this.model.find({at:{"$gte": start_report, "$lt": end_report}})
+	.then(function(old_entries) {
+		//Get the id's of the new entries
+		new_entries = new_entries.map(function(obj) {return ''+obj.id;});
+
+		//Get the id's of the old entries
+		old_entries = old_entries.map(function(obj) {return obj.id;});
+
+		//Find which entries exist in the old, but not the new, these need to be removed
+		entries_to_remove = old_entries.filter(function(i) {return new_entries.indexOf(i) < 0;});
+
+		//Make entries to remove into lookup objects
+		entries_to_remove = entries_to_remove.map(function(id) {return {id:id};});
+
+		return Promise.resolve(entries_to_remove);
+	});
+}
