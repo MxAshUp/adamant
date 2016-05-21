@@ -7,26 +7,54 @@
 module.exports = function(_config, _mysql) {
 	return [
 		{
-			initialize: function(args) {
-				/* Funciton here to initialize data collector, such as getting refresh token, logging in , etc... Should return a promise*/
-			},
-			prepare: function(args) {
-				/* Function here begins the data collection, for example: get a list of data to collect. args will provide custom arguments for syncing */
-			},
-			collect: function*(data) {
-				/* Function here is a generator, so it must yield each row of data that is to be synced. Specifically, yield a promise that will return the row of data*/
+			model_name: 'model-name',
+			model_id_key: 'id',
+			//Some example schemas!
+			model_schema: {
+				id: String,
+				name:    String,
+				binary:  Buffer,
+				living:  Boolean,
+				updated: { type: Date, default: Date.now },
+				age:     { type: Number, min: 18, max: 65 },
+				mixed:   Schema.Types.Mixed,
+				_someId: Schema.Types.ObjectId,
+				array:      [],
+				ofString:   [String],
+				ofNumber:   [Number],
+				ofDates:    [Date],
+				ofBuffer:   [Buffer],
+				ofBoolean:  [Boolean],
+				ofMixed:    [Schema.Types.Mixed],
+				ofObjectId: [Schema.Types.ObjectId],
+				nested: {
+					stuff: { type: String, lowercase: true, trim: true }
+				}
 			},
 			default_args: {
-				/* Default args that are used for collecting and initializing, this will be the same structure as args passed in collect()*/
+				days_back_to_sync: 7
 			},
-			//define database data will be put into
-			database: {
-				mysql_connection: _mysql,
-				mysql_table: /*Table name to sync data to*/
+			initialize: function(args) {
+				//Do some initialize stuff
 			},
-			//run attempt paramters
-			run_attempts_limit: 5,
-			run_time_between_attempts: 500,
+			prepare: function(args) {
+				return Promise.resolve(some_data_to_use_in_collect_and_remove);
+			},
+			collect: function(data, args) {
+
+			},
+			remove: function(data, args) {
+
+			}
+			onCreate: function(val) {
+				console.log('Created',val);
+			},
+			onUpdate: function(val) {
+				console.log('Updated',val);
+			},
+			onRemove: function(val) {
+				console.log('Removed',val);
+			},
 		}
 	];
 };

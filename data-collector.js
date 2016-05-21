@@ -8,16 +8,16 @@ var DataCollector = function(args) {
 
 	//Settable properties
 	self.initialize = function(_args) {
-		return Promise.resolve();
+
 	};
 	self.prepare = function(_args) {
-		return Promise.resolve();
+		
 	}
 	self.collect = function(data, _args) {
-
+		return data;
 	};
 	self.remove = function(data, _args) {
-
+		return;
 	};
 	self.onCreate = function() {
 
@@ -32,7 +32,7 @@ var DataCollector = function(args) {
 	self.run_attempts_limit = 5;
 	self.run_time_between_attempts = 500;
 	self.model_schema = {};
-	self.model_key = '';
+	self.model_id_key = '';
 	self.model_name = '';
 
 	//Set object properties from args
@@ -127,7 +127,7 @@ var DataCollector = function(args) {
 			} else {
 				//Update time!
 				var find = {};
-				find[self.model_key] = data_row[self.model_key];
+				find[self.model_id_key] = data_row[self.model_id_key];
 
 				return self.model.findOneAndUpdate(find, data_row, {
 					upsert:true,

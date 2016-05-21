@@ -6,10 +6,33 @@ var moment = require('moment');
 
 //******MAIN DATA COLLECTOR DEFINITION*********//
 
-module.exports = function(_config, _mysql) {
+module.exports = function(_config) {
 	return [
 		{
-			//data collector initialize function, which logs in
+			model_name: 'timeclock_timeEntry',
+			model_id_key: 'pid',
+			model_schema: {
+				pid: String,
+				employeeId: String,
+				employeeName: String,
+				punchInTime: Date,
+				punchInFlags: String,
+				punchInDepartment: String,
+				punchOutFlags: String,
+				punchOutTime: Date,
+				punchOutLunch: Number,
+				punchOutADJ: Number,
+				punchSTD: Number,
+				punchOT1: Number,
+				punchOT2: Number,
+				punchHOL: Number,
+				punchHRS: Number,
+				punchLaborDS: Number,
+				punchLabor: Number,
+			},
+			default_args: {
+				days_back_to_sync: 7
+			},
 			initialize: function(args) {
 				return timeclockLogin( _config.timeclock.url, _config.timeclock.user, _config.timeclock.password );
 			},
@@ -20,26 +43,27 @@ module.exports = function(_config, _mysql) {
 				//Get report data Promise
 				return timeclockReport( _config.timeclock.url, start_report, end_report );
 			},
-			collect: function*(data) {
-				for(row in parseReport(data)) {
-					yield Promise.resolve(row);
+			collect: function* (data, args) {
+				for(var data_row of parseReport(data)) {
+					yield data_row;
 				}
 			},
-			default_args: {
-				days_back_to_sync: 7
+			remove: function(data, args) {
+				//TODO: Check if local time entry is not in data, then delete it
+				return [];
+			}
+			onCreate: function(val) {
+				console.log('Created',val);
 			},
-			//define database data will be put into
-			database: {
-				mysql_connection: _mysql,
-				mysql_table: 'timeclock'
+			onUpdate: function(val) {
+				console.log('Updated',val);
 			},
-			//run attempt paramters
-			run_attempts_limit: 5,
-			run_time_between_attempts: 500,
+			onRemove: function(val) {
+				console.log('Removed',val);
+			},
 		}
 	];
 };
-
 
 //******HELPER FUNCTIONS FOR GETTING DATA*********//
 
