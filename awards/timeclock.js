@@ -161,7 +161,7 @@ module.exports = [
 			return dataGetter.query(query,params)
 			.then(function(res) {
 				//If you missed at least a day in the last week, and you are currently clocked in, you are awarded!
-				if(res[0] && res[0].is_clocked_in && res[0].days_present < 5) {
+				if(res[0] && res[0].is_clocked_in && res[0].days_present < 6) {
 					return Promise.resolve(true);
 				}
 
