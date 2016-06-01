@@ -152,6 +152,8 @@ module.exports = [
 		getLimitTime:	'month',
 		checkCallback: 	function(dataGetter, user) {
 
+			return Promise.resolve(false); //Temmporarily disabling. Issue: should award only the day you get back
+
 			var start_s = moment().startOf('day').subtract(1,'week');
 			var end_s = moment().endOf('day');
 
