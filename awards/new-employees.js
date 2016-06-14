@@ -1,10 +1,10 @@
 var awards = [
 	{
 		uniqueID:		'training-wheels',
-		name:			'No More Training Wheels',
-		iconImage:		':bicyclist:',
-		description:	'It\'s 4 weeks at Pro Q!',
-		requiredData:	['dates'], 
+		name:			'Orbital Velocity',
+		iconImage:		':dizzy:',
+		description:	'After 4 weeks at Pro Q, you are now in orbit!',
+		requiredData:	['dates'],
 		getLimit:		1,
 		getLimitPer:	'user',
 		getLimitTime:	'ever',
