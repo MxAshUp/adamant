@@ -3,7 +3,7 @@ var mysqlObject = require('mysql');
 var config = require('./config.js');
 
 var mysql = mysqlObject.createPool({
-	connectionLimit: 100,
+	connectionLimit: 10,
 	host: config.mysql.hostname,
 	user: config.mysql.user,
 	password: config.mysql.password,
