@@ -50,8 +50,8 @@ module.exports = [
 			user:'aaronjamesyoung'
 		},
 		dates: {
-			//hiredate: '08/12/2014',
-			hiredate: '12/30/1969',
+			hiredate: '08/12/2014',
+			//hiredate: '12/30/1969',
 			birthday: '01/01'
 		},/*
 		asana: {
