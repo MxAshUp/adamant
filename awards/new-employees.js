@@ -1,10 +1,10 @@
 var awards = [
 	{
 		uniqueID:		'training-wheels',
-		name:			'No More Training Wheels',
-		iconImage:		':bicyclist:',
-		description:	'It\'s been four weeks, I think you\'ve got the hang of this!',
-		requiredData:	['dates'], 
+		name:			'Orbital Velocity',
+		iconImage:		':dizzy:',
+		description:	'After 4 weeks at Pro Q, you are now in orbit!',
+		requiredData:	['dates'],
 		getLimit:		1,
 		getLimitPer:	'user',
 		getLimitTime:	'ever',
@@ -21,6 +21,32 @@ var awards = [
 
 			//Check if we've past the mark! If so, award it :)
 			if((new Date()) > four_weeks_later) {
+				return Promise.resolve(true);
+			} else {
+				return Promise.resolve(false);
+			}
+		}
+	},
+	{
+		uniqueID:		'welcome',
+		name:			'Liftoff',
+		iconImage:		':rocket:',
+		description:	'Welcome to Pro Q!',
+		requiredData:	['dates'],
+		getLimit:		1,
+		getLimitPer:	'user',
+		getLimitTime:	'ever',
+		checkCallback: 	function(dataGetter, user) {
+			//Check if dates are defined
+			if(!user.dates.hiredate) {
+				return Promise.resolve(false);
+			}
+
+			//Get the Date of users hiredate this year
+			var hire_date = new Date(user.dates.hiredate);
+
+			//Check if today is the user's hiredate
+			if((new Date()).toDateString() == hire_date.toDateString()) {
 				return Promise.resolve(true);
 			} else {
 				return Promise.resolve(false);

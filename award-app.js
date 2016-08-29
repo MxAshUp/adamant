@@ -110,7 +110,7 @@ function main() {
 			var has_or_have = user_names.length > 1 ? 'have' : 'has';
 
 			var award = grouped_by_award[i].award;
-			var message = vsprintf("%s %s earned *%s*!\n_%s_\n%s",[user_string,has_or_have,award.name,award.description,award.iconImage]);
+			var message = vsprintf("%s %s earned %s *%s*: _%s_",[user_string,has_or_have,award.iconImage,award.name,award.description]);
 			notifications.send_message(config.rocketchat.roomid,message).catch(function(err) {
 				console.log("Could not send notification: ", err);
 			});

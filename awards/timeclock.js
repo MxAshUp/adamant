@@ -152,6 +152,8 @@ module.exports = [
 		getLimitTime:	'month',
 		checkCallback: 	function(dataGetter, user) {
 
+			return Promise.resolve(false); //Temmporarily disabling. Issue: should award only the day you get back
+
 			var start_s = moment().startOf('day').subtract(1,'week');
 			var end_s = moment().endOf('day');
 
@@ -161,7 +163,7 @@ module.exports = [
 			return dataGetter.query(query,params)
 			.then(function(res) {
 				//If you missed at least a day in the last week, and you are currently clocked in, you are awarded!
-				if(res[0] && res[0].is_clocked_in && res[0].days_present < 5) {
+				if(res[0] && res[0].is_clocked_in && res[0].days_present < 6) {
 					return Promise.resolve(true);
 				}
 
