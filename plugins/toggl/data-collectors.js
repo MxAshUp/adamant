@@ -31,7 +31,12 @@ module.exports = function() {
 			},
 			initialize: function(args) {
 				var self = this;
-				self.toggl = new TogglClient({apiToken: args.apiToken});
+				try {
+					self.toggl = new TogglClient({apiToken: args.apiToken});
+					return Promise.resolve();
+				} catch(e) {
+					return Promise.reject();
+				}
 			},
 			prepare: function(args) {
 				var self = this;
@@ -69,7 +74,7 @@ module.exports = function() {
 				return this.model.find({at:{"$gte": start_report, "$lt": end_report}})
 				.then(function(old_entries) {
 					//Get the id's of the new entries
-					new_entries = new_entries.map(function(obj) {return ''+obj.id;});
+					new_entries = data.map(function(obj) {return ''+obj.id;});
 
 					//Get the id's of the old entries
 					old_entries = old_entries.map(function(obj) {return obj.id;});

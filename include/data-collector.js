@@ -1,8 +1,8 @@
-var vsprintf = require("sprintf-js").vsprintf;
-var mongoose = require('./mongoose-utilities').mongoose;
+var vsprintf = require("sprintf-js").vsprintf,
+	mongoose = require('./mongoose-utilities').mongoose;
 
 
-var DataCollector = function(args) {
+function DataCollector(init_properties, args) {
 
 	//Scope it!
 	var self = this;
@@ -13,7 +13,7 @@ var DataCollector = function(args) {
 	};
 	self.prepare = function(_args) {
 
-	}
+	};
 	self.collect = function(data, _args) {
 		return data;
 	};
@@ -37,29 +37,34 @@ var DataCollector = function(args) {
 	self.model_name = '';
 
 	//Set object properties from args
-	for(var i in args) {
-		self[i] = args[i];
+	for(var i in init_properties) {
+		self[i] = init_properties[i];
 	}
 
 	//Set non-settable properties
+
+	//Set run args
+	args = args ? args : {};
+
+	//Merges args with default args
+	self.args = self.default_args;
+	for (var attrname in args) { self.args[attrname] = args[attrname]; }
 
 	//We begin as uninitialized
 	self.is_initialized = Promise.reject();
 	self.run_attempts = 0;
 
-	//Prepare schema
-	self.dbSetup = function() {
-		self.model = mongoose.model(self.model_name, mongoose.Schema(self.model_schema));	
+	//Registers the model if needed
+	try {
+		mongoose.model(self.model_name); //Lets see if the model exists
+	} catch(e) {
+		mongoose.model(self.model_name, mongoose.Schema(self.model_schema)); //Nope? Let's make it
+	} finally {
+		self.model = mongoose.model(self.model_name); //Grab it
 	}
 
 	//Runs a full data collection sync, returns promise
-	self.run = function(args) {
-
-		//Make sure args i mergable
-		args = args ? args : {};
-
-		//Merges args with default args
-		var args = self._merge_args(args);
+	self.run = function() {
 
 		var preparedData;
 
@@ -67,7 +72,7 @@ var DataCollector = function(args) {
 		return self.is_initialized
 		//If not initialized, then try to initialize
 		.catch(function() {
-			return self.initialize.call(self,args)
+			return self.initialize.call(self,self.args)
 			//Reformat possible error
 			.catch(function(err) {
 				return Promise.reject('Error initializing: '+err);
@@ -75,7 +80,7 @@ var DataCollector = function(args) {
 		})
 		//Run collect
 		.then(function() {
-			return self.prepare.call(self,args)
+			return self.prepare.call(self,self.args)
 		})
 		.then(function(res) {
 			preparedData = res;
@@ -83,11 +88,11 @@ var DataCollector = function(args) {
 		})
 		//Collect data and insert it
 		.then(function() {
-			return self._collect_and_insert.call(self,preparedData,args)
+			return self._collect_and_insert.call(self,preparedData,self.args)
 		})
 		//Remove docs that may need to be removed
 		.then(function() {
-			return self._prepare_and_remove.call(self,preparedData,args)
+			return self._prepare_and_remove.call(self,preparedData,self.args)
 		})
 		//collect is success, run success function
 		.then(self._on_success)
@@ -96,14 +101,7 @@ var DataCollector = function(args) {
 
 	}
 
-	//Merge run args
-	self._merge_args = function(provded_args) {
-		var ret = self.default_args;
-		for (var attrname in provded_args) { ret[attrname] = provded_args[attrname]; }
-		return ret;
-	}
-
-	//Loops through collect data, and inserts each row asynchronously into database 
+	//Loops through collect data, and inserts each row asynchronously into database
 	self._collect_and_insert = function(data, args) {
 
 		return self._apply_funct_to_func(self.collect , [data, args] , self._insert_data)
@@ -258,7 +256,7 @@ var DataCollector = function(args) {
 			return Promise.reject("Max run attempts reached.\n" + err_a);
 		}
 	}
-}
+};
 
 
 module.exports = DataCollector;

@@ -23,14 +23,6 @@ var Plugin = function(args) {
 		self[i] = args[i];
 	}
 
-	//Let's initialize the components
-	if(self.data_collectors.length) {
-		for(var i in self.data_collectors) {
-			self.data_collectors[i] = new DataCollector(self.data_collectors[i]);
-		}
-	}
-
-	self._file_path = '';
 }
 
 module.exports = Plugin;

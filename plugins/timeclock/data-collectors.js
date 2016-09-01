@@ -31,17 +31,20 @@ module.exports = function(_config) {
 				punchLabor: Number,
 			},
 			default_args: {
-				days_back_to_sync: 7
+				days_back_to_sync: 7,
+				url:'',
+				user:'',
+				password:''
 			},
 			initialize: function(args) {
-				return timeclock.doLogin( _config.timeclock.url, _config.timeclock.user, _config.timeclock.password );
+				return timeclock.doLogin( args.url, args.user, args.password );
 			},
 			prepare: function(args) {
 				//Set report ranges
 				var start_report = moment().subtract(args.days_back_to_sync,'days');
 				var end_report = moment();
 				//Get report data Promise
-				return timeclock.getReportHTML( _config.timeclock.url, start_report, end_report );
+				return timeclock.getReportHTML( args.url, start_report, end_report );
 			},
 			collect: function* (data, args) {
 				for(var data_row of timeclock.parseReport(data)) {

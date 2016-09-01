@@ -6,7 +6,7 @@ module.exports = {
 	loadPlugins: function(_config) {
 
 		//We'll export these
-		var plugins = {};
+		var plugins = [];
 
 		//Get directors of plugins
 		var plugin_dirs = this.getPluginDirectories();
@@ -35,7 +35,7 @@ module.exports = {
 			plugin.enabled = true;
 
 			//Add plugin to registered array
-			plugins[plugin.name] = plugin;
+			plugins.push(plugin);
 		}
 
 		return plugins;
