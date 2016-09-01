@@ -31,7 +31,8 @@ function DataCollector(init_properties, args) {
 	};
 	self.default_args = {};
 	self.run_attempts_limit = 5;
-	self.run_time_between_attempts = 500;
+	self.mseconds_between_run_attempts = 500;
+	self.min_mseconds_between_runs = 0;
 	self.model_schema = {};
 	self.model_id_key = '';
 	self.model_name = '';
@@ -50,9 +51,10 @@ function DataCollector(init_properties, args) {
 	self.args = self.default_args;
 	for (var attrname in args) { self.args[attrname] = args[attrname]; }
 
-	//We begin as uninitialized
+	//Set some initial variables
 	self.is_initialized = Promise.reject();
 	self.run_attempts = 0;
+	self.last_run_start = 0;
 
 	//Registers the model if needed
 	try {
@@ -66,38 +68,56 @@ function DataCollector(init_properties, args) {
 	//Runs a full data collection sync, returns promise
 	self.run = function() {
 
-		var preparedData;
+		var prepared_data;
+
+		//A promise to potentially delay the next run
+		var maybe_delay = function() {
+			return new Promise(function(resolve,reject) {
+				if(Date.now() - self.last_run_start > self.min_mseconds_between_runs) {
+					//If enough time has passed between runs, go ahead and continue
+					resolve();
+				} else {
+					//If not enough time has passed between runs, set a timeout
+					setTimeout(resolve, Date.now() - self.last_run_start - self.min_mseconds_between_runs);
+				}
+			});
+		};
+
+		//Update last run date
+		self.last_run_start = Date.now();
 
 		//Being the promise chain
 		return self.is_initialized
-		//If not initialized, then try to initialize
-		.catch(function() {
-			return self.initialize.call(self,self.args)
-			//Reformat possible error
-			.catch(function(err) {
-				return Promise.reject('Error initializing: '+err);
-			});
-		})
-		//Run collect
-		.then(function() {
-			return self.prepare.call(self,self.args)
-		})
-		.then(function(res) {
-			preparedData = res;
-			return Promise.reoslve;
-		})
-		//Collect data and insert it
-		.then(function() {
-			return self._collect_and_insert.call(self,preparedData,self.args)
-		})
-		//Remove docs that may need to be removed
-		.then(function() {
-			return self._prepare_and_remove.call(self,preparedData,self.args)
-		})
-		//collect is success, run success function
-		.then(self._on_success)
-		//If any errors occured during collect or initialize, it's caught here
-		.catch(self._on_failure);
+			//If not initialized, then try to initialize
+			.catch(function() {
+				return self.initialize.call(self,self.args)
+				//Reformat possible error
+				.catch(function(err) {
+					return Promise.reject('Error initializing: '+err);
+				});
+			})
+			//Maybe delay
+			.then(maybe_delay)
+			//Run collect
+			.then(function() {
+				return self.prepare.call(self,self.args)
+			})
+			.then(function(res) {
+				prepared_data = res; //prepared data is used further down
+				return Promise.resolve();
+			})
+			//Collect data and insert it
+			.then(function() {
+				return self._collect_and_insert.call(self,prepared_data,self.args)
+			})
+			//Remove docs that may need to be removed
+			.then(function() {
+				return self._prepare_and_remove.call(self,prepared_data,self.args)
+			})
+			//collect is success, run success function
+			.then(self._on_success)
+			//If any errors occured during collect or initialize, it's caught here
+			.catch(self._on_failure);
 
 	}
 
@@ -249,7 +269,7 @@ function DataCollector(init_properties, args) {
 					}).then(function(res) {
 						resolve(res); //Resolved! yay!
 					});
-				}, self.run_time_between_attempts);
+				}, self.mseconds_between_run_attempts);
 			});
 		} else {
 			//We tried to initialize or run many times, but couldn't, throwing in the towel

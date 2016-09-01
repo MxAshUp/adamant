@@ -3,8 +3,11 @@
 //Currently this is a static library in that you cannot login as mutliple users.
 
 //need to use cookies for logging in
-var request = require('request');
-var cjar = request.jar();
+var request = require('request'),
+	cjar = request.jar(),
+	cheerio = require('cheerio'),
+	moment = require('moment');
+
 request = request.defaults({jar: cjar});
 
 //logs into mavenlink using non-api methods
@@ -76,12 +79,10 @@ function tryParseFloat(val) {
 //Parses html report and returns array of data
 function* parseReport(html) {
 	var $ = cheerio.load(html);
-	var entries = $('#pageContents > .noAccrual, #pageContents > .clear');
-
-	var data = [];
 
 	var current_date;
 
+	//This is where we define how fields are parsed in the report
 	var parse_fields = [
 		{
 			selector: '.punchEmployee > a',
@@ -193,25 +194,36 @@ function* parseReport(html) {
 		},
 	];
 
-	for (var i in entries) {
 
-		//This is a row giving us the current_date
-		if($(this).attr('class') == "clear") {
-			current_date = $(this).text().trim();
-			return;
+	//Get all time entry rows and date rows
+	var entries = $('#pageContents > .noAccrual, #pageContents > .clear');
+
+	var data = [];
+
+	for (var j = entries.length - 1; j >= 0; j--) {
+
+		//This is a row giving us the current_date, and that is all
+		if($(entries[j]).attr('class') == "clear") {
+			current_date = $(entries[j]).text().trim();
+			continue;
 		}
+
+		var punch_id = $('.punchIn', entries[j]).attr('href');
+		if(typeof punch_id === "undefined") {
+			continue;
+		}
+		punch_id = punch_id.match(/pid=([0-9]+)/)[1];
 
 		var data_row = {};
 
-		var punch_id = $('.punchIn',this).attr('href');
-		punch_id = punch_id.match(/pid=([0-9]+)/)[1];
-
 		data_row['pid'] = punch_id;
 
-		for (var i = parse_fields.length - 1; i >= 0; i--) {
+		//Loop through fields to parse
+		for (var i in parse_fields) {
 			data_row[parse_fields[i].name] = '';
 
-			var dom_find = $(parse_fields[i].selector,this);
+			var dom_find = $(parse_fields[i].selector, entries[j]);
+
 			var val = '';
 
 			if(dom_find.length != 1) {

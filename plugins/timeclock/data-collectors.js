@@ -1,8 +1,6 @@
 //requires
-var request = require('request');
-var cheerio = require('cheerio');
-var moment = require('moment');
-var timeclock = require('./timeclock.js');
+var moment = require('moment'),
+	timeclock = require('./timeclock.js');
 
 //******MAIN DATA COLLECTOR DEFINITION*********//
 
