@@ -52,7 +52,7 @@ module.exports = function() {
 							resolve(data);
 						}
 					});
-				});				
+				});
 			},
 			collect: function(data, args) {
 				return data;
@@ -81,7 +81,7 @@ module.exports = function() {
 					entries_to_remove = entries_to_remove.map(function(id) {return {id:id};});
 
 					return entries_to_remove;
-				});				
+				});
 			},
 			onCreate: function(val) {
 				console.log('Created',val);

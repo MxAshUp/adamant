@@ -1,3 +1,5 @@
+/* This method of storing user settings is temporary. Long-term we want this info store in a database and updatable via browser */
+
 module.exports = [
 	{
 		ID:1,

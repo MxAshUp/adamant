@@ -1,79 +1,14 @@
-//requires
-var request = require('request');
-var cheerio = require('cheerio');
-var moment = require('moment');
-
-
-//******MAIN DATA COLLECTOR DEFINITION*********//
-
-module.exports = function(_config) {
-	return [
-		{
-			model_name: 'timeclock_timeEntry',
-			model_id_key: 'pid',
-			model_schema: {
-				pid: String,
-				employeeId: String,
-				employeeName: String,
-				punchInTime: Date,
-				punchInFlags: String,
-				punchInDepartment: String,
-				punchOutFlags: String,
-				punchOutTime: Date,
-				punchOutLunch: Number,
-				punchOutADJ: Number,
-				punchSTD: Number,
-				punchOT1: Number,
-				punchOT2: Number,
-				punchHOL: Number,
-				punchHRS: Number,
-				punchLaborDS: Number,
-				punchLabor: Number,
-			},
-			default_args: {
-				days_back_to_sync: 7
-			},
-			initialize: function(args) {
-				return timeclockLogin( _config.timeclock.url, _config.timeclock.user, _config.timeclock.password );
-			},
-			prepare: function(args) {
-				//Set report ranges
-				var start_report = moment().subtract(args.days_back_to_sync,'days');
-				var end_report = moment();
-				//Get report data Promise
-				return timeclockReport( _config.timeclock.url, start_report, end_report );
-			},
-			collect: function* (data, args) {
-				for(var data_row of parseReport(data)) {
-					yield data_row;
-				}
-			},
-			remove: function(data, args) {
-				//TODO: Check if local time entry is not in data, then delete it
-				return [];
-			}
-			onCreate: function(val) {
-				console.log('Created',val);
-			},
-			onUpdate: function(val) {
-				console.log('Updated',val);
-			},
-			onRemove: function(val) {
-				console.log('Removed',val);
-			},
-		}
-	];
-};
-
 //******HELPER FUNCTIONS FOR GETTING DATA*********//
 
+//Currently this is a static library in that you cannot login as mutliple users.
 
 //need to use cookies for logging in
+var request = require('request');
 var cjar = request.jar();
 request = request.defaults({jar: cjar});
 
 //logs into mavenlink using non-api methods
-function timeclockLogin(url,username,password) {
+function doLogin(url,username,password) {
 
     var loginPage = url + '/login.html';
 
@@ -105,7 +40,7 @@ function timeclockLogin(url,username,password) {
 }
 
 //Gets HTML content of report from timeclock
-function timeclockReport(url,start_date,end_date) {
+function getReportHTML(url,start_date,end_date) {
 
 	var url = url + '/report.html';
 
@@ -258,14 +193,13 @@ function* parseReport(html) {
 		},
 	];
 
-	entries.each(function(i,el) {
+	for (var i in entries) {
 
 		//This is a row giving us the current_date
 		if($(this).attr('class') == "clear") {
 			current_date = $(this).text().trim();
 			return;
 		}
-
 
 		var data_row = {};
 
@@ -298,7 +232,12 @@ function* parseReport(html) {
 		}
 
 		yield data_row;
-	});
-
+	}
 }
 
+//Export them functions
+module.exports = {
+	doLogin: doLogin,
+	getReportHTML: getReportHTML,
+	parseReport: parseReport
+};

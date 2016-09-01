@@ -1,6 +1,7 @@
 var vsprintf = require("sprintf-js").vsprintf;
 var mongoose = require('./mongoose-utilities').mongoose;
 
+
 var DataCollector = function(args) {
 
 	//Scope it!
@@ -11,7 +12,7 @@ var DataCollector = function(args) {
 
 	};
 	self.prepare = function(_args) {
-		
+
 	}
 	self.collect = function(data, _args) {
 		return data;

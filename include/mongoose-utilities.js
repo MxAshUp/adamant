@@ -1,3 +1,5 @@
+/* This is shared, so only one db connection is meant to be served*/
+
 var mongoose = require('mongoose');
 
 //Connects to mondo db with uri
