@@ -74,16 +74,16 @@ module.exports = function() {
 				return this.model.find({at:{"$gte": start_report, "$lt": end_report}})
 				.then(function(old_entries) {
 					//Get the id's of the new entries
-					new_entries = data.map(function(obj) {return ''+obj.id;});
+					new_entries = data.map(function(obj) {return String(obj.id)});
 
 					//Get the id's of the old entries
-					old_entries = old_entries.map(function(obj) {return obj.id;});
+					old_entries = old_entries.map(function(obj) {return String(obj.id)});
 
 					//Find which entries exist in the old, but not the new, these need to be removed
-					entries_to_remove = old_entries.filter(function(i) {return new_entries.indexOf(i) < 0;});
+					entries_to_remove = old_entries.filter(function(i) {return new_entries.indexOf(i) < 0});
 
 					//Make entries to remove into lookup objects
-					entries_to_remove = entries_to_remove.map(function(id) {return {id:id};});
+					entries_to_remove = entries_to_remove.map(function(id) {return {id:id}});
 
 					return entries_to_remove;
 				});

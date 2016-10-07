@@ -1,8 +1,11 @@
+/* This is an abstract Data Collector */
+
+
 var vsprintf = require("sprintf-js").vsprintf,
 	mongoose = require('./mongoose-utilities').mongoose;
 
 
-function DataCollector(init_properties, args) {
+var DataCollector = function(init_properties, args) {
 
 	//Scope it!
 	var self = this;
