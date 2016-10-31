@@ -5,6 +5,8 @@
   "main": "achievements.js",
   "dependencies": {
     "cheerio": "^0.20.0",
+    "lodash": "^4.16.4",
+    "minimist": "^1.2.0",
     "moment": "^2.13.0",
     "mongoose": "^4.4.17",
     "mysql": "^2.10.2",
