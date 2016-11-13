@@ -16,9 +16,8 @@ var plugin_loader = require('./include/plugin-loader'),
 
 var plugins = plugin_loader.loadPlugins(_config);
 
-console.log("Plugins loaded");
 
-var collector_instances = [
+var collector_configs = [
 	{
 		plugin_name: 'Toggl',
 		collection_name: 'toggl_timeEntry',
@@ -40,25 +39,25 @@ var collector_instances = [
 	}
 ];
 
-function load_collector(collector_instance) {
+function load_collector(collector_config) {
 	
 	//Find plugin
-	var plugin = _.find(plugins, {name: collector_instance.plugin_name, enabled: true});
-	if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_instance.plugin_name));
+	var plugin = _.find(plugins, {name: collector_config.plugin_name, enabled: true});
+	if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
 	
 	//Find data collector in plugin
-	var data_collector = _.find(plugin.data_collectors, {model_name: collector_instance.collection_name})
-	if(!data_collector) throw new Error(sprintf("Collection not found: %s", collector_instance.collection_name));
+	var data_collector = _.find(plugin.data_collectors, {model_name: collector_config.collection_name})
+	if(!data_collector) throw new Error(sprintf("Collection not found: %s", collector_config.collection_name));
 	
 	//Check version
-	if(data_collector.version && data_collector.version !== collector_instance.version) {
+	if(data_collector.version && data_collector.version !== collector_config.version) {
 		//TODO: Do better version check, and also maybe run update on current config
 		throw new Error("Collection version not the same.");
 	}
 
 	//Time to create data colector instance
 	try {
-		var data_collector = new DataCollector(data_collector, collector_instance.config);
+		var data_collector = new DataCollector(data_collector, collector_config.config);
 	} catch (r) {
 		throw new Error(sprintf("Error creating data collector instance: $s", r));
 	}
@@ -70,12 +69,12 @@ function load_collector(collector_instance) {
 
 function main() {
 
-	var data_collector_instances;
+	var collector_instances;
 
-	data_collector_instances = _.map(collector_instances, function(collector_instance) {
+	collector_instances = _.map(collector_configs, function(collector_config) {
 		try {
 			console.log('Loading instance...');
-			return load_collector(collector_instance);
+			return load_collector(collector_config);
 		} catch (e) {
 			//TODO: Log error somewhere better
 			console.log(e);
@@ -84,27 +83,18 @@ function main() {
 	});
 
 	//Remove instances failed to load
-	data_collector_instances = _.filter(data_collector_instances, i => !_.isUndefined(i));
+	collector_instances = _.filter(collector_instances, i => !_.isUndefined(i));
 
-	console.log(sprintf("%s collectors loaded.", data_collector_instances.length));
+	console.log(sprintf("%s collectors loaded.", collector_instances.length));
 
-	try {
+	var collect_services = _.map(collector_instances, (i) => {
+		var service = new LoopService(i.run, i.stop);
+		service.on('error',		(e) => console.log('Error in service: ' + e));
+		service.on('started',	() => console.log('Service started.'));
+		service.on('stopped',	() => console.log('Service stopped.'));
+		service.start();
+	});
 
-		var collect_services = _.map(data_collector_instances, (i) => new LoopService(i.run));
-
-		_.each(collect_services, function(service) {
-			service.on('error',		(e) => console.log('Error in service: ' + e));
-			service.on('started',	() => console.log('Service started.'));
-			service.on('stopped',	() => console.log('Service stopped.', service));
-			service.start();
-		});
-
-		setTimeout(collect_services[0].stop,3000);
-		setTimeout(collect_services[1].stop,4000);
-
-	} catch(e) {
-		console.log(e);
-	}
 }
 
 //Connect to db, then do main

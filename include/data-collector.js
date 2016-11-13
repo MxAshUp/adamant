@@ -59,8 +59,9 @@ var DataCollector = function(init_properties, args) {
 
 	//Set some initial variables
 	self.is_initialized = Promise.reject();
-	self.run_attempts = 0;
-	self.last_run_start = 0;
+	self.run_attempts = 0; //Count of failed run attempts
+	self.last_run_start = 0; //Timestamp of last run
+	self.stop_flag = false; //Set to true to indicate we need to stop running
 
 	//Registers the model if needed
 	try {
@@ -76,8 +77,13 @@ var DataCollector = function(init_properties, args) {
 
 		var prepared_data;
 
+		self.stop_flag = false;//reset stop flag
+
 		//A promise to potentially delay the next run
 		var maybe_delay = function() {
+			if(self.stop_flag) {
+				return Promise.reject('Stop initiated.');
+			}
 			return new Promise(function(resolve,reject) {
 				if(Date.now() - self.last_run_start > self.min_mseconds_between_runs) {
 					//If enough time has passed between runs, go ahead and continue
@@ -125,6 +131,11 @@ var DataCollector = function(init_properties, args) {
 			//If any errors occured during collect or initialize, it's caught here and maybe retried
 			.catch(self._maybe_retry);
 
+	}
+
+	//Sets stop flag to intiate a stop
+	self.stop = function() {
+		self.stop_flag = true;
 	}
 
 	//Loops through collect data, and inserts each row asynchronously into database
@@ -260,6 +271,10 @@ var DataCollector = function(init_properties, args) {
 
 		//In any case, another initialize will be warranted
 		self.is_initialized = Promise.reject();
+
+		if(self.stop_flag) {
+			return Promise.reject("Force stopped.");
+		}
 
 		//Check if we've reached out failure limit
 		if(self.run_attempts < self.run_attempts_limit) {
