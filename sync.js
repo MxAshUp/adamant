@@ -37,6 +37,20 @@ var collector_configs = [
 
 function main() {
 
+
+	//Maybe attach some event handlers?
+/*	plugins.on('create', (model, data) => {
+		console.log('model '+model+' created: ', data);
+	});
+	plugins.on('update', (model, data) => {
+		console.log('model '+model+' update: ', data);
+	});
+	plugins.on('remove', (model, data) => {
+		console.log('model '+model+' remove: ', data);
+	});*/
+
+	plugins.on('toggl_timeEntry_create', data => console.log('NEW TIME ENTRY'));
+
 	var collect_services = _.map(collector_configs, (config) => {
 		try {
 

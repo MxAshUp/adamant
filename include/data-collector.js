@@ -163,9 +163,9 @@ var DataCollector = function(init_properties, args) {
 		})
 		.then((is_inserted_row) => {
 			if(is_inserted_row === true) {
-				self.emit('create', data_row, self); //Execute create event function
+				self.emit('create', data_row); //Execute create event function
 			} else if(is_inserted_row === false) {
-				self.emit('update', data_row, self); //Execute create event function
+				self.emit('update', data_row); //Execute create event function
 			}
 		})
 		//Catch database insert error
@@ -195,7 +195,7 @@ var DataCollector = function(init_properties, args) {
 		//Find doc by lookup and remove it
 		return self.model.findOneAndRemove(lookup).then(function(res) {
 			if(typeof res !== 'undefined') {
-				self.emit('remove', res, self); //Execute create event function
+				self.emit('remove', res); //Execute create event function
 			}
 			return Promise.resolve(typeof res !== 'undefined');
 		});

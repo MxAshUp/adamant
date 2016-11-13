@@ -6,7 +6,8 @@ var fs = require('fs'),
 	DataCollector = require('./data-collector'),
     LoopService = require('./loop-service'),
     sprintf = require('sprintf-js').sprintf,
-    mongoose = require('./mongoose-utilities').mongoose;
+    mongoose = require('./mongoose-utilities').mongoose,
+    EventEmitter = require('events');
 
 var PluginLoader = function(_config) {
 
@@ -62,23 +63,29 @@ var PluginLoader = function(_config) {
 			throw new Error("Collection version not the same.");
 		}
 
-		//Time to create data colector instance
+		//Create data colector instance
 		try {
-			var data_collector = new DataCollector(data_collector, collector_config.config);
+			data_collector = new DataCollector(data_collector, collector_config.config);
 		} catch (e) {
 			throw new Error(sprintf("Error creating data collector instance: %s", e));
 		}
 
-		//TODO: systemize event handling
-		data_collector.on('create', (data, collector) => console.log('created '+collector.model_name+': ',data));
-		data_collector.on('update', (data, collector) => console.log('updated '+collector.model_name+': ',data));
-		data_collector.on('remove', (data, collector) => console.log('removed '+collector.model_name+': ',data));
-
-		
+		//Add event handling
+		_.each(['create','update','remove'], (event) => {
+			data_collector.on(event, (data) => self.handleEventEmit(data_collector.model_name, event, data));
+		});
+	
 
 		return new LoopService(data_collector.run, data_collector.stop);
 	}
+
+	self.handleEventEmit = function(model_name, event, data) {
+		self.emit(event, model_name, data);
+		self.emit(model_name + '_' + event, data);
+	}
 }
+
+PluginLoader.prototype.__proto__ = EventEmitter.prototype;
 
 var getPluginDirectories = function() {
 	srcpath = 'plugins';
