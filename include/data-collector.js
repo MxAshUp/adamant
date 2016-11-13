@@ -39,6 +39,9 @@ var DataCollector = function(init_properties, args) {
 	self.model_schema = {};
 	self.model_id_key = '';
 	self.model_name = '';
+	self.version = '';
+	self.plugin_name = '';
+	self.last_run = 0;
 
 	//Set object properties from args
 	for(var i in init_properties) {
@@ -118,9 +121,9 @@ var DataCollector = function(init_properties, args) {
 				return self._prepare_and_remove.call(self,prepared_data,self.args)
 			})
 			//collect is success, run success function
-			.then(self._on_success)
-			//If any errors occured during collect or initialize, it's caught here
-			.catch(self._on_failure);
+			.then(self._finish_run)
+			//If any errors occured during collect or initialize, it's caught here and maybe retried
+			.catch(self._maybe_retry);
 
 	}
 
@@ -244,14 +247,14 @@ var DataCollector = function(init_properties, args) {
 	}
 
 	//Function that executes on successful run
-	self._on_success = function(data) {
+	self._finish_run = function(data) {
 		self.run_attempts = 0;
 		self.is_initialized = Promise.resolve(); //Set is_initialized to resolved
 		return data;
 	}
 
 	//Function that executes on run failure, handles retry attempts
-	self._on_failure = function(err_a) {
+	self._maybe_retry = function(err_a) {
 		//Create error message
 		err_a = vsprintf('Attempt %d/%d: %s', [self.run_attempts,self.run_attempts_limit,err_a]);
 
