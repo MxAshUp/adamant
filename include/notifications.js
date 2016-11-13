@@ -12,14 +12,14 @@ var rocketchat_headers = {
 function send_message(room,message) {
 /*	console.log(message);
 	return Promise.resolve();*/
-	return new Promise(function(resolve,reject) {
+	return new Promise((resolve,reject) => {
 		// Send to notifications room
 		request({
 			headers: rocketchat_headers,
 			body: JSON.stringify({msg: message}),
 			uri: config.rocketchat.url+'/rooms/'+room+'/send',
 			method: 'POST'
-		}, function(err, res, body) {
+		}, (err, res, body) => {
 			if(err) {
 				reject(err);
 			} else {

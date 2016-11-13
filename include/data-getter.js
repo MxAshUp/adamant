@@ -12,8 +12,8 @@ var mysql = mysqlObject.createPool({
 
 module.exports = {
 	query: function(query,params) {
-		return new Promise(function(resolve, reject) {
-			mysql.query(query, params, function (error, results, fields) {
+		return new Promise((resolve, reject) => {
+			mysql.query(query, params, (error, results, fields) => {
 				if(error) {
 					reject(error);
 				} else {
