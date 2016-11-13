@@ -8,7 +8,7 @@
 var plugin_loader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
 	mongoose_util = require('./include/mongoose-utilities'),
-	DataCollector = require('./include/data-collector');
+	Collector = require('./include/collector');
 
 var plugins = plugin_loader.loadPlugins(_config);
 
@@ -33,7 +33,7 @@ var sample_config = {
 }
 
 function main() {
-	//This loop creates an array of DataCollector instances based on the config
+	//This loop creates an array of Collector instances based on the config
 	var data_collector_instances = [];
 	for(var i in plugins) {
 		if(plugins[i].name in sample_config) {
@@ -42,7 +42,7 @@ function main() {
 			for(var ii in instance_configs) {
 				for(var iii in plugins[i].data_collectors) {
 					try {
-						var data_collector = new DataCollector(plugins[i].data_collectors[iii], instance_configs[ii]);
+						var data_collector = new Collector(plugins[i].data_collectors[iii], instance_configs[ii]);
 					} catch (r) {
 						console.log(r);
 					}

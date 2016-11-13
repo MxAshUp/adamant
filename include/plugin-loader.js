@@ -3,7 +3,7 @@ var fs = require('fs'),
     Plugin = require('./plugin'),
 	semver = require('semver'),
 	_ = require('lodash'),
-	DataCollector = require('./data-collector'),
+	Collector = require('./collector'),
     LoopService = require('./loop-service'),
     sprintf = require('sprintf-js').sprintf,
     mongoose = require('./mongoose-utilities').mongoose,
@@ -65,7 +65,7 @@ var PluginLoader = function(_config) {
 
 		//Create data colector instance
 		try {
-			data_collector = new DataCollector(data_collector, collector_config.config);
+			data_collector = new Collector(data_collector, collector_config.config);
 		} catch (e) {
 			throw new Error(sprintf("Error creating data collector instance: %s", e));
 		}

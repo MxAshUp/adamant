@@ -7,7 +7,7 @@ var vsprintf = require("sprintf-js").vsprintf,
 	_ = require('lodash');
 
 
-var DataCollector = function(init_properties, args) {
+var Collector = function(init_properties, args) {
 
 	//Scope it!
 	var self = this;
@@ -280,6 +280,6 @@ var DataCollector = function(init_properties, args) {
 	}
 };
 
-DataCollector.prototype.__proto__ = EventEmitter.prototype;
+Collector.prototype.__proto__ = EventEmitter.prototype;
 
-module.exports = DataCollector;
+module.exports = Collector;
