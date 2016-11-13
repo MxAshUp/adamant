@@ -63,9 +63,13 @@ var PluginLoader = function(_config) {
 		//Time to create data colector instance
 		try {
 			var data_collector = new DataCollector(data_collector, collector_config.config);
-		} catch (r) {
-			throw new Error(sprintf("Error creating data collector instance: $s", r));
+		} catch (e) {
+			throw new Error(sprintf("Error creating data collector instance: $s", e));
 		}
+
+		data_collector.on('create', (data, collector) => console.log('created '+collector.model_name+': ',data));
+		data_collector.on('update', (data, collector) => console.log('updated '+collector.model_name+': ',data));
+		data_collector.on('remove', (data, collector) => console.log('removed '+collector.model_name+': ',data));
 
 		return new LoopService(data_collector.run, data_collector.stop);
 	}

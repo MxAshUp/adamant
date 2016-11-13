@@ -2,7 +2,9 @@
 
 
 var vsprintf = require("sprintf-js").vsprintf,
-	mongoose = require('./mongoose-utilities').mongoose;
+	mongoose = require('./mongoose-utilities').mongoose,
+	EventEmitter = require('events'),
+	_ = require('lodash');
 
 
 var DataCollector = function(init_properties, args) {
@@ -22,15 +24,6 @@ var DataCollector = function(init_properties, args) {
 	};
 	self.remove = function(data, _args) {
 		return;
-	};
-	self.onCreate = function() {
-
-	};
-	self.onUpdate = function() {
-
-	};
-	self.onRemove = function() {
-
 	};
 	self.default_args = {};
 	self.run_attempts_limit = 5;
@@ -141,7 +134,7 @@ var DataCollector = function(init_properties, args) {
 	//Loops through collect data, and inserts each row asynchronously into database
 	self._collect_and_insert = function(data, args) {
 
-		return self._apply_funct_to_func(self.collect , [data, args] , self._insert_data)
+		return self._apply_func_to_func(self.collect , [data, args] , self._insert_data)
 		.catch((err) => {
 			//If an error occured, format the error more specifically
 			return Promise.reject('Error collecting doc: '+err);
@@ -151,10 +144,6 @@ var DataCollector = function(init_properties, args) {
 
 	//Inserts data into database
 	self._insert_data = function(data_row) {
-
-		if(typeof self.model === "undefined") {
-			return Promise.reject('Data collector model not defined.');
-		}
 		return self.model.count(data_row)
 		.then((res) => {
 			if(res > 0) {
@@ -175,9 +164,9 @@ var DataCollector = function(init_properties, args) {
 		})
 		.then((is_inserted_row) => {
 			if(is_inserted_row === true) {
-				self.onCreate.call(self, data_row); //Execute create event function
+				self.emit('create', data_row, self); //Execute create event function
 			} else if(is_inserted_row === false) {
-				self.onUpdate.call(self, data_row); //Execute update event function
+				self.emit('update', data_row, self); //Execute create event function
 			}
 		})
 		//Catch database insert error
@@ -192,7 +181,7 @@ var DataCollector = function(init_properties, args) {
 	//Find items to remove, and removes them from database
 	self._prepare_and_remove = function(data, args) {
 
-		return self._apply_funct_to_func(self.remove , [data, args] , self._remove_data)
+		return self._apply_func_to_func(self.remove , [data, args] , self._remove_data)
 		.catch((err) => {
 			//If an error occured, format the error more specifically
 			return Promise.reject('Error removing doc: '+err);
@@ -201,55 +190,48 @@ var DataCollector = function(init_properties, args) {
 
 	//Loops through itmes to remove, and removes them
 	self._remove_data = function(lookup) {
-
-		if(typeof self.model === "undefined") {
-			return Promise.reject('Data collector model not defined.');
+		if(typeof lookup !== 'object') {
+			throw new Error('Invalid lookup.');
 		}
-
 		//Find doc by lookup and remove it
 		return self.model.findOneAndRemove(lookup).then(function(res) {
-			if(res != null) {
-				self.onRemove.call(self, lookup); //Execute remove event function
+			if(typeof res !== 'undefined') {
+				self.emit('remove', res, self); //Execute create event function
 			}
-			return Promise.resolve(res != null);
+			return Promise.resolve(typeof res !== 'undefined');
 		});
 
 	}
 
 	//This function takes the results of func1, loops through the results, and passes them to func2, finally returns a promise for when func2 is done
 	//Sometimes we get a generator, sometimes we get a promise that returns an array, sometimes we get an array
-	self._apply_funct_to_func = function(func1, args1, func2) {
+	self._apply_func_to_func = function(func1, args1, func2) {
 		var is_generator = (func1.constructor.name === 'GeneratorFunction');
 
 		args1 = Array.isArray(args1) ? args1 : [args1];
 
 		if(!is_generator) {
 			//promisfy, because func1 could return an array
-			return Promise.resolve(func1.apply(self, args1)).then((definitely_an_array) => {
-				var promises = [];
-				for(var i in definitely_an_array) {
-					var args2 = Promise.resolve(definitely_an_array[i]);
+			return Promise.resolve(func1.apply(self, args1)).then((res_array) => {
 
-					promises.push(
-						//Pass results to func2, make sure it's a promise
-						args2.then((res) => {
-							var args2 = Array.isArray(res) ? res : [res];
-							func2.apply(self, args2);
-						})
-					);
-				}
-				return Promise.all(promises);
+				return Promise.all(_.map(res_array, (item) => {					
+
+					//Pass results to func2, make sure it's a promise
+					return Promise.resolve(item).then((res) => {
+						func2.apply(self, Array.isArray(res) ? res : [res]);
+					});
+
+				}));
+
 			});
 		} else {
+			//For of
 			var promises = [];
-			for(var ret of func1.apply(self, args1)) {
-				var args2 = Promise.resolve(ret);
-
+			for(var item of func1.apply(self, args1)) {
 				promises.push(
 					//Pass results to func2, make sure it's a promise
-					args2.then((res) => {
-						var args2 = Array.isArray(res) ? res : [res];
-						func2.apply(self, args2);
+					Promise.resolve(item).then((res) => {
+						func2.apply(self, Array.isArray(res) ? res : [res]);
 					})
 				);
 			}
@@ -299,5 +281,6 @@ var DataCollector = function(init_properties, args) {
 	}
 };
 
+DataCollector.prototype.__proto__ = EventEmitter.prototype;
 
 module.exports = DataCollector;
