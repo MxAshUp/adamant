@@ -6,48 +6,48 @@ var fs = require('fs'),
 	DataCollector = require('./data-collector'),
     LoopService = require('./loop-service');
 
-module.exports = {
-	loadPlugins: function(_config) {
+var PluginLoader = function(_config) {
 
-		//We'll export these
-		var plugins = [];
+	//Scope it
+	var self = this;
 
-		//Get directors of plugins
-		var plugin_dirs = this.getPluginDirectories();
+	//We'll export these
+	self.plugins = [];
 
-		//Loop through them
-		for (var i in plugin_dirs) {
+	//Get directors of plugins
+	var plugin_dirs = getPluginDirectories();
 
-			//Load in the plugin
-			var plugin_args = require('../' + plugin_dirs[i].path);
+	//Loop through them
+	for (var i in plugin_dirs) {
 
-			//Could not load it, or it's not a valid plugin_args
-			if(typeof plugin_args !== 'function') {
-				continue;
-			}
+		//Load in the plugin
+		var plugin_args = require('../' + plugin_dirs[i].path);
 
-			//Initialize plugin_args
-			plugin_args = plugin_args(_config);
-
-			//Initialize plugin
-			var plugin = new Plugin(plugin_args);
-
-			//If plugin wasn't given a name, name it after the directory
-			plugin.name = plugin.name ? plugin.name : plugin_dirs[i].name;
-
-			//If all went well loading it...
-			plugin.enabled = true;
-
-			//Add plugin to registered array
-			plugins.push(plugin);
+		//Could not load it, or it's not a valid plugin_args
+		if(typeof plugin_args !== 'function') {
+			continue;
 		}
 
-		return plugins;
-	},
-	initializeCollectorService: function(plugins, collector_config) {
+		//Initialize plugin_args
+		plugin_args = plugin_args(_config);
+
+		//Initialize plugin
+		var plugin = new Plugin(plugin_args);
+
+		//If plugin wasn't given a name, name it after the directory
+		plugin.name = plugin.name ? plugin.name : plugin_dirs[i].name;
+
+		//If all went well loading it...
+		plugin.enabled = true;
+
+		//Add plugin to registered array
+		self.plugins.push(plugin);
+	}
+
+	self.initializeCollectorService = function(collector_config) {
 		
 		//Find plugin
-		var plugin = _.find(plugins, {name: collector_config.plugin_name, enabled: true});
+		var plugin = _.find(self.plugins, {name: collector_config.plugin_name, enabled: true});
 		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
 		
 		//Find data collector in plugin
@@ -68,18 +68,21 @@ module.exports = {
 		}
 
 		return new LoopService(data_collector.run, data_collector.stop);
-	},
-	getPluginDirectories: function() {
-		srcpath = 'plugins';
-		return fs.readdirSync(srcpath).filter(function(file) {
-			return fs.statSync(path.join(srcpath, file)).isDirectory();
-		}).map(function(path) {
-			return {
-				name: path,
-				path: srcpath + '/' + path
-			};
-		});
 	}
+}
+
+var getPluginDirectories = function() {
+	srcpath = 'plugins';
+	return fs.readdirSync(srcpath).filter(function(file) {
+		return fs.statSync(path.join(srcpath, file)).isDirectory();
+	}).map(function(path) {
+		return {
+			name: path,
+			path: srcpath + '/' + path
+		};
+	});
 };
+
+module.exports = PluginLoader;
 
 

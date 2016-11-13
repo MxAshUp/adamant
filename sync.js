@@ -5,13 +5,13 @@
 
 /* THE FOLLOWING IS TESTING CODE FOR DATA COLLECTOR SERVICE */
 
-var plugin_loader = require('./include/plugin-loader'),
+var PluginLoader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
 	mongoose_util = require('./include/mongoose-utilities'),
 	_ = require('lodash'),
 	sprintf = require('sprintf-js').sprintf;
 
-var plugins = plugin_loader.loadPlugins(_config);
+var plugins = new PluginLoader(_config);
 
 
 var collector_configs = [
@@ -39,10 +39,10 @@ var collector_configs = [
 
 function main() {
 
-	var collect_services = _.map(collector_configs, (i) => {
+	var collect_services = _.map(collector_configs, (config) => {
 		try {
 
-			var service = plugin_loader.initializeCollectorService(plugins, i);
+			var service = plugins.initializeCollectorService(config);
 			service.on('error',		(e) => console.log('Error in service: ' + e));
 			service.on('started',	() => console.log('Service started.'));
 			service.on('stopped',	() => console.log('Service stopped.'));
