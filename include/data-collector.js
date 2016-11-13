@@ -84,7 +84,7 @@ var DataCollector = function(init_properties, args) {
 			if(self.stop_flag) {
 				return Promise.reject('Stop initiated.');
 			}
-			return new Promise(function(resolve,reject) {
+			return new Promise((resolve,reject) => {
 				if(Date.now() - self.last_run_start > self.min_mseconds_between_runs) {
 					//If enough time has passed between runs, go ahead and continue
 					resolve();
@@ -101,29 +101,29 @@ var DataCollector = function(init_properties, args) {
 		//Being the promise chain
 		return self.is_initialized
 			//If not initialized, then try to initialize
-			.catch(function() {
+			.catch(() => {
 				return self.initialize.call(self,self.args)
 				//Reformat possible error
-				.catch(function(err) {
+				.catch((err) => {
 					return Promise.reject('Error initializing: '+err);
 				});
 			})
 			//Maybe delay
 			.then(maybe_delay)
 			//Run collect
-			.then(function() {
+			.then(() => {
 				return self.prepare.call(self,self.args)
 			})
-			.then(function(res) {
+			.then((res) => {
 				prepared_data = res; //prepared data is used further down
 				return Promise.resolve();
 			})
 			//Collect data and insert it
-			.then(function() {
+			.then(() => {
 				return self._collect_and_insert.call(self,prepared_data,self.args)
 			})
 			//Remove docs that may need to be removed
-			.then(function() {
+			.then(() => {
 				return self._prepare_and_remove.call(self,prepared_data,self.args)
 			})
 			//collect is success, run success function
@@ -142,7 +142,7 @@ var DataCollector = function(init_properties, args) {
 	self._collect_and_insert = function(data, args) {
 
 		return self._apply_funct_to_func(self.collect , [data, args] , self._insert_data)
-		.catch(function(err) {
+		.catch((err) => {
 			//If an error occured, format the error more specifically
 			return Promise.reject('Error collecting doc: '+err);
 		});
@@ -156,7 +156,7 @@ var DataCollector = function(init_properties, args) {
 			return Promise.reject('Data collector model not defined.');
 		}
 		return self.model.count(data_row)
-		.then(function(res) {
+		.then((res) => {
 			if(res > 0) {
 				//Move along, nothing to update
 				return Promise.resolve();
@@ -168,12 +168,12 @@ var DataCollector = function(init_properties, args) {
 				return self.model.findOneAndUpdate(find, data_row, {
 					upsert:true,
 					setDefaultsOnInsert:true,
-				}).then(function(oldDoc) {
+				}).then((oldDoc) => {
 					return Promise.resolve(oldDoc == null); //return true if doc is inserted
 				});
 			}
 		})
-		.then(function(is_inserted_row) {
+		.then((is_inserted_row) => {
 			if(is_inserted_row === true) {
 				self.onCreate.call(self, data_row); //Execute create event function
 			} else if(is_inserted_row === false) {
@@ -181,7 +181,7 @@ var DataCollector = function(init_properties, args) {
 			}
 		})
 		//Catch database insert error
-		.catch(function(err) {
+		.catch((err) => {
 			//If an error happens inserting rows, we won't retry
 			self.run_attempts = self.run_attempts_limit;
 			//Reformat error to be more specific
@@ -193,7 +193,7 @@ var DataCollector = function(init_properties, args) {
 	self._prepare_and_remove = function(data, args) {
 
 		return self._apply_funct_to_func(self.remove , [data, args] , self._remove_data)
-		.catch(function(err) {
+		.catch((err) => {
 			//If an error occured, format the error more specifically
 			return Promise.reject('Error removing doc: '+err);
 		});
@@ -225,14 +225,14 @@ var DataCollector = function(init_properties, args) {
 
 		if(!is_generator) {
 			//promisfy, because func1 could return an array
-			return Promise.resolve(func1.apply(self, args1)).then(function(definitely_an_array) {
+			return Promise.resolve(func1.apply(self, args1)).then((definitely_an_array) => {
 				var promises = [];
 				for(var i in definitely_an_array) {
 					var args2 = Promise.resolve(definitely_an_array[i]);
 
 					promises.push(
 						//Pass results to func2, make sure it's a promise
-						args2.then(function(res) {
+						args2.then((res) => {
 							var args2 = Array.isArray(res) ? res : [res];
 							func2.apply(self, args2);
 						})
@@ -247,7 +247,7 @@ var DataCollector = function(init_properties, args) {
 
 				promises.push(
 					//Pass results to func2, make sure it's a promise
-					args2.then(function(res) {
+					args2.then((res) => {
 						var args2 = Array.isArray(res) ? res : [res];
 						func2.apply(self, args2);
 					})
@@ -282,12 +282,12 @@ var DataCollector = function(init_properties, args) {
 			self.run_attempts++;
 			//return a promise containing a timout of a retry
 			return new Promise(function(resolve,reject) {
-				setTimeout(function() {
+				setTimeout(() => {
 					//Try to run again
-					self.run().catch(function(err_b) {
+					self.run().catch((err_b) => {
 						err_b = err_b + "\n" + err_a; //Concatenate errors with a new line
 						reject(err_b);
-					}).then(function(res) {
+					}).then((res) => {
 						resolve(res); //Resolved! yay!
 					});
 				}, self.mseconds_between_run_attempts);

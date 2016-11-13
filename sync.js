@@ -1,9 +1,7 @@
-//Main app goes here
-//Some code action is happening over in /test/
-
 
 
 /* THE FOLLOWING IS TESTING CODE FOR DATA COLLECTOR SERVICE */
+
 
 var PluginLoader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
