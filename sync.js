@@ -11,8 +11,8 @@ var plugin_loader = require('./include/plugin-loader'),
 	DataCollector = require('./include/data-collector'),
 	_ = require('lodash'),
 	semver = require('semver'),
-	utilities = require('./include/utilities'),
-	sprintf = require("sprintf-js").sprintf;
+	sprintf = require('sprintf-js').sprintf,
+	LoopService = require('./include/loop-service');
 
 var plugins = plugin_loader.loadPlugins(_config);
 
@@ -67,11 +67,10 @@ function load_collector(collector_instance) {
 }
 
 
+
 function main() {
 
 	var data_collector_instances;
-
-	console.log("in main...");
 
 	data_collector_instances = _.map(collector_instances, function(collector_instance) {
 		try {
@@ -87,35 +86,25 @@ function main() {
 	//Remove instances failed to load
 	data_collector_instances = _.filter(data_collector_instances, i => !_.isUndefined(i));
 
-	console.log(data_collector_instances.length);
-
 	console.log(sprintf("%s collectors loaded.", data_collector_instances.length));
 
-	//Now we run!
-	var keep_running = true;
+	try {
 
-	Promise.all(_.map(data_collector_instances, function(data_collector_instance) {
+		var collect_services = _.map(data_collector_instances, (i) => new LoopService(i.run));
 
-		return utilities.promiseLoop(data_collector_instance.run, function() {
-			if(keep_running) {
-				return Promise.resolve();
-			} else {
-				return Promise.reject();
-			}
-		}).catch((e) => {
-			//TODO: better error logging
-			console.log("Data collector stopped: "+e);
+		_.each(collect_services, function(service) {
+			service.on('error',		(e) => console.log('Error in service: ' + e));
+			service.on('started',	() => console.log('Service started.'));
+			service.on('stopped',	() => console.log('Service stopped.', service));
+			service.start();
 		});
 
-	}))
-	.then(() => {
-		console.log("All are stopped");
-	});
+		setTimeout(collect_services[0].stop,3000);
+		setTimeout(collect_services[1].stop,4000);
 
-
-
-
-
+	} catch(e) {
+		console.log(e);
+	}
 }
 
 //Connect to db, then do main
