@@ -41,6 +41,7 @@ function main() {
 		try {
 
 			var service = plugins.initializeCollectorService(config);
+			
 			service.on('error',		(e) => console.log('Error in service: ' + e));
 			service.on('started',	() => console.log('Service started.'));
 			service.on('stopped',	() => console.log('Service stopped.'));

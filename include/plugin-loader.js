@@ -4,7 +4,9 @@ var fs = require('fs'),
 	semver = require('semver'),
 	_ = require('lodash'),
 	DataCollector = require('./data-collector'),
-    LoopService = require('./loop-service');
+    LoopService = require('./loop-service'),
+    sprintf = require('sprintf-js').sprintf,
+    mongoose = require('./mongoose-utilities').mongoose;
 
 var PluginLoader = function(_config) {
 
@@ -64,12 +66,15 @@ var PluginLoader = function(_config) {
 		try {
 			var data_collector = new DataCollector(data_collector, collector_config.config);
 		} catch (e) {
-			throw new Error(sprintf("Error creating data collector instance: $s", e));
+			throw new Error(sprintf("Error creating data collector instance: %s", e));
 		}
 
+		//TODO: systemize event handling
 		data_collector.on('create', (data, collector) => console.log('created '+collector.model_name+': ',data));
 		data_collector.on('update', (data, collector) => console.log('updated '+collector.model_name+': ',data));
 		data_collector.on('remove', (data, collector) => console.log('removed '+collector.model_name+': ',data));
+
+		
 
 		return new LoopService(data_collector.run, data_collector.stop);
 	}

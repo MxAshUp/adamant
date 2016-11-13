@@ -7,7 +7,31 @@ function connect(uri) {
 	return mongoose.connect(uri);
 }
 
+function modelExists(model_name) {
+	try {
+		mongoose.model(model_name); //Lets see if the model exists
+		return true;
+	} catch(e) {
+		return false;
+	}
+}
+
+function getModel(model_name) {
+	return mongoose.model(model_name);
+}
+
+function createModel(model_name, model_schema) {
+
+	var schema = mongoose.Schema(model_schema);
+
+	return mongoose.model(model_name, schema); //Nope? Let's make it
+
+}
+
 module.exports = {
-	mongoose:mongoose,
-	connect:connect
+	mongoose: mongoose,
+	connect: connect,
+	modelExists: modelExists,
+	getModel: getModel,
+	createModel: createModel,	
 };

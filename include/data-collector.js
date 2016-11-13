@@ -2,7 +2,7 @@
 
 
 var vsprintf = require("sprintf-js").vsprintf,
-	mongoose = require('./mongoose-utilities').mongoose,
+	mongoose = require('./mongoose-utilities'),
 	EventEmitter = require('events'),
 	_ = require('lodash');
 
@@ -57,13 +57,12 @@ var DataCollector = function(init_properties, args) {
 	self.stop_flag = false; //Set to true to indicate we need to stop running
 
 	//Registers the model if needed
-	try {
-		mongoose.model(self.model_name); //Lets see if the model exists
-	} catch(e) {
-		mongoose.model(self.model_name, mongoose.Schema(self.model_schema)); //Nope? Let's make it
-	} finally {
-		self.model = mongoose.model(self.model_name); //Grab it
+	if(!mongoose.modelExists(self.model_name)) {
+		mongoose.createModel(self.model_name, self.model_schema);
 	}
+
+	//Get model
+	self.model = mongoose.getModel(self.model_name);
 
 	//Runs a full data collection sync, returns promise
 	self.run = function() {
