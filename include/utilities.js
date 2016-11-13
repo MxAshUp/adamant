@@ -10,6 +10,8 @@ module.exports = {
 			return 'plugins/' + path;
 		});
 	},
+
+	//Runs fn continuously until condition_fn returns a reject
 	promiseLoop: function(fn, condition_fn) {
 
 		return new Promise((resolve,reject) => {

@@ -35,7 +35,7 @@ module.exports = function() {
 					self.toggl = new TogglClient({apiToken: args.apiToken});
 					return Promise.resolve();
 				} catch(e) {
-					return Promise.reject();
+					return Promise.reject(e);
 				}
 			},
 			prepare: function(args) {

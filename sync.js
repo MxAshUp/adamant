@@ -58,7 +58,7 @@ function load_collector(collector_instance) {
 
 	//Time to create data colector instance
 	try {
-		var data_collector = new DataCollector(data_collector, collector_instance);
+		var data_collector = new DataCollector(data_collector, collector_instance.config);
 	} catch (r) {
 		throw new Error(sprintf("Error creating data collector instance: $s", r));
 	}
@@ -98,7 +98,6 @@ function main() {
 
 		return utilities.promiseLoop(data_collector_instance.run, function() {
 			if(keep_running) {
-				console.log('Running...');
 				return Promise.resolve();
 			} else {
 				return Promise.reject();
