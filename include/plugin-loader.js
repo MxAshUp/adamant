@@ -1,6 +1,10 @@
 var fs = require('fs'),
     path = require('path'),
-    Plugin = require('./plugin');
+    Plugin = require('./plugin'),
+	semver = require('semver'),
+	_ = require('lodash'),
+	DataCollector = require('./data-collector'),
+    LoopService = require('./loop-service');
 
 module.exports = {
 	loadPlugins: function(_config) {
@@ -39,6 +43,31 @@ module.exports = {
 		}
 
 		return plugins;
+	},
+	initializeCollectorService: function(plugins, collector_config) {
+		
+		//Find plugin
+		var plugin = _.find(plugins, {name: collector_config.plugin_name, enabled: true});
+		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
+		
+		//Find data collector in plugin
+		var data_collector = _.find(plugin.data_collectors, {model_name: collector_config.collection_name})
+		if(!data_collector) throw new Error(sprintf("Collection not found: %s", collector_config.collection_name));
+		
+		//Check version
+		if(data_collector.version && data_collector.version !== collector_config.version) {
+			//TODO: Do better version check, and also maybe run update on current config
+			throw new Error("Collection version not the same.");
+		}
+
+		//Time to create data colector instance
+		try {
+			var data_collector = new DataCollector(data_collector, collector_config.config);
+		} catch (r) {
+			throw new Error(sprintf("Error creating data collector instance: $s", r));
+		}
+
+		return new LoopService(data_collector.run, data_collector.stop);
 	},
 	getPluginDirectories: function() {
 		srcpath = 'plugins';
