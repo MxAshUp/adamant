@@ -11,6 +11,7 @@
     "mongoose": "^4.4.17",
     "mysql": "^2.10.2",
     "request": "^2.72.0",
+    "semver": "^5.3.0",
     "sprintf-js": "^1.0.3",
     "toggl-api": "0.0.4"
   },
