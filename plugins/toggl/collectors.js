@@ -1,6 +1,7 @@
 //requires
-var TogglClient = require('toggl-api');
-var moment = require('moment');
+var TogglClient = require('toggl-api'),
+	moment = require('moment'),
+	_ = require('lodash');
 
 //******MAIN DATA COLLECTOR DEFINITION*********//
 
@@ -35,7 +36,7 @@ module.exports = function() {
 					self.toggl = new TogglClient({apiToken: args.apiToken});
 					return Promise.resolve();
 				} catch(e) {
-					return Promise.reject();
+					return Promise.reject(e);
 				}
 			},
 			prepare: function(args) {
@@ -45,8 +46,8 @@ module.exports = function() {
 				var end_report = moment();
 				//Get time entries
 				//return getTimeEntries(self.toggl,start_report,end_report);
-				return new Promise(function(resolve,reject) {
-					self.toggl.getTimeEntries(start_report, end_report, function(err,data) {
+				return new Promise((resolve,reject) => {
+					self.toggl.getTimeEntries(start_report, end_report, (err,data) => {
 						//Error getting data
 						if(err) {
 							if(err.code == '403') {
@@ -67,35 +68,26 @@ module.exports = function() {
 				var start_report = moment().subtract(args.days_back_to_sync,'days');
 				var end_report = moment();
 
-				var entries_to_remove
+				var entries_to_remove;
 
 				//This function compares the entries in Toggl and the entries in local db,
 				//then returns the entries that are only in the local db. These need to be removed.
 				return this.model.find({at:{"$gte": start_report, "$lt": end_report}})
 				.then(function(old_entries) {
 					//Get the id's of the new entries
-					new_entries = data.map(function(obj) {return String(obj.id)});
+					new_entries = _.map(data, (obj) => String(obj.id));
 
-					//Get the id's of the old entries
-					old_entries = old_entries.map(function(obj) {return String(obj.id)});
+					//Get the id's of the entries currently stored
+					old_entries = _.map(old_entries, (obj) => String(obj.id));
 
 					//Find which entries exist in the old, but not the new, these need to be removed
-					entries_to_remove = old_entries.filter(function(i) {return new_entries.indexOf(i) < 0});
+					entries_to_remove = _.difference(old_entries, new_entries);
 
 					//Make entries to remove into lookup objects
-					entries_to_remove = entries_to_remove.map(function(id) {return {id:id}});
+					entries_to_remove = _.map(entries_to_remove, (idv) => {return {id:idv}});
 
 					return entries_to_remove;
 				});
-			},
-			onCreate: function(val) {
-				console.log('Created',val);
-			},
-			onUpdate: function(val) {
-				console.log('Updated',val);
-			},
-			onRemove: function(val) {
-				console.log('Removed',val);
 			},
 		}
 	];

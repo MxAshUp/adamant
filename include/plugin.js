@@ -1,7 +1,5 @@
 /* This is an abstract plugin */
 
-var DataCollector = require('./data-collector');
-
 var Plugin = function(args) {
 
 	//Scope it!

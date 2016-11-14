@@ -20,8 +20,8 @@ function doLogin(url,username,password) {
     loginFormData.password = password;
     loginFormData.buttonClicked = "Submit";
 
-    return new Promise(function(resolve,reject) {
-	    request.post({url:loginPage,form:loginFormData},function(err,res,body) {
+    return new Promise((resolve,reject) => {
+	    request.post({url:loginPage,form:loginFormData},(err,res,body) => {
 	    	//If we were successful, then we should get a redirect
 	        if(res && res.statusCode == '301') {
 	            //success login!
@@ -54,8 +54,8 @@ function getReportHTML(url,start_date,end_date) {
 	data.to = end_date.format("MM/DD/YY");
 	data.eid = "0";
 
-	return new Promise(function(resolve,reject) {
-		request.get({url:url,qs:data},function(err,response,body) {
+	return new Promise((resolve,reject) => {
+		request.get({url:url,qs:data},(err,response,body) => {
 			if(err || !body) {
 				reject('Could not get timeclock report. Maybe reboot timeclock? ' + err);
 			} else if(response.statusCode == '301') {
@@ -87,21 +87,21 @@ function* parseReport(html) {
 		{
 			selector: '.punchEmployee > a',
 			name: 'employeeId',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return input.match(/([0-9]+)\-(.*)/)[1];
 			}
 		},
 		{
 			selector: '.punchEmployee > a',
 			name: 'employeeName',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return input.match(/([0-9]+)\-(.*)/)[2];
 			}
 		},
 		{
 			selector: 'a.punchIn .punchTime',
 			name: 'punchInTime',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				if(input == "Add Punch" || !input) return;
 				input = input.replace(/^(.*)([a|p])$/,"$1 $2m");
 				return moment(new Date(current_date + " " + input)).format("YYYY-MM-DD HH:mm:ss");
@@ -122,7 +122,7 @@ function* parseReport(html) {
 		{
 			selector: 'a.punchOut .punchTime',
 			name: 'punchOutTime',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				if(input == "Add Punch" || !input) return;
 				input = input.replace(/^(.*)([a|p])$/,"$1 $2m");
 				return moment(new Date(current_date + " " + input)).format("YYYY-MM-DD HH:mm:ss");
@@ -131,56 +131,56 @@ function* parseReport(html) {
 		{
 			selector: 'a.punchOut .punchLunch',
 			name: 'punchOutLunch',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input)/60; //lunch is in minutes
 			}
 		},
 		{
 			selector: 'a.punchOut .punchADJ',
 			name: 'punchOutADJ',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input);
 			}
 		},
 		{
 			selector: '.punchSTD',
 			name: 'punchSTD',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input);
 			}
 		},
 		{
 			selector: '.punchOT1',
 			name: 'punchOT1',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input);
 			}
 		},
 		{
 			selector: '.punchOT2',
 			name: 'punchOT2',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input);
 			}
 		},
 		{
 			selector: '.punchHOL',
 			name: 'punchHOL',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input);
 			}
 		},
 		{
 			selector: '.punchHRS',
 			name: 'punchHRS',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input);
 			}
 		},
 		{
 			selector: '.punchLaborDS',
 			name: 'punchLaborDS',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				input = input.replace("$","");
 				return tryParseFloat(input);
 			}
@@ -188,7 +188,7 @@ function* parseReport(html) {
 		{
 			selector: '.punchLabor',
 			name: 'punchLabor',
-			parse_function: function(input) {
+			parse_function: (input) => {
 				return tryParseFloat(input);
 			}
 		},

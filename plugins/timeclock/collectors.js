@@ -53,15 +53,6 @@ module.exports = function(_config) {
 				//TODO: Check if local time entry is not in data, then delete it
 				return [];
 			},
-			onCreate: function(val) {
-				console.log('Created',val);
-			},
-			onUpdate: function(val) {
-				console.log('Updated',val);
-			},
-			onRemove: function(val) {
-				console.log('Removed',val);
-			},
 		}
 	];
 };
