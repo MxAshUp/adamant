@@ -48,15 +48,15 @@ var PluginLoader = function(_config) {
 	}
 
 	self.initializeCollectorService = function(collector_config) {
-		
+
 		//Find plugin
 		var plugin = _.find(self.plugins, {name: collector_config.plugin_name, enabled: true});
 		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
-		
+
 		//Find data collector in plugin
 		var data_collector = _.find(plugin.data_collectors, {model_name: collector_config.collection_name})
 		if(!data_collector) throw new Error(sprintf("Collection not found: %s", collector_config.collection_name));
-		
+
 		//Check version
 		if(data_collector.version && data_collector.version !== collector_config.version) {
 			//TODO: Do better version check, and also maybe run update on current config
@@ -74,7 +74,6 @@ var PluginLoader = function(_config) {
 		_.each(['create','update','remove'], (event) => {
 			data_collector.on(event, (data) => self.handleEventEmit(data_collector.model_name, event, data));
 		});
-	
 
 		return new LoopService(data_collector.run, data_collector.stop);
 	}

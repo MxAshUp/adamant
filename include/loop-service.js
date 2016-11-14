@@ -41,7 +41,7 @@ var LoopService = function(start_fn, stop_fn) {
 
 		//Proceed
 		return true;
-	
+
 	}
 
 	//Starts the service
