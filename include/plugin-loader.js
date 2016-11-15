@@ -75,7 +75,7 @@ var PluginLoader = function(_config) {
 			data_collector.on(event, (data) => self.handleEventEmit(data_collector.model_name, event, data));
 		});
 
-		return new LoopService(data_collector.run, data_collector.stop);
+		return new LoopService(data_collector.run.bind(data_collector), data_collector.stop.bind(data_collector));
 	}
 
 	self.handleEventEmit = function(model_name, event, data) {

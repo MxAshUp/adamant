@@ -6,6 +6,6 @@ module.exports = function(_config) {
 
 	return {
 		name: 'Toggl',
-		data_collectors: require('./collectors.js')(_config)
+		collectors: require('./collectors.js')(_config)
 	};
 };

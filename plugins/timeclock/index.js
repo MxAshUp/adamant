@@ -6,6 +6,6 @@ module.exports = function(_config) {
 
 	return {
 		name: 'TimeClock',
-		data_collectors: require('./collectors.js')(_config)
+		collectors: require('./collectors.js')(_config)
 	};
 };
