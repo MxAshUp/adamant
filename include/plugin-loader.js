@@ -54,28 +54,28 @@ var PluginLoader = function(_config) {
 		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
 
 		//Find data collector in plugin
-		var data_collector = _.find(plugin.data_collectors, {model_name: collector_config.collection_name})
-		if(!data_collector) throw new Error(sprintf("Collection not found: %s", collector_config.collection_name));
+		var collector = _.find(plugin.collectors, {model_name: collector_config.collection_name})
+		if(!collector) throw new Error(sprintf("Collection not found: %s", collector_config.collection_name));
 
 		//Check version
-		if(data_collector.version && data_collector.version !== collector_config.version) {
+		if(collector.version && collector.version !== collector_config.version) {
 			//TODO: Do better version check, and also maybe run update on current config
 			throw new Error("Collection version not the same.");
 		}
 
 		//Create data colector instance
 		try {
-			data_collector = new Collector(data_collector, collector_config.config);
+			collector = new Collector(collector, collector_config.config);
 		} catch (e) {
 			throw new Error(sprintf("Error creating data collector instance: %s", e));
 		}
 
 		//Add event handling
 		_.each(['create','update','remove'], (event) => {
-			data_collector.on(event, (data) => self.handleEventEmit(data_collector.model_name, event, data));
+			collector.on(event, (data) => self.handleEventEmit(collector.model_name, event, data));
 		});
 
-		return new LoopService(data_collector.run.bind(data_collector), data_collector.stop.bind(data_collector));
+		return new LoopService(collector.run.bind(collector), collector.stop.bind(collector));
 	}
 
 	self.handleEventEmit = function(model_name, event, data) {
