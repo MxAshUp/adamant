@@ -17,13 +17,14 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "mocha test/test.js"
+    "test": "mocha test/*-test.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "mocha-mongoose": "^1.2.0"
+    "mocha-mongoose": "^1.2.0",
+    "rewire": "^2.5.2"
   }
 }
