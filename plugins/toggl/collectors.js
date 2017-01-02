@@ -63,24 +63,22 @@ module.exports = function() {
 				return data;
 			},
 			remove: function(data, args) {
-				var self = this;
+
 				var start_report = moment().subtract(args.days_back_to_sync,'days');
 				var end_report = moment();
-
-				var entries_to_remove;
 
 				//This function compares the entries in Toggl and the entries in local db,
 				//then returns the entries that are only in the local db. These need to be removed.
 				return this.model.find({at:{"$gte": start_report, "$lt": end_report}})
-				.then(function(old_entries) {
+				.then((old_entries) => {
 					//Get the id's of the new entries
-					new_entries = _.map(data, (obj) => String(obj.id));
+					var new_entries = _.map(data, (obj) => String(obj.id));
 
 					//Get the id's of the entries currently stored
 					old_entries = _.map(old_entries, (obj) => String(obj.id));
 
 					//Find which entries exist in the old, but not the new, these need to be removed
-					entries_to_remove = _.difference(old_entries, new_entries);
+					var entries_to_remove = _.difference(old_entries, new_entries);
 
 					//Make entries to remove into lookup objects
 					entries_to_remove = _.map(entries_to_remove, (idv) => {return {id:idv}});

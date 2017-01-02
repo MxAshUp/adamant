@@ -36,7 +36,7 @@ var Collector = function(init_properties, args) {
 	self.plugin_name = '';
 	self.last_run = 0;
 
-	//Set object properties from args
+	//Set object properties from args
 	for(var i in init_properties) {
 		self[i] = init_properties[i];
 	}
@@ -102,21 +102,22 @@ var Collector = function(init_properties, args) {
 			})
 			//Maybe delay
 			.then(maybe_delay)
-			//Run collect
+			//Prepare to collect and remove data
 			.then(() => {
 				return self.prepare.call(self,self.args)
 			})
+			//Data is prepared
 			.then((res) => {
-				prepared_data = res; //prepared data is used further down
+				prepared_data = res;
 				return Promise.resolve();
 			})
 			//Collect data and insert it
 			.then(() => {
-				return self._collect_and_insert.call(self,prepared_data,self.args)
+				return self._collect_then_insert.call(self,prepared_data,self.args)
 			})
 			//Remove docs that may need to be removed
 			.then(() => {
-				return self._prepare_and_remove.call(self,prepared_data,self.args)
+				return self._remove_then_remove.call(self,prepared_data,self.args)
 			})
 			//collect is success, run success function
 			.then(self._finish_run)
@@ -131,7 +132,7 @@ var Collector = function(init_properties, args) {
 	}
 
 	//Loops through collect data, and inserts each row asynchronously into database
-	self._collect_and_insert = function(data, args) {
+	self._collect_then_insert = function(data, args) {
 
 		return self._apply_func_to_func(self.collect , [data, args] , self._insert_data)
 		.catch((err) => {
@@ -178,7 +179,7 @@ var Collector = function(init_properties, args) {
 	}
 
 	//Find items to remove, and removes them from database
-	self._prepare_and_remove = function(data, args) {
+	self._remove_then_remove = function(data, args) {
 
 		return self._apply_func_to_func(self.remove , [data, args] , self._remove_data)
 		.catch((err) => {
