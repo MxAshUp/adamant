@@ -7,8 +7,8 @@ module.exports = {
 		srcpath = 'plugins';
 		return fs.readdirSync(srcpath).filter((file) => {
 			return fs.statSync(path.join(srcpath, file)).isDirectory();
-		}).map((path) => {
-			return 'plugins/' + path;
+		}).map((fpath) => {
+			return 'plugins/' + fpath;
 		});
 	},
 

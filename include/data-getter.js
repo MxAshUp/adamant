@@ -1,4 +1,6 @@
 
+//This is likely to be retired... no more native mysql
+
 var mysqlObject = require('mysql');
 var config = require('./config.js');
 

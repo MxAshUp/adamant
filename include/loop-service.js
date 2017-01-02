@@ -4,7 +4,7 @@ var EventEmitter = require('events');
 * this class will run a promise-returning function continuously when start() is triggered.
 * It will stop when stop() is triggered or an error is caught.
 */
-var LoopService = function(start_fn, stop_fn) {
+var LoopService = function(run_fn, stop_fn) {
 
 	//Scope it!
 	var self = this;
@@ -12,7 +12,7 @@ var LoopService = function(start_fn, stop_fn) {
 	//Set initial variables
 	self.run_flag = false;
 	self.run_status = false;
-	self.start_fn = start_fn;
+	self.run_fn = run_fn;
 	self.stop_fn = stop_fn;
 	self.run_count = 0;
 	self.stop_on_run = 0;
@@ -36,8 +36,6 @@ var LoopService = function(start_fn, stop_fn) {
 			return false;
 		}
 
-		//increment run count
-		self.run_count++;
 
 		//Proceed
 		return true;
@@ -64,7 +62,14 @@ var LoopService = function(start_fn, stop_fn) {
 		self.emit('started');
 
 		//Start promise loop
-		promiseLoop(self.start_fn, self.should_run)
+		promiseLoop(() => {
+
+			//increment run count
+			self.run_count++;
+			//run the start function
+			self.run_fn();
+
+		}, self.should_run)
 		.catch((e) => {
 
 			//emit error event

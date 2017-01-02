@@ -36,7 +36,7 @@ var Collector = function(init_properties, args) {
 	self.plugin_name = '';
 	self.last_run = 0;
 
-	//Set object properties from args
+	//Set object properties from args
 	for(var i in init_properties) {
 		self[i] = init_properties[i];
 	}
@@ -77,12 +77,14 @@ var Collector = function(init_properties, args) {
 				return Promise.reject('Stop initiated.');
 			}
 			return new Promise((resolve,reject) => {
-				if(Date.now() - self.last_run_start > self.min_mseconds_between_runs) {
+				var mseconds_since_last = Date.now() - self.last_run_start;
+
+				if(mseconds_since_last > self.min_mseconds_between_runs) {
 					//If enough time has passed between runs, go ahead and continue
 					resolve();
 				} else {
 					//If not enough time has passed between runs, set a timeout
-					setTimeout(resolve, Date.now() - self.last_run_start - self.min_mseconds_between_runs);
+					setTimeout(resolve, mseconds_since_last - self.min_mseconds_between_runs);
 				}
 			});
 		};
@@ -90,7 +92,7 @@ var Collector = function(init_properties, args) {
 		//Update last run date
 		self.last_run_start = Date.now();
 
-		//Being the promise chain
+		//Begin the run promise chain
 		return self.is_initialized
 			//If not initialized, then try to initialize
 			.catch(() => {
