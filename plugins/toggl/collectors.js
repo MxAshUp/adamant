@@ -45,7 +45,6 @@ module.exports = function() {
 				var start_report = moment().subtract(args.days_back_to_sync,'days');
 				var end_report = moment();
 				//Get time entries
-				//return getTimeEntries(self.toggl,start_report,end_report);
 				return new Promise((resolve,reject) => {
 					self.toggl.getTimeEntries(start_report, end_report, (err,data) => {
 						//Error getting data

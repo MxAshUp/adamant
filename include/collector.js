@@ -214,7 +214,7 @@ var Collector = function(init_properties, args) {
 			//promisfy, because func1 could return an array
 			return Promise.resolve(func1.apply(self, args1)).then((res_array) => {
 
-				return Promise.all(_.map(res_array, (item) => {					
+				return Promise.all(_.map(res_array, (item) => {
 
 					//Pass results to func2, make sure it's a promise
 					return Promise.resolve(item).then((res) => {
@@ -258,7 +258,7 @@ var Collector = function(init_properties, args) {
 			return Promise.reject("Force stopped.");
 		}
 
-		//Check if we've reached out failure limit
+		//Check if we've reached our failure limit
 		if(self.run_attempts < self.run_attempts_limit) {
 			//Increment attempt
 			self.run_attempts++;
@@ -281,6 +281,7 @@ var Collector = function(init_properties, args) {
 	}
 };
 
+//Extend to event emitter
 Collector.prototype.__proto__ = EventEmitter.prototype;
 
 module.exports = Collector;

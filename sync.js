@@ -39,7 +39,7 @@ function main() {
 
 
 	//Maybe attach some event handlers?
-/*	plugins.on('create', (model, data) => {
+	plugins.on('create', (model, data) => {
 		console.log('model '+model+' created: ', data);
 	});
 	plugins.on('update', (model, data) => {
@@ -47,7 +47,7 @@ function main() {
 	});
 	plugins.on('remove', (model, data) => {
 		console.log('model '+model+' remove: ', data);
-	});*/
+	});
 
 	plugins.on('toggl_timeEntry_create', data => console.log('NEW TIME ENTRY'));
 
@@ -55,14 +55,14 @@ function main() {
 		try {
 
 			var service = plugins.initializeCollectorService(config);
-			
+
 			service.on('error',		(e) => console.log('Error in service: ' + e));
 			service.on('started',	() => console.log('Service started.'));
 			service.on('stopped',	() => console.log('Service stopped.'));
 			service.start();
 
 		} catch (e) {
-			console.log(e);			
+			console.log(e);
 		}
 	});
 

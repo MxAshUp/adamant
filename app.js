@@ -1,10 +1,42 @@
 //Main app goes here
 //Some code action is happening over in /test/
 
+var arg_handler = require('./include/arg-handle');
+
+
+//Sample definitions
+var arg_def = new arg_handler.arg_definition({
+	short: 'v',
+	long: 'verbose',
+	default_value: false,
+	description: 'Show lots of useful goodies in the console.',
+	callback: function() {
+
+	}
+});
+
+var commands = [
+	new arg_handler.command_definition({
+		command: 'run',
+		description: 'Executes main script',
+		callback: function({verbose, thing}) {
+			console.log('I am a program running!');
+			console.log('What is this? ', this);
+			console.log('verbose? ', verbose);
+			console.log('thing? ', thing);
+		},
+		arg_definitions: [
+			arg_def
+		]
+	})
+];
+
+arg_handler.run_args(commands,process.argv);
+
 
 
 /* THE FOLLOWING IS TESTING CODE FOR DATA COLLECTOR SERVICE */
-
+/*
 var plugin_loader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
 	mongoose_util = require('./include/mongoose-utilities'),
@@ -75,4 +107,4 @@ function main() {
 }
 
 //Connect to db, then do main
-mongoose_util.connect(_config.mongodb.uri).then(main);
+mongoose_util.connect(_config.mongodb.uri).then(main);*/

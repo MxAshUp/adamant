@@ -12,7 +12,7 @@ var Plugin = function(args) {
 	self.onUnLoad = function(_args) {
 		//Maybe we need somethign to run when plugin is unloaded
 	};
-	self.data_collectors = [];
+	self.collectors = [];
 	self.enabled = false;
 	self.name = '';
 
