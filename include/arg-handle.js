@@ -48,7 +48,7 @@ class command_definition {
 
 	//Calls a command's callback with arguments
 	run_command(args, context) {
-		this.callback.apply(context, [args]);
+		return this.callback.apply(context, [args]);
 	}
 
 }
@@ -57,7 +57,7 @@ class command_definition {
 class argv_parser {
 	constructor(arg_definitions, _args) {
 		this.arg_definitions = arg_definitions;
-		this.args = [];
+		this.args = {};
 
 		this.args = this.base_args = minimist(_args.slice(2), {default: this.default_args_map});
 		this.args = this.short_keys_to_long();
@@ -70,7 +70,7 @@ class argv_parser {
 				);
 	}
 
-	//Returns map of each key (shothad) and default value (if any)
+	//Returns map of each key (shorthand) and default value (if any)
 	get default_args_map() {
 		var default_args = _.mapKeys(this.arg_definitions, arg => arg.short);
 		default_args = _.mapValues(default_args, arg => arg.default_value);
@@ -99,7 +99,7 @@ function run_args(commands, argv) {
 	if(command.length > 1) {
 		//TODO: show help and syntax
 		console.log('Unknown command: ', command);
-		return;
+		return 1;
 	} else if(command.length == 0) {
 		//Set default command
 	} else {
@@ -110,7 +110,7 @@ function run_args(commands, argv) {
 
 	if(typeof o_command === 'undefined') {
 		console.log('Unknown command: ', command);
-		return;
+		return 1;
 	}
 
 	parsed_args = new argv_parser(o_command.arg_definitions, argv);
