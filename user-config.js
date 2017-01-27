@@ -145,27 +145,5 @@ module.exports = [
 				apitoken: null,
 				user: null
 		}*/
-	},
-        {
-                ID:8,
-                timeclock: {
-                        user:'223'
-                },
-                rocketchat: {
-                        user:'morgan'
-                },
-                dates: {
-                        hiredate: '12/07/2016'/*,
-                        birthday: '05/25'*/
-                },/*
-                asana: {
-                        refreshtoken: null,
-                        user: null
-                },
-                toggl: {
-                        apitoken: null,
-                        user: null
-                }*/
-        }
-
+	}
 ];
