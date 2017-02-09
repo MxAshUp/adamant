@@ -71,24 +71,6 @@ var Collector = function(init_properties, args) {
 
 		self.stop_flag = false;//reset stop flag
 
-		//A promise to potentially delay the next run
-		var maybe_delay = function() {
-			if(self.stop_flag) {
-				return Promise.reject('Stop initiated.');
-			}
-			return new Promise((resolve,reject) => {
-				var mseconds_since_last = Date.now() - self.last_run_start;
-
-				if(mseconds_since_last > self.min_mseconds_between_runs) {
-					//If enough time has passed between runs, go ahead and continue
-					resolve();
-				} else {
-					//If not enough time has passed between runs, set a timeout
-					setTimeout(resolve, mseconds_since_last - self.min_mseconds_between_runs);
-				}
-			});
-		};
-
 		//Update last run date
 		self.last_run_start = Date.now();
 
@@ -102,8 +84,16 @@ var Collector = function(init_properties, args) {
 					return Promise.reject('Error initializing: '+err);
 				});
 			})
-			//Maybe delay
-			.then(maybe_delay)
+			//Maybe abort if stop_flag enabled
+			.then(() => {
+				return self.stop_flag ? Promise.reject('Stop initiated.') : Promise.resolve();
+			})
+			//Maybe delay to ensure at least self.min_mseconds_between_runs has passed
+			.then(() => {
+				return new Promise((resolve,reject) => {
+					setTimeout(resolve, Math.max(0, Date.now() - self.last_run_start - self.min_mseconds_between_runs));
+				});
+			})
 			//Prepare to collect and remove data
 			.then(() => {
 				return self.prepare.call(self,self.args)
@@ -117,13 +107,28 @@ var Collector = function(init_properties, args) {
 			.then(() => {
 				return self._collect_then_insert.call(self,prepared_data,self.args)
 			})
+			//If an error happens inserting data, we won't retry
+			.catch((err) => {
+				self.run_attempts = self.run_attempts_limit;
+				return Promise.reject(err);
+			})
 			//Remove docs that may need to be removed
 			.then(() => {
 				return self._remove_then_remove.call(self,prepared_data,self.args)
 			})
-			//collect is success, run success function
-			.then(self._finish_run)
+			//collect is success, cleanup and return data
+			.then((data) => {
+				self.run_attempts = 0;
+				self.is_initialized = Promise.resolve(); //Set is_initialized to resolved
+				return data;
+			})
+			//If any error occurs during sync, we need to initialize again next time around
+			.catch((err) => {
+				self.is_initialized = Promise.reject();
+				return Promise.reject(err);
+			})
 			//If any errors occured during collect or initialize, it's caught here and maybe retried
+			//_maybe_retry will throw an error if max attempts reached, then it has to be caught outside this function
 			.catch(self._maybe_retry);
 
 	}
@@ -173,8 +178,6 @@ var Collector = function(init_properties, args) {
 		})
 		//Catch database insert error
 		.catch((err) => {
-			//If an error happens inserting rows, we won't retry
-			self.run_attempts = self.run_attempts_limit;
 			//Reformat error to be more specific
 			return Promise.reject('Error inserting doc: '+err);
 		});
@@ -190,13 +193,14 @@ var Collector = function(init_properties, args) {
 		});
 	}
 
-	//Loops through itmes to remove, and removes them
+	//Loops through items to remove, and removes them
 	self._remove_data = function(lookup) {
 		if(typeof lookup !== 'object') {
-			throw new Error('Invalid lookup.');
+			throw new Error('Invalid Mongoose lookup.');
 		}
 		//Find doc by lookup and remove it
 		return self.model.findOneAndRemove(lookup).then(function(res) {
+			//Res is defined if something was found and deleted
 			if(typeof res !== 'undefined') {
 				self.emit('remove', res); //Execute create event function
 			}
@@ -241,27 +245,13 @@ var Collector = function(init_properties, args) {
 		}
 	}
 
-	//Function that executes on successful run
-	self._finish_run = function(data) {
-		self.run_attempts = 0;
-		self.is_initialized = Promise.resolve(); //Set is_initialized to resolved
-		return data;
-	}
-
 	//Function that executes on run failure, handles retry attempts
 	self._maybe_retry = function(err_a) {
 		//Create error message
 		err_a = vsprintf('Attempt %d/%d: %s', [self.run_attempts,self.run_attempts_limit,err_a]);
 
-		//In any case, another initialize will be warranted
-		self.is_initialized = Promise.reject();
-
-		if(self.stop_flag) {
-			return Promise.reject("Force stopped.");
-		}
-
-		//Check if we've reached our failure limit
-		if(self.run_attempts < self.run_attempts_limit) {
+		//Check if we've reached our failure limit, and make sure stop flag wasn't set
+		if(self.run_attempts < self.run_attempts_limit && self.stop_flag) {
 			//Increment attempt
 			self.run_attempts++;
 			//return a promise containing a timout of a retry
@@ -276,10 +266,10 @@ var Collector = function(init_properties, args) {
 					});
 				}, self.mseconds_between_run_attempts);
 			});
-		} else {
-			//We tried to initialize or run many times, but couldn't, throwing in the towel
-			return Promise.reject("Max run attempts reached.\n" + err_a);
 		}
+
+		//We tried to initialize or run many times, but couldn't, throwing in the towel
+		return Promise.reject("Max run attempts reached.\n" + err_a);
 	}
 };
 
