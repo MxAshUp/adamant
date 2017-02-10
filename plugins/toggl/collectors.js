@@ -62,7 +62,7 @@ module.exports = function() {
 			collect: function(data, args) {
 				return data;
 			},
-			remove: function(data, args) {
+			garbage: function(data, args) {
 
 				var start_report = moment().subtract(args.days_back_to_sync,'days');
 				var end_report = moment();

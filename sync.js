@@ -15,7 +15,7 @@ var plugins = new PluginLoader(_config);
 var collector_configs = [
 	{
 		plugin_name: 'Toggl',
-		collection_name: 'toggl_timeEntry',
+		model_name: 'toggl_timeEntry',
 		version: '1.0',
 		config: {
 			apiToken:'771a871d9670b874655a25e20391640f'
@@ -23,7 +23,7 @@ var collector_configs = [
 	},
 	{
 		plugin_name: 'TimeClock',
-		collection_name: 'timeclock_timeEntry',
+		model_name: 'timeclock_timeEntry',
 		version: '1.0',
 		config: {
 			days_back_to_sync: 1,
@@ -57,7 +57,7 @@ function main() {
 			var service = plugins.initializeCollectorService(config);
 
 			service.on('error',		(e) => console.log('Error in service: ' + e));
-			servic.eon('started',	() => console.log('Service started.'));
+			service.on('started',	() => console.log('Service started.'));
 			service.on('stopped',	() => console.log('Service stopped.'));
 			service.start();
 

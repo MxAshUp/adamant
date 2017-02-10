@@ -54,8 +54,8 @@ var PluginLoader = function(_config) {
 		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
 
 		//Find data collector in plugin
-		var collector = _.find(plugin.collectors, {model_name: collector_config.collection_name})
-		if(!collector) throw new Error(sprintf("Collection not found: %s", collector_config.collection_name));
+		var collector = _.find(plugin.collectors, {model_name: collector_config.model_name})
+		if(!collector) throw new Error(sprintf("Collection not found: %s", collector_config.model_name));
 
 		//Check version
 		if(collector.version && collector.version !== collector_config.version) {

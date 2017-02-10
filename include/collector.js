@@ -17,12 +17,12 @@ var Collector = function(init_properties, args) {
 
 	};
 	self.prepare = function(_args) {
-
+		return;
 	};
-	self.collect = function(data, _args) {
-		return data;
+	self.collect = function(prepared_data, _args) {
+		return;
 	};
-	self.remove = function(data, _args) {
+	self.garbage = function(prepared_data, _args) {
 		return;
 	};
 	self.default_args = {};
@@ -114,7 +114,7 @@ var Collector = function(init_properties, args) {
 			})
 			//Remove docs that may need to be removed
 			.then(() => {
-				return self._remove_then_remove.call(self,prepared_data,self.args)
+				return self._garbage_then_remove.call(self,prepared_data,self.args)
 			})
 			//collect is success, cleanup and return data
 			.then((data) => {
@@ -184,9 +184,9 @@ var Collector = function(init_properties, args) {
 	}
 
 	//Find items to remove, and removes them from database
-	self._remove_then_remove = function(data, args) {
+	self._garbage_then_remove = function(data, args) {
 
-		return self._apply_func_to_func(self.remove , [data, args] , self._remove_data)
+		return self._apply_func_to_func(self.garbage , [data, args] , self._remove_data)
 		.catch((err) => {
 			//If an error occured, format the error more specifically
 			return Promise.reject('Error removing doc: '+err);

@@ -49,7 +49,7 @@ module.exports = function(_config) {
 					yield data_row;
 				}
 			},
-			remove: function(data, args) {
+			garbage: function(data, args) {
 				//TODO: Check if local time entry is not in data, then delete it
 				return [];
 			},
