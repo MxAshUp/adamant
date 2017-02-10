@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "chalk": "^1.1.3",
     "cheerio": "^0.20.0",
     "lodash": "^4.16.4",
     "minimist": "^1.2.0",
