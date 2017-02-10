@@ -123,7 +123,7 @@ function* parseReport(html) {
 			selector: 'a.punchOut .punchTime',
 			name: 'punchOutTime',
 			parse_function: (input) => {
-				if(input == "Add Punch" || !input) return;
+				if(input == "Add Punch" || !input || typeof current_date_str === 'undefined') return;
 				input = input.replace(/^(.*)([a|p])$/,"$1 $2m");
 				return moment(new Date(current_date_str + " " + input)).format("YYYY-MM-DD HH:mm:ss");
 			}
