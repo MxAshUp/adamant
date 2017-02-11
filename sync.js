@@ -22,7 +22,7 @@ var collector_configs = [
 			apiToken:'771a871d9670b874655a25e20391640f'
 		}
 	},
-	{
+/*	{
 		plugin_name: 'TimeClock',
 		model_name: 'timeclock_timeEntry',
 		version: '1.0',
@@ -32,7 +32,7 @@ var collector_configs = [
 			user:'admin',
 			password:'FVnZaHD8HyCe'
 		}
-	}
+	}*/
 ];
 
 
@@ -50,20 +50,20 @@ function main() {
 		console.log(`model ${chalk.bgCyan(model)} ${chalk.red(created)}: ${chalk.grey(data)}`);
 	});
 
-	plugins.on('toggl_timeEntry_create', data => console.log('NEW TIME ENTRY'));
+	plugins.on('toggl_timeEntry_create', data => console.log(`${chalk.rainbow('NEW TIME ENTRY')}`));
 
 	var collect_services = _.each(collector_configs, (config) => {
 		try {
 
 			var service = plugins.initializeCollectorService(config);
 
-			service.on('error',		(e) => console.log(`${chalk.red('Error')} in ${chalk.bgCyan(config.model_name)} service: ${chalk.grey(e)}`))
+			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e)}`))
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
 			service.on('stopped',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('stopped')}.`));
-			service.start();
+			service.start(true);
 
 		} catch (e) {
-			console.log(e);
+			console.log(`${chalk.bgYellow('Service Loop Error')}: ${chalk.grey(e)}`);
 		}
 	});
 

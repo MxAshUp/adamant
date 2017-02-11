@@ -2,6 +2,9 @@
 
 var mongoose = require('mongoose');
 
+//Set promise library to ES6 default
+mongoose.Promise = global.Promise;
+
 //Connects to mondo db with uri
 function connect(uri) {
 	return mongoose.connect(uri);

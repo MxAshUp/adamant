@@ -7,6 +7,7 @@ var fs = require('fs'),
     LoopService = require('./loop-service'),
     sprintf = require('sprintf-js').sprintf,
     mongoose = require('./mongoose-utilities').mongoose,
+    utilities = require('./utilities'),
     EventEmitter = require('events');
 
 var PluginLoader = function(_config) {
@@ -18,7 +19,7 @@ var PluginLoader = function(_config) {
 	self.plugins = [];
 
 	//Get directors of plugins
-	var plugin_dirs = getPluginDirectories();
+	var plugin_dirs = utilities.getPluginsDirectories();
 
 	//Loop through them
 	for (var i in plugin_dirs) {
@@ -86,18 +87,4 @@ var PluginLoader = function(_config) {
 
 PluginLoader.prototype.__proto__ = EventEmitter.prototype;
 
-var getPluginDirectories = function() {
-	srcpath = 'plugins';
-	return fs.readdirSync(srcpath).filter((file) => {
-		return fs.statSync(path.join(srcpath, file)).isDirectory();
-	}).map((path) => {
-		return {
-			name: path,
-			path: srcpath + '/' + path
-		};
-	});
-};
-
 module.exports = PluginLoader;
-
-

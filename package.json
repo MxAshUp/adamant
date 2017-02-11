@@ -11,6 +11,7 @@
     "moment": "^2.13.0",
     "mongoose": "^4.6.8",
     "mysql": "^2.10.2",
+    "promise-loop": "^1.0.1",
     "request": "^2.72.0",
     "semver": "^5.3.0",
     "sprintf-js": "^1.0.3",

@@ -1,10 +1,11 @@
 var EventEmitter = require('events');
+var promiseLoop = require('promise-loop');
 
 /**
 * this class will run a promise-returning function continuously when start() is triggered.
 * It will stop when stop() is triggered or an error is caught.
 */
-var LoopService = function(run_fn, stop_fn) {
+var LoopService = function(run_callback, stop_callback) {
 
 	//Scope it!
 	var self = this;
@@ -12,8 +13,8 @@ var LoopService = function(run_fn, stop_fn) {
 	//Set initial variables
 	self.run_flag = false;
 	self.run_status = false;
-	self.run_fn = run_fn;
-	self.stop_fn = stop_fn;
+	self.run_callback = run_callback;
+	self.stop_callback = stop_callback;
 	self.run_count = 0;
 	self.stop_on_run = 0;
 
@@ -61,18 +62,23 @@ var LoopService = function(run_fn, stop_fn) {
 		//trigger start event
 		self.emit('started');
 
-		//Start promise loop
 		promiseLoop(() => {
+
+			//Check if need to keep running
+			if(!self.should_run()) {
+				return Promise.reject();
+			}
 
 			//increment run count
 			self.run_count++;
-			//run the start function
-			self.run_fn();
 
-		}, self.should_run)
+			//run the start function
+			return self.run_callback();
+
+		}, promiseLoop.catchRejectPromise)()
 		.catch((e) => {
 
-			//emit error event
+			//Emit error event
 			self.emit('error', e);
 
 		})
@@ -91,46 +97,10 @@ var LoopService = function(run_fn, stop_fn) {
 	//Tells the service to stop
 	self.stop = function() {
 		self.run_flag = false;
-		if(typeof self.stop_fn === "function") {
-			self.stop_fn();
+		if(typeof self.stop_callback === "function") {
+			self.stop_callback();
 		}
 	}
-}
-
-//Runs fn continuously until condition_fn returns a reject
-function promiseLoop(fn, condition_fn) {
-
-	return new Promise((resolve,reject) => {
-		let loop = function() {
-
-			var condition = false;
-
-			try {
-				condition = condition_fn();
-			} catch(e) {
-				reject(e);
-				return;
-			}
-
-			if(!condition) {
-				resolve(condition);
-				return;
-			}
-
-			try {
-				fn().catch((e) => {
-
-					reject(e);
-					return Promise.reject();
-
-				}).then(loop);
-			} catch(e) {
-				reject(e);
-			}
-		};
-
-		loop();
-	});
 }
 
 LoopService.prototype.__proto__ = EventEmitter.prototype;

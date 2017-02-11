@@ -51,7 +51,7 @@ var Collector = function(init_properties, args) {
 	for (var attrname in args) { self.args[attrname] = args[attrname]; }
 
 	//Set some initial variables
-	self.is_initialized = Promise.reject();
+	self.is_initialized = false;
 	self.run_attempts = 0; //Count of failed run attempts
 	self.last_run_start = 0; //Timestamp of last run
 	self.stop_flag = false; //Set to true to indicate we need to stop running
@@ -75,7 +75,7 @@ var Collector = function(init_properties, args) {
 		self.last_run_start = Date.now();
 
 		//Begin the run promise chain
-		return self.is_initialized
+		return (self.is_initialized ? Promise.resolve() : Promise.reject('Not Initialized'))
 			//If not initialized, then try to initialize
 			.catch(() => {
 				return self.initialize.call(self,self.args)
@@ -96,7 +96,7 @@ var Collector = function(init_properties, args) {
 			})
 			//Prepare to collect and remove data
 			.then(() => {
-				return self.prepare.call(self,self.args)
+				return self.prepare.call(self,self.args);
 			})
 			//Data is prepared
 			.then((res) => {
@@ -119,12 +119,12 @@ var Collector = function(init_properties, args) {
 			//collect is success, cleanup and return data
 			.then((data) => {
 				self.run_attempts = 0;
-				self.is_initialized = Promise.resolve(); //Set is_initialized to resolved
+				self.is_initialized = true; //Set is_initialized to resolved
 				return data;
 			})
 			//If any error occurs during sync, we need to initialize again next time around
 			.catch((err) => {
-				self.is_initialized = Promise.reject();
+				self.is_initialized = false;
 				return Promise.reject(err);
 			})
 			//If any errors occured during collect or initialize, it's caught here and maybe retried

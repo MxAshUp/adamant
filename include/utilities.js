@@ -7,12 +7,12 @@ module.exports = {
 		srcpath = 'plugins';
 		return fs.readdirSync(srcpath).filter((file) => {
 			return fs.statSync(path.join(srcpath, file)).isDirectory();
-		}).map((fpath) => {
-			return 'plugins/' + fpath;
+		}).map((path) => {
+			return {
+				name: path,
+				path: srcpath + '/' + path
+			};
 		});
 	},
 
 }
-
-
-
