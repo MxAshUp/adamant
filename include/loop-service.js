@@ -2,15 +2,11 @@ var EventEmitter = require('events');
 var promiseLoop = require('promise-loop');
 
 /**
-* this class will run a promise-returning function continuously when start() is triggered.
-* It will stop when stop() is triggered or an error is caught.
-*/
-
-
-/**
  * Creates a LoopService object
- * 
- * @param {function} run_callback - The function to run continuously
+ * A LoopService object will run a function continuously when start() is triggered.
+ * It will stop when stop() is called, an error is caught, or has reached a run limit.
+ *
+ * @param {function} run_callback - The function to run continuously. Can be a Promise-returning function.
  * @param {function} stop_callback - The function that will run when run_callback stops
  */
 var LoopService = function(run_callback, stop_callback) {
