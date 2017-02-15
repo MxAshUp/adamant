@@ -7,7 +7,8 @@ var PluginLoader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
 	mongoose_util = require('./include/mongoose-utilities'),
 	_ = require('lodash'),
-	sprintf = require('sprintf-js').sprintf;
+	sprintf = require('sprintf-js').sprintf,
+	chalk = require('chalk');
 
 var plugins = new PluginLoader(_config);
 
@@ -21,7 +22,7 @@ var collector_configs = [
 			apiToken:'771a871d9670b874655a25e20391640f'
 		}
 	},
-	{
+/*	{
 		plugin_name: 'TimeClock',
 		model_name: 'timeclock_timeEntry',
 		version: '1.0',
@@ -31,7 +32,7 @@ var collector_configs = [
 			user:'admin',
 			password:'FVnZaHD8HyCe'
 		}
-	}
+	}*/
 ];
 
 
@@ -40,29 +41,29 @@ function main() {
 
 	//Maybe attach some event handlers?
 	plugins.on('create', (model, data) => {
-		console.log('model '+model+' created: ', data);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.green(created)}: ${chalk.grey(data)}`);
 	});
 	plugins.on('update', (model, data) => {
-		console.log('model '+model+' update: ', data);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.yellow(created)}: ${chalk.grey(data)}`);
 	});
 	plugins.on('remove', (model, data) => {
-		console.log('model '+model+' remove: ', data);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.red(created)}: ${chalk.grey(data)}`);
 	});
 
-	plugins.on('toggl_timeEntry_create', data => console.log('NEW TIME ENTRY'));
+	plugins.on('toggl_timeEntry_create', data => console.log(`${chalk.rainbow('NEW TIME ENTRY')}`));
 
-	var collect_services = _.map(collector_configs, (config) => {
+	var collect_services = _.each(collector_configs, (config) => {
 		try {
 
 			var service = plugins.initializeCollectorService(config);
 
-			service.on('error',		(e) => console.log('Error in service: ' + e));
-			service.on('started',	() => console.log('Service started.'));
-			service.on('stopped',	() => console.log('Service stopped.'));
-			service.start();
+			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e)}`))
+			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
+			service.on('stopped',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('stopped')}.`));
+			service.start(true);
 
 		} catch (e) {
-			console.log(e);
+			console.log(`${chalk.bgYellow('Service Loop Error')}: ${chalk.grey(e)}`);
 		}
 	});
 

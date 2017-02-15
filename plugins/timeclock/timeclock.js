@@ -80,7 +80,7 @@ function tryParseFloat(val) {
 function* parseReport(html) {
 	var $ = cheerio.load(html);
 
-	var current_date;
+	var current_date_str;
 
 	//This is where we define how fields are parsed in the report
 	var parse_fields = [
@@ -102,9 +102,9 @@ function* parseReport(html) {
 			selector: 'a.punchIn .punchTime',
 			name: 'punchInTime',
 			parse_function: (input) => {
-				if(input == "Add Punch" || !input) return;
+				if(input == "Add Punch" || !input || typeof current_date_str === 'undefined') return;
 				input = input.replace(/^(.*)([a|p])$/,"$1 $2m");
-				return moment(new Date(current_date + " " + input)).format("YYYY-MM-DD HH:mm:ss");
+				return moment(new Date(current_date_str + " " + input)).format("YYYY-MM-DD HH:mm:ss");
 			}
 		},
 		{
@@ -123,9 +123,9 @@ function* parseReport(html) {
 			selector: 'a.punchOut .punchTime',
 			name: 'punchOutTime',
 			parse_function: (input) => {
-				if(input == "Add Punch" || !input) return;
+				if(input == "Add Punch" || !input || typeof current_date_str === 'undefined') return;
 				input = input.replace(/^(.*)([a|p])$/,"$1 $2m");
-				return moment(new Date(current_date + " " + input)).format("YYYY-MM-DD HH:mm:ss");
+				return moment(new Date(current_date_str + " " + input)).format("YYYY-MM-DD HH:mm:ss");
 			}
 		},
 		{
@@ -202,9 +202,9 @@ function* parseReport(html) {
 
 	for (var j = entries.length - 1; j >= 0; j--) {
 
-		//This is a row giving us the current_date, and that is all
+		//This is a row giving us the current_date_str, and that is all
 		if($(entries[j]).attr('class') == "clear") {
-			current_date = $(entries[j]).text().trim();
+			current_date_str = $(entries[j]).text().trim();
 			continue;
 		}
 
