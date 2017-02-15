@@ -227,7 +227,7 @@ var Collector = function(init_properties, args) {
 					//Pass results to func2, make sure it's a promise
 					Promise.resolve(item).then((res) => {
 						func2.apply(self, Array.isArray(res) ? res : [res]);
-					});
+					})
 				);
 			}
 			return Promise.all(promises);
