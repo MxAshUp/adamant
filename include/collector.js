@@ -18,6 +18,7 @@ var Collector = function(init_properties, args) {
   /**
    * Assemble the data needed to establish an API connection
    * @param  {object} args
+   * @return {Promise}
    */
 	self.initialize = function(_args) {	};
 
@@ -25,7 +26,7 @@ var Collector = function(init_properties, args) {
   /**
    * Check an API for data that we might need to insert, update, or delete from the db
    * @param  {object} args
-   * @return {object}
+   * @return {Promise}
    */
 	self.prepare = function(_args) {
 		return;
@@ -36,7 +37,7 @@ var Collector = function(init_properties, args) {
 	 * Collect and insert or update data
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
-	 * @return {object}
+	 * @return {Promise}
 	 */
 	self.collect = function(prepared_data, _args) {
 		return;
@@ -47,7 +48,7 @@ var Collector = function(init_properties, args) {
 	 * Remove data which needs to be removed
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
-	 * @return {object}
+	 * @return {Promise}
 	 */
 	self.garbage = function(prepared_data, _args) {
 		return;
@@ -98,7 +99,7 @@ var Collector = function(init_properties, args) {
 
 	/**
 	 * Run through the collector functions (initialize, prepare, collect, garbage)
-	 * @return {object} Promise
+	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
 	 */
 	self.run = function() {
 		var prepared_data;
@@ -180,7 +181,7 @@ var Collector = function(init_properties, args) {
 	 * Loop through collect data, and insert each row asynchronously into a database
 	 * @param  {array} data - or is this an object?
 	 * @param  {object} args
-	 * @return {object}
+	 * @return {Promise}
 	 */
 	self._collect_then_insert = function(data, args) {
 		return self._apply_func_to_func(self.collect, [data, args] , self._insert_data)
@@ -194,7 +195,7 @@ var Collector = function(init_properties, args) {
 	/**
 	 * Insert data into the database
 	 * @param  {object} data_row
-	 * @return {object}
+	 * @return {Promise} Promise resolves when success or rejects when error 
 	 */
 	self._insert_data = function(data_row) {
 		return self.model.count(data_row)
@@ -219,7 +220,7 @@ var Collector = function(init_properties, args) {
 		.catch((err) => {
 			//Reformat error to be more specific
 			return Promise.reject('Error inserting doc: '+err);
-		})
+		})		
 		.then((is_inserted_row) => {
 			if(is_inserted_row === true) {
 				self.emit('create', data_row); //Execute create event function
@@ -231,7 +232,7 @@ var Collector = function(init_properties, args) {
 		.catch((err) => {
 			//Reformat error to be more specific
 			return Promise.reject('Error emitting event: '+err);
-		})
+		});
 	}
 
 
@@ -239,7 +240,7 @@ var Collector = function(init_properties, args) {
 	 * Find items to remove, and remove them from the database
 	 * @param  {array} data - or is this an object?
 	 * @param  {object} args
-	 * @return {object}
+	 * @return {Promise}
 	 */
 	self._garbage_then_remove = function(data, args) {
 
@@ -254,7 +255,7 @@ var Collector = function(init_properties, args) {
 	/**
 	 * Loop through items to remove, and remove them
 	 * @param  {object} lookup - Mongoose Lookup
-	 * @return {object}
+	 * @return {Promise}
 	 */
 	self._remove_data = function(lookup) {
 		if(typeof lookup !== 'object') {
@@ -276,7 +277,7 @@ var Collector = function(init_properties, args) {
 	 * @param  {function} func1 - Initial function to run
 	 * @param  {object} args1 - arguments to run the first function with
 	 * @param  {function} func2 - Second function to run, passing in the results from the first function
-	 * @return {object} Promise when func2 is done
+	 * @return {Promise} Promise when func2 is done
 	 */
 	self._apply_func_to_func = function(func1, args1, func2) {
 		var is_generator = (func1.constructor.name === 'GeneratorFunction');
@@ -312,7 +313,7 @@ var Collector = function(init_properties, args) {
   /**
    * Execute on this.run() failure, handle retry attempts
    * @param  {string} err_a
-   * @return {object}
+   * @return {Promise}
    */
 	self._maybe_retry = function(err_a) {
 		//Create error message
