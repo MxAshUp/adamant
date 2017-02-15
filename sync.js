@@ -14,15 +14,15 @@ var plugins = new PluginLoader(_config);
 
 
 var collector_configs = [
+	// {
+	// 	plugin_name: 'Toggl',
+	// 	model_name: 'toggl_timeEntry',
+	// 	version: '1.0',
+	// 	config: {
+	// 		apiToken:'771a871d9670b874655a25e20391640f'
+	// 	}
+	// },
 	{
-		plugin_name: 'Toggl',
-		model_name: 'toggl_timeEntry',
-		version: '1.0',
-		config: {
-			apiToken:'771a871d9670b874655a25e20391640f'
-		}
-	},
-/*	{
 		plugin_name: 'TimeClock',
 		model_name: 'timeclock_timeEntry',
 		version: '1.0',
@@ -32,7 +32,7 @@ var collector_configs = [
 			user:'admin',
 			password:'FVnZaHD8HyCe'
 		}
-	}*/
+	}
 ];
 
 

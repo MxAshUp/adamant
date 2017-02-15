@@ -1,30 +1,61 @@
-/* This is an abstract Data Collector */
-
-
 var vsprintf = require("sprintf-js").vsprintf,
 	mongoose = require('./mongoose-utilities'),
 	EventEmitter = require('events'),
 	_ = require('lodash');
 
 
+/**
+ * Abstract data collector class
+ * @param {object} init_properties - An object of properties to initialize this class with
+ * @param {object} args - An object of run args
+ */
 var Collector = function(init_properties, args) {
 
 	//Scope it!
 	var self = this;
 
-	//Settable properties
-	self.initialize = function(_args) {
 
-	};
+  /**
+   * Assemble the data needed to establish an API connection
+   * @param  {object} args
+   */
+	self.initialize = function(_args) {	};
+
+
+  /**
+   * Check an API for data that we might need to insert, update, or delete from the db
+   * @param  {object} args
+   * @return {object}
+   */
 	self.prepare = function(_args) {
 		return;
 	};
+
+
+	/**
+	 * Collect and insert or update data
+	 * @param  {object} prepared_data
+	 * @param  {object} _args
+	 * @return {object}
+	 */
 	self.collect = function(prepared_data, _args) {
 		return;
 	};
+
+
+	/**
+	 * Remove data which needs to be removed
+	 * @param  {object} prepared_data
+	 * @param  {object} _args
+	 * @return {object}
+	 */
 	self.garbage = function(prepared_data, _args) {
 		return;
 	};
+
+
+
+	// Below stuff would go into the constructor
 	self.default_args = {};
 	self.run_attempts_limit = 5;
 	self.mseconds_between_run_attempts = 500;
@@ -64,92 +95,107 @@ var Collector = function(init_properties, args) {
 	//Get model
 	self.model = mongoose.getModel(self.model_name);
 
-	//Runs a full data collection sync, returns promise
-	self.run = function() {
 
+	/**
+	 * Run through the collector functions (initialize, prepare, collect, garbage)
+	 * @return {object} Promise
+	 */
+	self.run = function() {
 		var prepared_data;
 
-		self.stop_flag = false;//reset stop flag
+		// reset stop flag
+		self.stop_flag = false;
 
-		//Update last run date
+		// Update last run date
 		self.last_run_start = Date.now();
 
-		//Begin the run promise chain
+		// Begin the run promise chain
 		return (self.initialize_flag ? Promise.resolve() : Promise.reject('Not Initialized'))
-			//If not initialized, then try to initialize
+			// If not initialized, then try to initialize
 			.catch(() => {
 				return self.initialize.call(self,self.args)
-				//Reformat possible error
+				// Reformat possible error
 				.catch((err) => {
 					return Promise.reject('Error initializing: '+err);
 				});
 			})
-			//Maybe abort if stop_flag enabled
+			// Maybe abort if stop_flag enabled
 			.then(() => {
 				return self.stop_flag ? Promise.reject('Stop initiated.') : Promise.resolve();
 			})
-			//Maybe delay to ensure at least self.min_mseconds_between_runs has passed
+			// Maybe delay to ensure at least self.min_mseconds_between_runs has passed
 			.then(() => {
 				return new Promise((resolve,reject) => {
 					setTimeout(resolve, Math.max(0, Date.now() - self.last_run_start - self.min_mseconds_between_runs));
 				});
 			})
-			//Prepare to collect and remove data
+			// Prepare to collect and remove data
 			.then(() => {
 				return self.prepare.call(self,self.args);
 			})
-			//Data is prepared
+			// Data is prepared
 			.then((res) => {
 				prepared_data = res;
 				return Promise.resolve();
 			})
-			//Collect data and insert it
+			// Collect data and insert it
 			.then(() => {
 				return self._collect_then_insert.call(self,prepared_data,self.args)
 			})
-			//If an error happens inserting data, we won't retry
+			// If an error happens inserting data, we won't retry
 			.catch((err) => {
 				self.run_attempts = self.run_attempts_limit;
 				return Promise.reject(err);
 			})
-			//Remove docs that may need to be removed
+			// Remove docs that may need to be removed
 			.then(() => {
 				return self._garbage_then_remove.call(self,prepared_data,self.args)
 			})
-			//collect is success, cleanup and return data
+			// collect is success, cleanup and return data
 			.then((data) => {
 				self.run_attempts = 0;
 				self.initialize_flag = true; //Set initialize_flag to resolved
 				return data;
 			})
-			//If any error occurs during sync, we need to initialize again next time around
+			// If any error occurs during sync, we need to initialize again next time around
 			.catch((err) => {
 				self.initialize_flag = false;
 				return Promise.reject(err);
 			})
-			//If any errors occured during collect or initialize, it's caught here and maybe retried
-			//_maybe_retry will throw an error if max attempts reached, then it has to be caught outside this function
+			// If any errors occured during collect or initialize, it's caught here and maybe retried
+			// _maybe_retry will throw an error if max attempts reached, then it has to be caught outside this function
 			.catch(self._maybe_retry);
-
 	}
 
-	//Sets stop flag to intiate a stop
+
+	/**
+	 * Sets stop flag to initiate a stop
+	 */
 	self.stop = function() {
 		self.stop_flag = true;
 	}
 
-	//Loops through collect data, and inserts each row asynchronously into database
-	self._collect_then_insert = function(data, args) {
 
+	/**
+	 * Loop through collect data, and insert each row asynchronously into a database
+	 * @param  {array} data - or is this an object?
+	 * @param  {object} args
+	 * @return {object}
+	 */
+	self._collect_then_insert = function(data, args) {
 		return self._apply_func_to_func(self.collect, [data, args] , self._insert_data)
 		.catch((err) => {
 			//If an error occured, format the error more specifically
 			return Promise.reject('Error collecting doc: '+err);
 		});
-
 	}
 
-	//Inserts data into database
+
+	/**
+	 * Insert data into the database
+	 * @param  {object} data_row
+	 * @return {object}
+	 */
 	self._insert_data = function(data_row) {
 		return self.model.count(data_row)
 		.then((res) => {
@@ -183,7 +229,13 @@ var Collector = function(init_properties, args) {
 		});
 	}
 
-	//Find items to remove, and removes them from database
+
+	/**
+	 * Find items to remove, and remove them from the database
+	 * @param  {array} data - or is this an object?
+	 * @param  {object} args
+	 * @return {object}
+	 */
 	self._garbage_then_remove = function(data, args) {
 
 		return self._apply_func_to_func(self.garbage , [data, args] , self._remove_data)
@@ -193,7 +245,12 @@ var Collector = function(init_properties, args) {
 		});
 	}
 
-	//Loops through items to remove, and removes them
+
+	/**
+	 * Loop through items to remove, and remove them
+	 * @param  {object} lookup - Mongoose Lookup
+	 * @return {object}
+	 */
 	self._remove_data = function(lookup) {
 		if(typeof lookup !== 'object') {
 			throw new Error('Invalid Mongoose lookup.');
@@ -206,25 +263,27 @@ var Collector = function(init_properties, args) {
 			}
 			return Promise.resolve(typeof res !== 'undefined');
 		});
-
 	}
 
-	//This function takes the results of func1, loops through the results, and passes them to func2, finally returns a promise for when func2 is done
-	//Sometimes we get a generator, sometimes we get a promise that returns an array, sometimes we get an array
+
+	/** 
+	 * Run a function, loop through the results, and pass them to another function
+	 * @param  {function} func1 - Initial function to run
+	 * @param  {object} args1 - arguments to run the first function with
+	 * @param  {function} func2 - Second function to run, passing in the results from the first function
+	 * @return {object} Promise when func2 is done
+	 */
 	self._apply_func_to_func = function(func1, args1, func2) {
 		var is_generator = (func1.constructor.name === 'GeneratorFunction');
-
 		args1 = Array.isArray(args1) ? args1 : [args1];
-
 		if(is_generator) {
-
-			//If func1 is a generator (These are cool, see here: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*)
-			//Loop through yields of func1, create array of promises, one for each yield
-			//Final promise resolves when all promises resolve
+			// If func1 is a generator (These are cool, see here: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*)
+			// Loop through yields of func1, create array of promises, one for each yield
+			// Final promise resolves when all promises resolve
 			var promises = [];
 			for(var item of func1.apply(self, args1)) {
 				promises.push(
-					//Pass results to func2, make sure it's a promise
+					// Pass results to func2, make sure it's a promise
 					Promise.resolve(item).then((res) => {
 						func2.apply(self, Array.isArray(res) ? res : [res]);
 					})
@@ -232,24 +291,24 @@ var Collector = function(init_properties, args) {
 			}
 			return Promise.all(promises);
 		} else {
-
-			//Promisfy, because func1 could return an array
+			// Promisfy, because func1 could return an array
 			return Promise.resolve(func1.apply(self, args1)).then((res_array) => {
-
 				return Promise.all(_.map(res_array, (item) => {
-
-					//Pass results to func2, make sure it's a promise
+					// Pass results to func2, make sure it's a promise
 					return Promise.resolve(item).then((res) => {
 						func2.apply(self, Array.isArray(res) ? res : [res]);
 					});
-
 				}));
-
 			});
 		}
 	}
 
-	//Function that executes on run failure, handles retry attempts
+
+  /**
+   * Execute on this.run() failure, handle retry attempts
+   * @param  {string} err_a
+   * @return {object}
+   */
 	self._maybe_retry = function(err_a) {
 		//Create error message
 		err_a = vsprintf('Attempt %d/%d: %s', [self.run_attempts,self.run_attempts_limit,err_a]);
