@@ -169,6 +169,11 @@ var Collector = function(init_properties, args) {
 				});
 			}
 		})
+		//Catch database insert error
+		.catch((err) => {
+			//Reformat error to be more specific
+			return Promise.reject('Error inserting doc: '+err);
+		})
 		.then((is_inserted_row) => {
 			if(is_inserted_row === true) {
 				self.emit('create', data_row); //Execute create event function
@@ -176,11 +181,11 @@ var Collector = function(init_properties, args) {
 				self.emit('update', data_row); //Execute create event function
 			}
 		})
-		//Catch database insert error
+		//Catch event handler error
 		.catch((err) => {
 			//Reformat error to be more specific
-			return Promise.reject('Error inserting doc: '+err);
-		});
+			return Promise.reject('Error emitting event: '+err);
+		})
 	}
 
 	//Find items to remove, and removes them from database
@@ -226,7 +231,7 @@ var Collector = function(init_properties, args) {
 				promises.push(
 					//Pass results to func2, make sure it's a promise
 					Promise.resolve(item).then((res) => {
-						func2.apply(self, Array.isArray(res) ? res : [res]);
+						return func2.apply(self, Array.isArray(res) ? res : [res]);
 					})
 				);
 			}
@@ -240,7 +245,7 @@ var Collector = function(init_properties, args) {
 
 					//Pass results to func2, make sure it's a promise
 					return Promise.resolve(item).then((res) => {
-						func2.apply(self, Array.isArray(res) ? res : [res]);
+						return func2.apply(self, Array.isArray(res) ? res : [res]);
 					});
 
 				}));
