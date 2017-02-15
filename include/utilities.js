@@ -3,6 +3,11 @@ var fs = require('fs'),
 
 
 module.exports = {
+	/**
+	 * Gets the directory path for each plugin
+	 * 
+	 * @returns {Array} Array of strings for each plugin path
+	 */
 	getPluginsDirectories: function() {
 		srcpath = 'plugins';
 		return fs.readdirSync(srcpath).filter((file) => {
