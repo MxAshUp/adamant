@@ -51,7 +51,7 @@ var Collector = function(init_properties, args) {
 	for (var attrname in args) { self.args[attrname] = args[attrname]; }
 
 	//Set some initial variables
-	self.is_initialized = false;
+	self.initialize_flag = false; //If true, initialize will execute before run
 	self.run_attempts = 0; //Count of failed run attempts
 	self.last_run_start = 0; //Timestamp of last run
 	self.stop_flag = false; //Set to true to indicate we need to stop running
@@ -75,7 +75,7 @@ var Collector = function(init_properties, args) {
 		self.last_run_start = Date.now();
 
 		//Begin the run promise chain
-		return (self.is_initialized ? Promise.resolve() : Promise.reject('Not Initialized'))
+		return (self.initialize_flag ? Promise.resolve() : Promise.reject('Not Initialized'))
 			//If not initialized, then try to initialize
 			.catch(() => {
 				return self.initialize.call(self,self.args)
@@ -119,12 +119,12 @@ var Collector = function(init_properties, args) {
 			//collect is success, cleanup and return data
 			.then((data) => {
 				self.run_attempts = 0;
-				self.is_initialized = true; //Set is_initialized to resolved
+				self.initialize_flag = true; //Set initialize_flag to resolved
 				return data;
 			})
 			//If any error occurs during sync, we need to initialize again next time around
 			.catch((err) => {
-				self.is_initialized = false;
+				self.initialize_flag = false;
 				return Promise.reject(err);
 			})
 			//If any errors occured during collect or initialize, it's caught here and maybe retried
@@ -141,7 +141,7 @@ var Collector = function(init_properties, args) {
 	//Loops through collect data, and inserts each row asynchronously into database
 	self._collect_then_insert = function(data, args) {
 
-		return self._apply_func_to_func(self.collect , [data, args] , self._insert_data)
+		return self._apply_func_to_func(self.collect, [data, args] , self._insert_data)
 		.catch((err) => {
 			//If an error occured, format the error more specifically
 			return Promise.reject('Error collecting doc: '+err);
@@ -216,8 +216,24 @@ var Collector = function(init_properties, args) {
 
 		args1 = Array.isArray(args1) ? args1 : [args1];
 
-		if(!is_generator) {
-			//promisfy, because func1 could return an array
+		if(is_generator) {
+
+			//If func1 is a generator (These are cool, see here: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*)
+			//Loop through yields of func1, create array of promises, one for each yield
+			//Final promise resolves when all promises resolve
+			var promises = [];
+			for(var item of func1.apply(self, args1)) {
+				promises.push(
+					//Pass results to func2, make sure it's a promise
+					Promise.resolve(item).then((res) => {
+						func2.apply(self, Array.isArray(res) ? res : [res]);
+					});
+				);
+			}
+			return Promise.all(promises);
+		} else {
+
+			//Promisfy, because func1 could return an array
 			return Promise.resolve(func1.apply(self, args1)).then((res_array) => {
 
 				return Promise.all(_.map(res_array, (item) => {
@@ -230,18 +246,6 @@ var Collector = function(init_properties, args) {
 				}));
 
 			});
-		} else {
-			//For of
-			var promises = [];
-			for(var item of func1.apply(self, args1)) {
-				promises.push(
-					//Pass results to func2, make sure it's a promise
-					Promise.resolve(item).then((res) => {
-						func2.apply(self, Array.isArray(res) ? res : [res]);
-					})
-				);
-			}
-			return Promise.all(promises);
 		}
 	}
 
