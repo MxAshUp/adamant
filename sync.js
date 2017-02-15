@@ -14,14 +14,14 @@ var plugins = new PluginLoader(_config);
 
 
 var collector_configs = [
-	// {
-	// 	plugin_name: 'Toggl',
-	// 	model_name: 'toggl_timeEntry',
-	// 	version: '1.0',
-	// 	config: {
-	// 		apiToken:'771a871d9670b874655a25e20391640f'
-	// 	}
-	// },
+/*	{
+		plugin_name: 'Toggl',
+		model_name: 'toggl_timeEntry',
+		version: '1.0',
+		config: {
+			apiToken:'771a871d9670b874655a25e20391640f'
+		}
+	},*/
 	{
 		plugin_name: 'TimeClock',
 		model_name: 'timeclock_timeEntry',
@@ -41,13 +41,13 @@ function main() {
 
 	//Maybe attach some event handlers?
 	plugins.on('create', (model, data) => {
-		console.log(`model ${chalk.bgCyan(model)} ${chalk.green(created)}: ${chalk.grey(data)}`);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.green('created')}: ${chalk.grey(data)}`);
 	});
 	plugins.on('update', (model, data) => {
-		console.log(`model ${chalk.bgCyan(model)} ${chalk.yellow(created)}: ${chalk.grey(data)}`);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.yellow('updated')}: ${chalk.grey(data)}`);
 	});
 	plugins.on('remove', (model, data) => {
-		console.log(`model ${chalk.bgCyan(model)} ${chalk.red(created)}: ${chalk.grey(data)}`);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.red('removed')}: ${chalk.grey(data)}`);
 	});
 
 	plugins.on('toggl_timeEntry_create', data => console.log(`${chalk.rainbow('NEW TIME ENTRY')}`));
@@ -60,7 +60,8 @@ function main() {
 			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e)}`))
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
 			service.on('stopped',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('stopped')}.`));
-			service.start(true);
+			service.start();
+			
 
 		} catch (e) {
 			console.log(`${chalk.bgYellow('Service Loop Error')}: ${chalk.grey(e)}`);

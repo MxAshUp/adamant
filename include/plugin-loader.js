@@ -10,6 +10,14 @@ var fs = require('fs'),
     utilities = require('./utilities'),
     EventEmitter = require('events');
 
+/**
+ * Creates a new PluginLoader object. 
+ * A PluginLoader loads plugin files into memeory and provides a way to bind with plugin events.
+ * 
+ * @param {Array} _config - Configuration array that is passed to every plugin constructor.
+ * 
+ * @todo Constructor shouldn't load plugins
+ */
 var PluginLoader = function(_config) {
 
 	//Scope it
@@ -48,6 +56,25 @@ var PluginLoader = function(_config) {
 		self.plugins.push(plugin);
 	}
 
+
+	/**
+	 * Loads a plugin into memeory.
+	 * 
+	 * @param {String} path - Path to plugin directory to be loaded
+	 * @param {Object} config - Configuration to pass to plugin on load
+	 * 
+	 * @todo Implement this, remove constructor code that loads plugins
+	 */
+	self.loadPlugin = function(path, config) {
+
+	}
+
+	/**
+	 * After plugins are loaded into memeory, a collector service can be initialized.
+	 * 
+	 * @param {any} collector_config - Configuration used for initializing collector instance
+	 * @returns {LoopService} to interface with collector (start, stopm etc...)
+	 */
 	self.initializeCollectorService = function(collector_config) {
 
 		//Find plugin
@@ -60,7 +87,9 @@ var PluginLoader = function(_config) {
 
 		//Check version
 		if(collector.version && collector.version !== collector_config.version) {
-			//TODO: Do better version check, and also maybe run update on current config
+			/** 
+			 * @todo Do better version check, and also maybe run update on current config
+			 */
 			throw new Error("Collection version not the same.");
 		}
 
@@ -79,7 +108,15 @@ var PluginLoader = function(_config) {
 		return new LoopService(collector.run.bind(collector), collector.stop.bind(collector));
 	}
 
+	/**
+	 * A generic event handler for dispatching collector events.
+	 * 
+	 * @param {String} model_name - Name of mongoose model associated with event
+	 * @param {String} event - Name/scope of event to trigger
+	 * @param {any} data - Data to pass to event handlers
+	 */
 	self.handleEventEmit = function(model_name, event, data) {
+		
 		self.emit(event, model_name, data);
 		self.emit(model_name + '_' + event, data);
 	}

@@ -2,9 +2,13 @@ var EventEmitter = require('events');
 var promiseLoop = require('promise-loop');
 
 /**
-* this class will run a promise-returning function continuously when start() is triggered.
-* It will stop when stop() is triggered or an error is caught.
-*/
+ * Creates a LoopService object
+ * A LoopService object will run a function continuously when start() is triggered.
+ * It will stop when stop() is called, an error is caught, or has reached a run limit.
+ *
+ * @param {function} run_callback - The function to run continuously. Can be a Promise-returning function.
+ * @param {function} stop_callback - The function that will run when run_callback stops
+ */
 var LoopService = function(run_callback, stop_callback) {
 
 	//Scope it!
@@ -19,31 +23,44 @@ var LoopService = function(run_callback, stop_callback) {
 	self.stop_on_run = 0;
 
 
-	//Returns true if service is running
+	/**
+	 * Checks if the LoopService object is running
+	 * 
+	 * @return {boolean} True if running, False if not
+	 */
 	self.is_running = function() {
 		return self.run_status;
 	}
 
-	//Returns a resolve if we can proceed with a run
+	/**
+	 * Checks if LoopService object should proceed to execute run_callback
+	 * 
+	 * @return {boolean} True if running, False if not
+	 */	
 	self.should_run = function() {
 
-		//stop running if stop_on_run is reached
+		//Should not run if stop_on_run count is reached
 		if(self.stop_on_run && self.run_count >= self.stop_on_run) {
 			return false;
 		}
 
-		//Check if run flag is set
+		//Should not run if run_flag isn't set
 		if(!self.run_flag) {
 			return false;
 		}
-
 
 		//Proceed
 		return true;
 
 	}
 
-	//Starts the service
+
+	/**
+	 * Initiates the LoopService to begin running.
+	 * 
+	 * @param {boolean} run_once - If True, LoopService will only execute run_callback once, and not continuously.
+	 * @return {Promise} Resolves or rejects when LoopService stops
+	 */	
 	self.start = function(run_once = false) {
 
 		//Don't start if already running
@@ -62,7 +79,7 @@ var LoopService = function(run_callback, stop_callback) {
 		//trigger start event
 		self.emit('started');
 
-		promiseLoop(() => {
+		return promiseLoop(() => {
 
 			//Check if need to keep running
 			if(!self.should_run()) {
@@ -83,23 +100,30 @@ var LoopService = function(run_callback, stop_callback) {
 
 		})
 		.then(() => {
+			if(typeof self.stop_callback === "function") {
+				return self.stop_callback();
+			}
+		})
+		.then(() => {
 			self.run_status = false;
 			self.stop_on_run = 0;
 			self.run_flag = false;
 
 			//Emit stopped event
-			self.emit('stopped');
+			self.emit('stopped'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
 
 		});
 
 	}
 
-	//Tells the service to stop
+	/**
+	 * Initiates the LoopService to stop running.
+	 * 
+	 * @todo Implement promise return
+	 * @return {Promise} Resolves or rejects when LoopService complete the stop
+	 */	
 	self.stop = function() {
 		self.run_flag = false;
-		if(typeof self.stop_callback === "function") {
-			self.stop_callback();
-		}
 	}
 }
 
