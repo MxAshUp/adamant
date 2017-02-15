@@ -50,7 +50,9 @@ module.exports = function(_config) {
 				}
 			},
 			garbage: function(data, args) {
-				//TODO: Check if local time entry is not in data, then delete it
+				/** 
+				 * @todo Check if local time entry is not in data, then delete it
+				 */				
 				return [];
 			},
 		}

@@ -12,7 +12,6 @@ var PluginLoader = require('./include/plugin-loader'),
 
 var plugins = new PluginLoader(_config);
 
-
 var collector_configs = [
 /*	{
 		plugin_name: 'Toggl',
@@ -61,6 +60,7 @@ function main() {
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
 			service.on('stopped',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('stopped')}.`));
 			service.start();
+			
 
 		} catch (e) {
 			console.log(`${chalk.bgYellow('Service Loop Error')}: ${chalk.grey(e)}`);

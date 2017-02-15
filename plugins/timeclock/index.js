@@ -1,5 +1,6 @@
-/* todo: load plugin stuff here */
-
+/** 
+ * @todo  load plugin stuff here
+ */			
 module.exports = function(_config) {
 
 	/*Plugin initializing done here...*/

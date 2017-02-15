@@ -97,7 +97,9 @@ function run_args(commands, argv) {
 
 	var command = pargv['_'];
 	if(command.length > 1) {
-		//TODO: show help and syntax
+		/** 
+		 * @todo show help and syntax
+		 */			
 		console.log('Unknown command: ', command);
 		return 1;
 	} else if(command.length == 0) {

@@ -60,7 +60,9 @@ var PluginLoader = function(_config) {
 
 		//Check version
 		if(collector.version && collector.version !== collector_config.version) {
-			//TODO: Do better version check, and also maybe run update on current config
+			/** 
+			 * @todo Do better version check, and also maybe run update on current config
+			 */
 			throw new Error("Collection version not the same.");
 		}
 
