@@ -55,7 +55,7 @@ function main() {
 	var collect_services = _.each(collector_configs, (config) => {
 		try {
 
-			var service = plugins.initializeCollectorService(config);
+			var service = plugins.initialize_collector_service(config);
 
 			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e)}`))
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));

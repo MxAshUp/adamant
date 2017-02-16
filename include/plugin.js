@@ -6,10 +6,10 @@ var Plugin = function(args) {
 	var self = this;
 
 	//Settable properties
-	self.onLoad = function(_args) {
+	self.on_load = function(_args) {
 		//Maybe we need somethign to run when plugin is loaded
 	};
-	self.onUnLoad = function(_args) {
+	self.on_unload = function(_args) {
 		//Maybe we need somethign to run when plugin is unloaded
 	};
 	self.collectors = [];

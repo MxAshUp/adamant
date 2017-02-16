@@ -65,7 +65,7 @@ var PluginLoader = function(_config) {
 	 * 
 	 * @todo Implement this, remove constructor code that loads plugins
 	 */
-	self.loadPlugin = function(path, config) {
+	self.load_plugin = function(path, config) {
 
 	}
 
@@ -75,7 +75,7 @@ var PluginLoader = function(_config) {
 	 * @param {any} collector_config - Configuration used for initializing collector instance
 	 * @returns {LoopService} to interface with collector (start, stopm etc...)
 	 */
-	self.initializeCollectorService = function(collector_config) {
+	self.initialize_collector_service = function(collector_config) {
 
 		//Find plugin
 		var plugin = _.find(self.plugins, {name: collector_config.plugin_name, enabled: true});
@@ -102,7 +102,7 @@ var PluginLoader = function(_config) {
 
 		//Add event handling
 		_.each(['create','update','remove'], (event) => {
-			collector.on(event, (data) => self.handleEventEmit(collector.model_name, event, data));
+			collector.on(event, (data) => self.handle_event_emit(collector.model_name, event, data));
 		});
 
 		return new LoopService(collector.run.bind(collector), collector.stop.bind(collector));
@@ -115,7 +115,7 @@ var PluginLoader = function(_config) {
 	 * @param {String} event - Name/scope of event to trigger
 	 * @param {any} data - Data to pass to event handlers
 	 */
-	self.handleEventEmit = function(model_name, event, data) {
+	self.handle_event_emit = function(model_name, event, data) {
 		
 		self.emit(event, model_name, data);
 		self.emit(model_name + '_' + event, data);

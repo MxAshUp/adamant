@@ -11,7 +11,7 @@ var request = require('request'),
 request = request.defaults({jar: cjar});
 
 //logs into mavenlink using non-api methods
-function doLogin(url,username,password) {
+function do_login(url,username,password) {
 
     var loginPage = url + '/login.html';
 
@@ -43,7 +43,7 @@ function doLogin(url,username,password) {
 }
 
 //Gets HTML content of report from timeclock
-function getReportHTML(url,start_date,end_date) {
+function get_report_html(url,start_date,end_date) {
 
 	var url = url + '/report.html';
 
@@ -68,7 +68,7 @@ function getReportHTML(url,start_date,end_date) {
 }
 
 //Tries to parse a float
-function tryParseFloat(val) {
+function try_parse_float(val) {
 	try {
 		return isNaN(parseFloat(val)) ? 0 : parseFloat(val);
 	} catch(ex) {
@@ -77,7 +77,7 @@ function tryParseFloat(val) {
 }
 
 //Parses html report and returns array of data
-function* parseReport(html) {
+function* parse_report(html) {
 	var $ = cheerio.load(html);
 
 	var current_date_str;
@@ -132,49 +132,49 @@ function* parseReport(html) {
 			selector: 'a.punchOut .punchLunch',
 			name: 'punchOutLunch',
 			parse_function: (input) => {
-				return tryParseFloat(input)/60; //lunch is in minutes
+				return try_parse_float(input)/60; //lunch is in minutes
 			}
 		},
 		{
 			selector: 'a.punchOut .punchADJ',
 			name: 'punchOutADJ',
 			parse_function: (input) => {
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 		{
 			selector: '.punchSTD',
 			name: 'punchSTD',
 			parse_function: (input) => {
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 		{
 			selector: '.punchOT1',
 			name: 'punchOT1',
 			parse_function: (input) => {
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 		{
 			selector: '.punchOT2',
 			name: 'punchOT2',
 			parse_function: (input) => {
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 		{
 			selector: '.punchHOL',
 			name: 'punchHOL',
 			parse_function: (input) => {
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 		{
 			selector: '.punchHRS',
 			name: 'punchHRS',
 			parse_function: (input) => {
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 		{
@@ -182,14 +182,14 @@ function* parseReport(html) {
 			name: 'punchLaborDS',
 			parse_function: (input) => {
 				input = input.replace("$","");
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 		{
 			selector: '.punchLabor',
 			name: 'punchLabor',
 			parse_function: (input) => {
-				return tryParseFloat(input);
+				return try_parse_float(input);
 			}
 		},
 	];
@@ -249,7 +249,7 @@ function* parseReport(html) {
 
 //Export them functions
 module.exports = {
-	doLogin: doLogin,
-	getReportHTML: getReportHTML,
-	parseReport: parseReport
+	do_login: do_login,
+	get_report_html: get_report_html,
+	parse_report: parse_report
 };

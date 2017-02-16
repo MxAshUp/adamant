@@ -35,17 +35,17 @@ module.exports = function(_config) {
 				password:''
 			},
 			initialize: function(args) {
-				return timeclock.doLogin( args.url, args.user, args.password );
+				return timeclock.do_login( args.url, args.user, args.password );
 			},
 			prepare: function(args) {
 				//Set report ranges
 				var start_report = moment().subtract(args.days_back_to_sync,'days');
 				var end_report = moment();
 				//Get report data Promise
-				return timeclock.getReportHTML( args.url, start_report, end_report );
+				return timeclock.get_report_html( args.url, start_report, end_report );
 			},
 			collect: function* (data, args) {
-				for(var data_row of timeclock.parseReport(data)) {
+				for(var data_row of timeclock.parse_report(data)) {
 					yield data_row;
 				}
 			},
