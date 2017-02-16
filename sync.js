@@ -8,9 +8,16 @@ var PluginLoader = require('./include/plugin-loader'),
 	mongoose_util = require('./include/mongoose-utilities'),
 	_ = require('lodash'),
 	sprintf = require('sprintf-js').sprintf,
+    utilities = require('./include/utilities'),
 	chalk = require('chalk');
 
-var plugins = new PluginLoader(_config);
+var plugins = new PluginLoader();
+
+//Get directors of plugins
+var plugin_dirs = utilities.getPluginsDirectories();
+
+//Load each plugin
+_.forEach(plugin_dirs, (plugin_path) => {plugins.load_plugin(plugin_path.path,_config)});
 
 
 var collector_configs = [

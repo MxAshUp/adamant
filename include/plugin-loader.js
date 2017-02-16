@@ -7,37 +7,37 @@ var fs = require('fs'),
     LoopService = require('./loop-service'),
     sprintf = require('sprintf-js').sprintf,
     mongoose = require('./mongoose-utilities').mongoose,
-    utilities = require('./utilities'),
     EventEmitter = require('events');
 
-/**
- * Creates a new PluginLoader object. 
- * A PluginLoader loads plugin files into memeory and provides a way to bind with plugin events.
- * 
- * @param {Array} _config - Configuration array that is passed to every plugin constructor.
- * 
- * @todo Constructor shouldn't load plugins
- */
-var PluginLoader = function(_config) {
 
-	//Scope it
-	var self = this;
+class PluginLoader {
 
-	//We'll export these
-	self.plugins = [];
+	/**
+	 * Creates a new PluginLoader object. 
+	 * A PluginLoader loads plugin files into memeory and provides a way to bind with plugin events.
+	 * 
+	 * 
+	 * @memberOf PluginLoader
+	 */
+	constructor() {
+		this.plugins = [];
+	}
 
-	//Get directors of plugins
-	var plugin_dirs = utilities.getPluginsDirectories();
 
-	//Loop through them
-	for (var i in plugin_dirs) {
-
+	/**
+	 * Loads a plugin into memeory.
+	 * 
+	 * @param {String} path - Path to plugin directory to be loaded
+	 * @param {Object} config - Configuration to pass to plugin on load
+	 * 
+	 */
+	load_plugin(path, _config) {
 		//Load in the plugin
-		var plugin_args = require('../' + plugin_dirs[i].path);
+		var plugin_args = require('../' + path);
 
 		//Could not load it, or it's not a valid plugin_args
 		if(typeof plugin_args !== 'function') {
-			continue;
+			throw `Error loading plugin: ${path}`;
 		}
 
 		//Initialize plugin_args
@@ -53,20 +53,7 @@ var PluginLoader = function(_config) {
 		plugin.enabled = true;
 
 		//Add plugin to registered array
-		self.plugins.push(plugin);
-	}
-
-
-	/**
-	 * Loads a plugin into memeory.
-	 * 
-	 * @param {String} path - Path to plugin directory to be loaded
-	 * @param {Object} config - Configuration to pass to plugin on load
-	 * 
-	 * @todo Implement this, remove constructor code that loads plugins
-	 */
-	self.load_plugin = function(path, config) {
-
+		this.plugins.push(plugin);
 	}
 
 	/**
@@ -75,10 +62,10 @@ var PluginLoader = function(_config) {
 	 * @param {any} collector_config - Configuration used for initializing collector instance
 	 * @returns {LoopService} to interface with collector (start, stopm etc...)
 	 */
-	self.initialize_collector_service = function(collector_config) {
+	initialize_collector_service(collector_config) {
 
 		//Find plugin
-		var plugin = _.find(self.plugins, {name: collector_config.plugin_name, enabled: true});
+		var plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
 		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
 
 		//Find data collector in plugin
@@ -102,7 +89,7 @@ var PluginLoader = function(_config) {
 
 		//Add event handling
 		_.each(['create','update','remove'], (event) => {
-			collector.on(event, (data) => self.handle_event_emit(collector.model_name, event, data));
+			collector.on(event, (data) => this.handle_event_emit(collector.model_name, event, data));
 		});
 
 		return new LoopService(collector.run.bind(collector), collector.stop.bind(collector));
@@ -115,10 +102,10 @@ var PluginLoader = function(_config) {
 	 * @param {String} event - Name/scope of event to trigger
 	 * @param {any} data - Data to pass to event handlers
 	 */
-	self.handle_event_emit = function(model_name, event, data) {
+	handle_event_emit(model_name, event, data) {
 		
-		self.emit(event, model_name, data);
-		self.emit(model_name + '_' + event, data);
+		this.emit(event, model_name, data);
+		this.emit(model_name + '_' + event, data);
 	}
 }
 
