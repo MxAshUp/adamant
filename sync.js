@@ -21,14 +21,14 @@ _.forEach(plugin_dirs, (plugin_path) => {plugins.load_plugin(plugin_path.path,_c
 
 
 var collector_configs = [
-/*	{
+	{
 		plugin_name: 'Toggl',
 		model_name: 'toggl_timeEntry',
 		version: '1.0',
 		config: {
 			apiToken:'771a871d9670b874655a25e20391640f'
 		}
-	},*/
+	},
 	{
 		plugin_name: 'TimeClock',
 		model_name: 'timeclock_timeEntry',
@@ -48,16 +48,17 @@ function main() {
 
 	//Maybe attach some event handlers?
 	plugins.on('create', (model, data) => {
-		console.log(`model ${chalk.bgCyan(model)} ${chalk.green('created')}: ${chalk.grey(data)}`);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.green('created')}: ${chalk.grey(JSON.stringify(data))}`);
 	});
 	plugins.on('update', (model, data) => {
-		console.log(`model ${chalk.bgCyan(model)} ${chalk.yellow('updated')}: ${chalk.grey(data)}`);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.yellow('updated')}: ${chalk.grey(JSON.stringify(data))}`);
 	});
 	plugins.on('remove', (model, data) => {
-		console.log(`model ${chalk.bgCyan(model)} ${chalk.red('removed')}: ${chalk.grey(data)}`);
+		console.log(`model ${chalk.bgCyan(model)} ${chalk.red('removed')}: ${chalk.grey(JSON.stringify(data))}`);
 	});
 
-	plugins.on('toggl_timeEntry_create', data => console.log(`${chalk.rainbow('NEW TIME ENTRY')}`));
+	//Example of plugin/model specific event
+	plugins.on('toggl_timeEntry_create', data => console.log(`${chalk.green('NEW TIME ENTRY')}`));
 
 	var collect_services = _.each(collector_configs, (config) => {
 		try {
