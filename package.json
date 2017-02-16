@@ -9,13 +9,13 @@
     "lodash": "^4.16.4",
     "minimist": "^1.2.0",
     "moment": "^2.13.0",
-    "mongoose": "^4.6.8",
+    "mongoose": "^4.8.3",
     "mysql": "^2.10.2",
     "promise-loop": "^1.0.1",
     "request": "^2.72.0",
     "semver": "^5.3.0",
     "sprintf-js": "^1.0.3",
-    "toggl-api": "0.0.4"
+    "toggl-api": "^1.0.1"
   },
   "scripts": {
     "start": "node index.js",
