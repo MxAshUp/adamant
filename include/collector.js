@@ -270,7 +270,7 @@ class Collector {
 			throw new Error('Invalid Mongoose lookup.');
 		}
 		//Find doc by lookup and remove it
-		return this.model.findOneAndRemove(lookup).then(function(res) {
+		return this.model.findOneAndRemove(lookup).then((res) => {
 			//Res is defined if something was found and deleted
 			if(typeof res !== 'undefined') {
 				this.emit('remove', res); //Execute create event function
@@ -324,6 +324,11 @@ class Collector {
    * @return {Promise}
    */
 	_maybe_retry(err_a) {
+
+		/**
+		 * @todo Only retry on certain errors. And only indiciate attept number if relevant.
+		 */
+
 		//Create error message
 		err_a = vsprintf('Attempt %d/%d: %s', [this.run_attempts,this.run_attempts_limit,err_a]);
 
