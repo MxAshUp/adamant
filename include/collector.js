@@ -168,7 +168,9 @@ class Collector {
 			})
 			// If any errors occured during collect or initialize, it's caught here and maybe retried
 			// _maybe_retry will throw an error if max attempts reached, then it has to be caught outside this function
-			.catch(this._maybe_retry);
+			.catch((err) => {
+				return this._maybe_retry(err)
+			});
 	}
 
 
