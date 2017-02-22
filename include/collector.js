@@ -1,7 +1,10 @@
 let vsprintf = require("sprintf-js").vsprintf,
 	mongoose = require('./mongoose-utilities'),
+	utilities = require('./utilities'),
 	EventEmitter = require('events'),
-	_ = require('lodash');
+	_ = require('lodash'),
+	CollectorInitializeError = require('./errors').CollectorInitializeError,
+	CollectorDatabaseError = require('./errors').CollectorDatabaseError;
 
 
 
@@ -48,6 +51,8 @@ class Collector {
 		this.run_attempts = 0; //Count of failed run attempts
 		this.last_run_start = 0; //Timestamp of last run
 		this.stop_flag = false; //Set to true to indicate we need to stop running
+		this.prepared_data;
+
 
 		//Registers the model if needed
 		if(!mongoose.modelExists(this.model_name)) {
@@ -84,8 +89,10 @@ class Collector {
 	 * @param  {object} _args
 	 * @return {Promise}
 	 */
-	collect(prepared_data, _args) {
-		return;
+	*collect(prepared_data, _args) {
+		for(item in prepared_data) {
+			yield item;
+		}
 	}
 
 
@@ -105,7 +112,6 @@ class Collector {
 	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
 	 */
 	run() {
-		let prepared_data;
 
 		// reset stop flag
 		this.stop_flag = false;
@@ -114,46 +120,53 @@ class Collector {
 		this.last_run_start = Date.now();
 
 		// Begin the run promise chain
-		return (this.initialize_flag ? Promise.resolve() : Promise.reject('Not Initialized'))
-			// If not initialized, then try to initialize
-			.catch(() => {
-				return this.initialize.call(this,this.args)
-				// Reformat possible error
-				.catch((err) => {
-					return Promise.reject('Error initializing: '+err);
-				});
+		return Promise.resolve().then(() => {
+				// If not initialized, then try to initialize
+				return this.initialize_flag ? Promise.resolve() : this.initialize.call(this,this.args);
+			})
+			// Reformat possible error
+			.catch((err) => {
+				return Promise.reject(new CollectorInitializeError(err));
 			})
 			// Maybe abort if stop_flag enabled
 			.then(() => {
 				return this.stop_flag ? Promise.reject('Stop initiated.') : Promise.resolve();
 			})
-			// Maybe delay to ensure at least this.min_mseconds_between_runs has passed
-			.then(() => {
-				return new Promise((resolve,reject) => {
-					setTimeout(resolve, Math.max(0, Date.now() - this.last_run_start - this.min_mseconds_between_runs));
-				});
-			})
 			// Prepare to collect and remove data
 			.then(() => {
-				return this.prepare.call(this,this.args);
+				return Promise.resolve(this.prepare.call(this,this.args));
 			})
 			// Data is prepared
 			.then((res) => {
-				prepared_data = res;
+				this.prepared_data = res;
 				return Promise.resolve();
 			})
 			// Collect data and insert it
 			.then(() => {
-				return this._collect_then_insert.call(this,prepared_data,this.args)
-			})
-			// If an error happens inserting data, we won't retry
-			.catch((err) => {
-				this.run_attempts = this.run_attempts_limit;
-				return Promise.reject(err);
+				const promises = [];
+				/**
+				 * Loop through collect data, and insert each row asynchronously into a database
+				 */
+				for(let to_collect of this.collect(this.prepared_data, this.args)) {
+					promises.push(
+						Promise.resolve(to_collect)
+						.then((data) => this._insert_data(data))
+						.catch((err) => {
+							if(err instanceof CollectorDatabaseError) {
+								/**
+								 * @todo - Decide how to handle database errors
+								 */
+							}
+							this.emit('error', err);
+						})
+					);
+				}
+
+				return Promise.all(promises);
 			})
 			// Remove docs that may need to be removed
 			.then(() => {
-				return this._garbage_then_remove.call(this,prepared_data,this.args)
+				return Promise.all(_.map(this.garbage.apply(this, [this.prepared_data,this.args]),this._remove_data));
 			})
 			// collect is success, cleanup and return data
 			.then((data) => {
@@ -164,13 +177,9 @@ class Collector {
 			// If any error occurs during sync, we need to initialize again next time around
 			.catch((err) => {
 				this.initialize_flag = false;
-				return Promise.reject(err);
+				return Promise.reject(err);//We're not handling the error, throw it along
 			})
-			// If any errors occured during collect or initialize, it's caught here and maybe retried
-			// _maybe_retry will throw an error if max attempts reached, then it has to be caught outside this function
-			.catch((err) => {
-				return this._maybe_retry(err)
-			});
+
 	}
 
 
@@ -182,21 +191,7 @@ class Collector {
 	 */
 	stop() {
 		this.stop_flag = true;
-	}
-
-
-	/**
-	 * Loop through collect data, and insert each row asynchronously into a database
-	 * @param  {array} data - or is this an object?
-	 * @param  {object} args
-	 * @return {Promise}
-	 */
-	_collect_then_insert(data, args) {
-		return this._apply_func_to_func(this.collect, [data, args] , this._insert_data)
-		.catch((err) => {
-			//If an error occured, format the error more specifically
-			return Promise.reject('Error collecting doc: '+err);
-		});
+		this.emit('stop');
 	}
 
 
@@ -219,43 +214,19 @@ class Collector {
 				return this.model.findOneAndUpdate(find, data_row, {
 					upsert:true,
 					setDefaultsOnInsert:true,
-				}).then((oldDoc) => {
-					return Promise.resolve(oldDoc == null); //return true if doc is inserted
+				}).then((old_doc) => {
+					const is_new = old_doc == null;
+					return Promise.resolve(is_new);
 				});
 			}
 		})
-		//Catch database insert error
 		.catch((err) => {
-			//Reformat error to be more specific
-			return Promise.reject('Error inserting doc: '+err);
-		})		
-		.then((is_inserted_row) => {
-			if(is_inserted_row === true) {
-				this.emit('create', data_row); //Execute create event function
-			} else if(is_inserted_row === false) {
-				this.emit('update', data_row); //Execute create event function
-			}
+			return Promise.reject(new CollectorDatabaseError(err));
 		})
-		//Catch event handler error
-		.catch((err) => {
-			//Reformat error to be more specific
-			return Promise.reject('Error emitting event: '+err);
-		});
-	}
-
-
-	/**
-	 * Find items to remove, and remove them from the database
-	 * @param  {array} data - or is this an object?
-	 * @param  {object} args
-	 * @return {Promise}
-	 */
-	_garbage_then_remove(data, args) {
-
-		return this._apply_func_to_func(this.garbage , [data, args] , this._remove_data)
-		.catch((err) => {
-			//If an error occured, format the error more specifically
-			return Promise.reject('Error removing doc: '+err);
+		.then((is_inserted_row) => {
+			if(typeof is_inserted_row === 'undefined') return;
+			const event = is_inserted_row === true ? 'create' : 'update';
+			this.emit(event, data_row);
 		});
 	}
 
@@ -266,92 +237,14 @@ class Collector {
 	 * @return {Promise}
 	 */
 	_remove_data(lookup) {
-		if(typeof lookup !== 'object') {
-			throw new Error('Invalid Mongoose lookup.');
-		}
 		//Find doc by lookup and remove it
 		return this.model.findOneAndRemove(lookup).then((res) => {
-			//Res is defined if something was found and deleted
+			//res is defined if something was found and deleted
 			if(typeof res !== 'undefined') {
 				this.emit('remove', res); //Execute create event function
 			}
 			return Promise.resolve(typeof res !== 'undefined');
 		});
-	}
-
-
-	/** 
-	 * Run a function, loop through the results, and pass them to another function
-	 * @param  {function} func1 - Initial function to run
-	 * @param  {object} args1 - arguments to run the first function with
-	 * @param  {function} func2 - Second function to run, passing in the results from the first function
-	 * @return {Promise} Promise when func2 is done
-	 */
-	_apply_func_to_func(func1, args1, func2) {
-		const is_generator = (func1.constructor.name === 'GeneratorFunction');
-		args1 = Array.isArray(args1) ? args1 : [args1];
-		if(is_generator) {
-			// If func1 is a generator (These are cool, see here: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*)
-			// Loop through yields of func1, create array of promises, one for each yield
-			// Final promise resolves when all promises resolve
-			const promises = [];
-			for(let item of func1.apply(this, args1)) {
-				promises.push(
-					// Pass results to func2, make sure it's a promise
-					Promise.resolve(item).then((res) => {
-						return func2.apply(this, Array.isArray(res) ? res : [res]);
-					})
-				);
-			}
-			return Promise.all(promises);
-		} else {
-			// Promisfy, because func1 could return an array
-			return Promise.resolve(func1.apply(this, args1)).then((res_array) => {
-				return Promise.all(_.map(res_array, (item) => {
-					// Pass results to func2, make sure it's a promise
-					return Promise.resolve(item).then((res) => {
-						return func2.apply(this, Array.isArray(res) ? res : [res]);
-					});
-				}));
-			});
-		}
-	}
-
-
-  /**
-   * Execute on this.run() failure, handle retry attempts
-   * @param  {string} err_a - Error that initiated a retry
-   * @return {Promise}
-   */
-	_maybe_retry(err_a) {
-
-		/**
-		 * @todo Only retry on certain errors. And only indiciate attept number if relevant.
-		 */
-
-		//Create error message
-		err_a = vsprintf('Attempt %d/%d: %s', [this.run_attempts,this.run_attempts_limit,err_a]);
-
-		//Check if we've reached our failure limit, and make sure stop flag wasn't set
-		if(this.run_attempts < this.run_attempts_limit && this.stop_flag) {
-			//Increment attempt
-			this.run_attempts++;
-			//return a promise containing a timout of a retry
-			return new Promise(function(resolve,reject) {
-				setTimeout(() => {
-					//Try to run again
-					this.run().catch((err_b) => {
-						err_b = err_b + "\n" + err_a; //Concatenate errors with a new line
-						reject(err_b);
-					}).then((res) => {
-						resolve(res); //Resolved! yay!
-					});
-				}, this.mseconds_between_run_attempts);
-			});
-		}
-
-		//We tried to initialize or run many times, but couldn't, throwing in the towel
-		return Promise.reject("Max run attempts reached.\n" + err_a);
 	}
 };
 

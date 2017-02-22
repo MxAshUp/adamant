@@ -59,8 +59,10 @@ module.exports = function() {
 					});
 				});
 			},
-			collect: function(data, args) {
-				return data;
+			collect: function* (data, args) {
+				for(let i = 0; i < data.length; i++) {
+					yield Promise.resolve(data[i]);
+				}
 			},
 			garbage: function(data, args) {
 
