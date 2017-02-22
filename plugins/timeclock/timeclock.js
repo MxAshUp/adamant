@@ -18,7 +18,7 @@ function do_login(url,username,password) {
 	loginFormData = [];
 	loginFormData.username = username;
 	loginFormData.password = password;
-	loginFormData.buttonClicked = "Submit";
+	loginFormData.buttonClicked = 'Submit';
 
 	return new Promise((resolve,reject) => {
 		request.post({url:loginPage,form:loginFormData},(err,res,body) => {
@@ -48,11 +48,11 @@ function get_report_html(url,start_date,end_date) {
 	url += '/report.html';
 
 	data = [];
-	data.rt = "1";
-	data.type = "7";
-	data.from = start_date.format("MM/DD/YY");
-	data.to = end_date.format("MM/DD/YY");
-	data.eid = "0";
+	data.rt = '1';
+	data.type = '7';
+	data.from = start_date.format('MM/DD/YY');
+	data.to = end_date.format('MM/DD/YY');
+	data.eid = '0';
 
 	return new Promise((resolve,reject) => {
 		request.get({url:url,qs:data},(err,response,body) => {
@@ -102,9 +102,9 @@ function* parse_report(html) {
 			selector: 'a.punchIn .punchTime',
 			name: 'punchInTime',
 			parse_function: (input) => {
-				if(input == "Add Punch" || !input || typeof current_date_str === 'undefined') return;
-				input = input.replace(/^(.*)([a|p])$/,"$1 $2m");
-				return moment(new Date(current_date_str + " " + input)).format("YYYY-MM-DD HH:mm:ss");
+				if(input == 'Add Punch' || !input || typeof current_date_str === 'undefined') return;
+				input = input.replace(/^(.*)([a|p])$/,'$1 $2m');
+				return moment(new Date(current_date_str + ' ' + input)).format('YYYY-MM-DD HH:mm:ss');
 			}
 		},
 		{
@@ -123,9 +123,9 @@ function* parse_report(html) {
 			selector: 'a.punchOut .punchTime',
 			name: 'punchOutTime',
 			parse_function: (input) => {
-				if(input == "Add Punch" || !input || typeof current_date_str === 'undefined') return;
-				input = input.replace(/^(.*)([a|p])$/,"$1 $2m");
-				return moment(new Date(current_date_str + " " + input)).format("YYYY-MM-DD HH:mm:ss");
+				if(input == 'Add Punch' || !input || typeof current_date_str === 'undefined') return;
+				input = input.replace(/^(.*)([a|p])$/,'$1 $2m');
+				return moment(new Date(current_date_str + ' ' + input)).format('YYYY-MM-DD HH:mm:ss');
 			}
 		},
 		{
@@ -181,7 +181,7 @@ function* parse_report(html) {
 			selector: '.punchLaborDS',
 			name: 'punchLaborDS',
 			parse_function: (input) => {
-				input = input.replace("$","");
+				input = input.replace('$','');
 				return try_parse_float(input);
 			}
 		},
@@ -203,13 +203,13 @@ function* parse_report(html) {
 	for (var j = entries.length - 1; j >= 0; j--) {
 
 		//This is a row giving us the current_date_str, and that is all
-		if($(entries[j]).attr('class') == "clear") {
+		if($(entries[j]).attr('class') == 'clear') {
 			current_date_str = $(entries[j]).text().trim();
 			continue;
 		}
 
 		var punch_id = $('.punchIn', entries[j]).attr('href');
-		if(typeof punch_id === "undefined") {
+		if(typeof punch_id === 'undefined') {
 			continue;
 		}
 		punch_id = punch_id.match(/pid=([0-9]+)/)[1];
@@ -232,7 +232,7 @@ function* parse_report(html) {
 				val = dom_find.text().trim();
 			}
 
-			if(typeof parse_fields[i].parse_function !== "undefined") {
+			if(typeof parse_fields[i].parse_function !== 'undefined') {
 				try {
 					val = parse_fields[i].parse_function(val);
 				} catch(ex) {
