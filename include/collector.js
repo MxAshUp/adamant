@@ -56,7 +56,6 @@ class Collector {
 
 		//Get model
 		this.model = mongoose.getModel(this.model_name);
-	
 	}
 
 
@@ -64,6 +63,8 @@ class Collector {
    * Assemble the data needed to establish an API connection
    * @param  {object} args
    * @return {Promise}
+	 * 
+	 * @memberOf Collector
    */
 	initialize(_args) {	}
 
@@ -72,6 +73,8 @@ class Collector {
    * Check an API for data that we might need to insert, update, or delete from the db
    * @param  {object} args
    * @return {Promise}
+	 * 
+	 * @memberOf Collector
    */
 	prepare(_args) {
 		return;
@@ -83,6 +86,8 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	collect(prepared_data, _args) {
 		return;
@@ -94,6 +99,8 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	garbage(prepared_data, _args) {
 		return;
@@ -103,6 +110,8 @@ class Collector {
 	/**
 	 * Run through the collector functions (initialize, prepare, collect, garbage)
 	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
+	 * 
+	 * @memberOf Collector
 	 */
 	run() {
 		let prepared_data;
@@ -144,7 +153,7 @@ class Collector {
 			})
 			// Collect data and insert it
 			.then(() => {
-				return this._collect_then_insert.call(this,prepared_data,this.args)
+				return this._collect_then_insert.call(this,prepared_data,this.args);
 			})
 			// If an error happens inserting data, we won't retry
 			.catch((err) => {
@@ -153,7 +162,7 @@ class Collector {
 			})
 			// Remove docs that may need to be removed
 			.then(() => {
-				return this._garbage_then_remove.call(this,prepared_data,this.args)
+				return this._garbage_then_remove.call(this,prepared_data,this.args);
 			})
 			// collect is success, cleanup and return data
 			.then((data) => {
@@ -169,7 +178,7 @@ class Collector {
 			// If any errors occured during collect or initialize, it's caught here and maybe retried
 			// _maybe_retry will throw an error if max attempts reached, then it has to be caught outside this function
 			.catch((err) => {
-				return this._maybe_retry(err)
+				return this._maybe_retry(err);
 			});
 	}
 
@@ -178,6 +187,7 @@ class Collector {
 	 * Sets stop flag to initiate a stop
 	 * 
 	 * @todo return a Promise indicating when stop is finished
+	 * 
 	 * @memberOf Collector
 	 */
 	stop() {
@@ -190,6 +200,8 @@ class Collector {
 	 * @param  {array} data - or is this an object?
 	 * @param  {object} args
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	_collect_then_insert(data, args) {
 		return this._apply_func_to_func(this.collect, [data, args] , this._insert_data)
@@ -204,6 +216,8 @@ class Collector {
 	 * Insert data into the database
 	 * @param  {object} data_row
 	 * @return {Promise} Promise resolves when success or rejects when error 
+	 * 
+	 * @memberOf Collector
 	 */
 	_insert_data(data_row) {
 		return this.model.count(data_row)
@@ -220,7 +234,7 @@ class Collector {
 					upsert:true,
 					setDefaultsOnInsert:true,
 				}).then((oldDoc) => {
-					return Promise.resolve(oldDoc == null); //return true if doc is inserted
+					return Promise.resolve(oldDoc === null); //return true if doc is inserted
 				});
 			}
 		})
@@ -249,6 +263,8 @@ class Collector {
 	 * @param  {array} data - or is this an object?
 	 * @param  {object} args
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	_garbage_then_remove(data, args) {
 
@@ -264,6 +280,8 @@ class Collector {
 	 * Loop through items to remove, and remove them
 	 * @param  {object} lookup - Mongoose Lookup
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	_remove_data(lookup) {
 		if(typeof lookup !== 'object') {
@@ -286,6 +304,8 @@ class Collector {
 	 * @param  {object} args1 - arguments to run the first function with
 	 * @param  {function} func2 - Second function to run, passing in the results from the first function
 	 * @return {Promise} Promise when func2 is done
+	 * 
+	 * @memberOf Collector
 	 */
 	_apply_func_to_func(func1, args1, func2) {
 		const is_generator = (func1.constructor.name === 'GeneratorFunction');
@@ -322,6 +342,8 @@ class Collector {
    * Execute on this.run() failure, handle retry attempts
    * @param  {string} err_a - Error that initiated a retry
    * @return {Promise}
+	 * 
+	 * @memberOf Collector
    */
 	_maybe_retry(err_a) {
 		//Create error message
@@ -348,7 +370,7 @@ class Collector {
 		//We tried to initialize or run many times, but couldn't, throwing in the towel
 		return Promise.reject("Max run attempts reached.\n" + err_a);
 	}
-};
+}
 
 //Extend to event emitter
 Collector.prototype.__proto__ = EventEmitter.prototype;
