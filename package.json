@@ -30,5 +30,10 @@
     "mocha-mongoose": "^1.2.0",
     "rewire": "^2.5.2",
     "sinon": "^1.17.7"
+  },
+  "jshintConfig": {
+    "esversion": 6,
+    "devel": true,
+    "node": true
   }
 }

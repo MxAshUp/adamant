@@ -61,7 +61,6 @@ class Collector {
 
 		//Get model
 		this.model = mongoose.getModel(this.model_name);
-	
 	}
 
 
@@ -69,6 +68,8 @@ class Collector {
    * Assemble the data needed to establish an API connection
    * @param  {object} args
    * @return {Promise}
+	 * 
+	 * @memberOf Collector
    */
 	initialize(_args) {	}
 
@@ -77,6 +78,8 @@ class Collector {
    * Check an API for data that we might need to insert, update, or delete from the db
    * @param  {object} args
    * @return {Promise}
+	 * 
+	 * @memberOf Collector
    */
 	prepare(_args) {
 		return;
@@ -88,6 +91,8 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	*collect(prepared_data, _args) {
 		for(item in prepared_data) {
@@ -101,6 +106,8 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	garbage(prepared_data, _args) {
 		return;
@@ -110,6 +117,8 @@ class Collector {
 	/**
 	 * Run through the collector functions (initialize, prepare, collect, garbage)
 	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
+	 * 
+	 * @memberOf Collector
 	 */
 	run() {
 
@@ -179,7 +188,6 @@ class Collector {
 				this.initialize_flag = false;
 				return Promise.reject(err);//We're not handling the error, throw it along
 			})
-
 	}
 
 
@@ -187,6 +195,7 @@ class Collector {
 	 * Sets stop flag to initiate a stop
 	 * 
 	 * @todo return a Promise indicating when stop is finished
+	 * 
 	 * @memberOf Collector
 	 */
 	stop() {
@@ -199,6 +208,8 @@ class Collector {
 	 * Insert data into the database
 	 * @param  {object} data_row
 	 * @return {Promise} Promise resolves when success or rejects when error 
+	 * 
+	 * @memberOf Collector
 	 */
 	_insert_data(data_row) {
 		return this.model.count(data_row)
@@ -235,6 +246,8 @@ class Collector {
 	 * Loop through items to remove, and remove them
 	 * @param  {object} lookup - Mongoose Lookup
 	 * @return {Promise}
+	 * 
+	 * @memberOf Collector
 	 */
 	_remove_data(lookup) {
 		//Find doc by lookup and remove it
