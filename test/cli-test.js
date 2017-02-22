@@ -10,13 +10,13 @@ describe('Command line', function() {
 	describe('Arg handler', function() {
 
 		//Sample argument definitions
-		var arg_def_verbose = new arg_handle.arg_definition({
+		var arg_def_verbose = new arg_handle.argDefinition({
 			short: 'v',
 			long: 'verbose',
 			default_value: false,
 			description: 'Show lots of useful goodies in the console.',
 		});
-		var arg_def_user = new arg_handle.arg_definition({
+		var arg_def_user = new arg_handle.argDefinition({
 			short: 'u',
 			long: 'user',
 			default_value: 0,
@@ -26,7 +26,7 @@ describe('Command line', function() {
 		var sinon_callback = sinon.spy();
 
 		var commands = [
-			new arg_handle.command_definition({
+			new arg_handle.commandDefinition({
 				command: 'run',
 				description: 'Executes main script',
 				callback: sinon_callback,

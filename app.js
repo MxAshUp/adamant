@@ -1,33 +1,57 @@
-//Main app goes here
-//Some code action is happening over in /test/
+// Main app goes here
+// Some code action is happening over in /test/
 
-var arg_handler = require('./include/arg-handle');
+// Handle command line arguments if passed
+const arg_handler = require('./include/arg-handle');
 
 
-//Sample definitions
-var arg_def = new arg_handler.arg_definition({
-	short: 'v',
-	long: 'verbose',
-	default_value: false,
-	description: 'Show lots of useful goodies in the console.',
-	callback: function() {
+// Sample definitions
+var arg_def = [
+	// -v, --verbose
+	new arg_handler.argDefinition({
+		short: 'v',
+		long: 'verbose',
+		default_value: false,
+		description: 'Show lots of useful goodies in the console.',
+		callback: function() { }
+	}),
 
-	}
-});
+	// --h, --help
+	new arg_handler.argDefinition({
+		short: 'h',
+		long: 'help',
+		default_value: false,
+		description: 'Show help documentation somehow',
+		callback: function() { }
+	})
+];
 
 var commands = [
-	new arg_handler.command_definition({
+	// No argument
+  new arg_handler.commandDefinition({
+		command: '',
+		description: 'Executes main script',
+		callback: function({verbose, help, thing}) {
+			console.log('ran without an arg');
+			console.log('verbose? ', verbose);
+			console.log('help? ', help);
+			console.log('thing? ', thing);
+		},
+		arg_definitions: arg_def
+	}),
+
+  // "run"
+	new arg_handler.commandDefinition({
 		command: 'run',
 		description: 'Executes main script',
-		callback: function({verbose, thing}) {
+		callback: function({verbose, help, thing}) {
 			console.log('I am a program running!');
 			console.log('What is this? ', this);
 			console.log('verbose? ', verbose);
+			console.log('help? ', help);
 			console.log('thing? ', thing);
 		},
-		arg_definitions: [
-			arg_def
-		]
+		arg_definitions: arg_def
 	})
 ];
 

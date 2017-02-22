@@ -1,5 +1,5 @@
-var EventEmitter = require('events');
-var promiseLoop = require('promise-loop');
+const EventEmitter = require('events');
+const promiseLoop = require('promise-loop');
 
 
 class LoopService {
@@ -22,12 +22,12 @@ class LoopService {
 		this.run_count = 0;
 		this.stop_on_run = 0;
 
-	} 
+	}
 
 
 	/**
 	 * Checks if the LoopService object is running
-	 * 
+	 *
 	 * @return {boolean} True if running, False if not
 	 */
 	get is_running() {
@@ -36,9 +36,9 @@ class LoopService {
 
 	/**
 	 * Checks if LoopService object should proceed to execute run_callback
-	 * 
+	 *
 	 * @return {boolean} True if running, False if not
-	 */	
+	 */
 	get _should_run() {
 
 		//Should not run if stop_on_run count is reached
@@ -59,10 +59,10 @@ class LoopService {
 
 	/**
 	 * Initiates the LoopService to begin running.
-	 * 
+	 *
 	 * @param {boolean} run_once - If True, LoopService will only execute run_callback once, and not continuously.
 	 * @return {Promise} Resolves or rejects when LoopService stops
-	 */	
+	 */
 	start(run_once = false) {
 
 		//Don't start if already running
@@ -102,7 +102,7 @@ class LoopService {
 
 		})
 		.then(() => {
-			if(typeof this.stop_callback === "function") {
+			if(typeof this.stop_callback === 'function') {
 				return this.stop_callback();
 			}
 		})
@@ -120,10 +120,10 @@ class LoopService {
 
 	/**
 	 * Initiates the LoopService to stop running.
-	 * 
+	 *
 	 * @todo Implement promise return
 	 * @return {Promise} Resolves or rejects when LoopService complete the stop
-	 */	
+	 */
 	stop() {
 		this.run_flag = false;
 	}

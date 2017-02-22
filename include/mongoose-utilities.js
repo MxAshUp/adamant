@@ -1,6 +1,6 @@
 /* This is shared, so only one db connection is meant to be served*/
 
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 //Set promise library to ES6 default
 mongoose.Promise = global.Promise;
@@ -36,5 +36,5 @@ module.exports = {
 	connect: connect,
 	modelExists: modelExists,
 	getModel: getModel,
-	createModel: createModel,	
+	createModel: createModel,
 };
