@@ -1,4 +1,4 @@
-let vsprintf = require("sprintf-js").vsprintf,
+const vsprintf = require("sprintf-js").vsprintf,
 	mongoose = require('./mongoose-utilities'),
 	EventEmitter = require('events'),
 	_ = require('lodash');
@@ -29,21 +29,19 @@ class Collector {
 		this.plugin_name = '';
 		this.last_run = 0;
 
-		//Set object properties from args
+		// Set object properties from args
 		for(let i in init_properties) {
 			this[i] = init_properties[i];
 		}
 
-		//Set non-settable properties
-
-		//Set run args
+		// Set run args
 		args = args ? args : {};
 
-		//Merges args with default args
+		// Merges args with default args
 		this.args = this.default_args;
 		for (let attrname in args) { this.args[attrname] = args[attrname]; }
 
-		//Set some initial variables
+		// Set some initial variables
 		this.initialize_flag = false; //If true, initialize will execute before run
 		this.run_attempts = 0; //Count of failed run attempts
 		this.last_run_start = 0; //Timestamp of last run
@@ -346,33 +344,33 @@ class Collector {
 	 * @memberOf Collector
    */
 	_maybe_retry(err_a) {
-		//Create error message
+		// Create error message
 		err_a = vsprintf('Attempt %d/%d: %s', [this.run_attempts,this.run_attempts_limit,err_a]);
 
-		//Check if we've reached our failure limit, and make sure stop flag wasn't set
+		// Check if we've reached our failure limit, and make sure stop flag wasn't set
 		if(this.run_attempts < this.run_attempts_limit && this.stop_flag) {
-			//Increment attempt
+			// Increment attempt
 			this.run_attempts++;
-			//return a promise containing a timout of a retry
+			// return a promise containing a timout of a retry
 			return new Promise(function(resolve,reject) {
 				setTimeout(() => {
-					//Try to run again
+					// Try to run again
 					this.run().catch((err_b) => {
-						err_b = err_b + "\n" + err_a; //Concatenate errors with a new line
+						err_b = err_b + "\n" + err_a; // Concatenate errors with a new line
 						reject(err_b);
 					}).then((res) => {
-						resolve(res); //Resolved! yay!
+						resolve(res); // Resolved! yay!
 					});
 				}, this.mseconds_between_run_attempts);
 			});
 		}
 
-		//We tried to initialize or run many times, but couldn't, throwing in the towel
+		// We tried to initialize or run many times, but couldn't, throwing in the towel
 		return Promise.reject("Max run attempts reached.\n" + err_a);
 	}
 }
 
-//Extend to event emitter
+// Extend to event emitter
 Collector.prototype.__proto__ = EventEmitter.prototype;
 
 module.exports = Collector;
