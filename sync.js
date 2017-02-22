@@ -17,7 +17,7 @@ var plugins = new PluginLoader();
 var plugin_dirs = utilities.getPluginsDirectories();
 
 //Load each plugin
-_.forEach(plugin_dirs, (plugin_path) => {plugins.load_plugin(plugin_path.path,_config)});
+_.forEach(plugin_dirs, (plugin_path) => { plugins.load_plugin(plugin_path.path,_config); });
 
 
 var collector_configs = [
@@ -65,7 +65,7 @@ function main() {
 
 			var service = plugins.initialize_collector_service(config);
 
-			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e.stack)}`))
+			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e.stack)}`));
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
 			service.on('stopped',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('stopped')}.`));
 			service.start();

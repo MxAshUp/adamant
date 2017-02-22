@@ -45,7 +45,7 @@ function do_login(url,username,password) {
 //Gets HTML content of report from timeclock
 function get_report_html(url,start_date,end_date) {
 
-	var url = url + '/report.html';
+	url += '/report.html';
 
 	data = [];
 	data.rt = "1";
@@ -216,7 +216,7 @@ function* parse_report(html) {
 
 		var data_row = {};
 
-		data_row['pid'] = punch_id;
+		data_row.pid = punch_id;
 
 		//Loop through fields to parse
 		for (var i in parse_fields) {

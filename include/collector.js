@@ -12,14 +12,14 @@ class Collector {
 
 	/**
 	 * Creates an instance of Collector.
-	 * 
+	 *
 	 * @param {object} init_properties - An object of properties to initialize this class with
 	 * @param {object} args - An object of run args
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	constructor(init_properties, args) {
-		
+
 		this.default_args = {};
 		this.run_attempts_limit = 5;
 		this.mseconds_between_run_attempts = 500;
@@ -65,7 +65,7 @@ class Collector {
    * Assemble the data needed to establish an API connection
    * @param  {object} args
    * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
    */
 	initialize(_args) {	}
@@ -75,7 +75,7 @@ class Collector {
    * Check an API for data that we might need to insert, update, or delete from the db
    * @param  {object} args
    * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
    */
 	prepare(_args) {
@@ -88,7 +88,7 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	*collect(prepared_data, _args) {
@@ -103,7 +103,7 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	garbage(prepared_data, _args) {
@@ -114,11 +114,10 @@ class Collector {
 	/**
 	 * Run through the collector functions (initialize, prepare, collect, garbage)
 	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	run() {
-		let prepared_data;
 
 		// reset stop flag
 		this.stop_flag = false;
@@ -191,9 +190,9 @@ class Collector {
 
 	/**
 	 * Sets stop flag to initiate a stop
-	 * 
+	 *
 	 * @todo return a Promise indicating when stop is finished
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	stop() {
@@ -205,8 +204,8 @@ class Collector {
 	/**
 	 * Insert data into the database
 	 * @param  {object} data_row
-	 * @return {Promise} Promise resolves when success or rejects when error 
-	 * 
+	 * @return {Promise} Promise resolves when success or rejects when error
+	 *
 	 * @memberOf Collector
 	 */
 	_insert_data(data_row) {
@@ -229,7 +228,6 @@ class Collector {
 				});
 			}
 		})
-		// Catch database insert error
 		.catch((err) => {
 			return Promise.reject(new CollectorDatabaseError(err));
 		})
@@ -245,7 +243,7 @@ class Collector {
 	 * Loop through items to remove, and remove them
 	 * @param  {object} lookup - Mongoose Lookup
 	 * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	_remove_data(lookup) {
