@@ -4,9 +4,9 @@ class Plugin {
 
 	/**
 	 * Creates an instance of Plugin.
-	 * 
+	 *
 	 * @param {object} args
-	 * 
+	 *
 	 * @memberOf Plugin
 	 */
 	constructor(args) {
@@ -15,7 +15,7 @@ class Plugin {
 		this.name = '';
 
 		//Set object properties from args
-		for(var i in args) {
+		for(let i in args) {
 			this[i] = args[i];
 		}
 	}
