@@ -216,7 +216,7 @@ function* parse_report(html) {
 
 		var data_row = {};
 
-		data_row['pid'] = punch_id;
+		data_row.pid = punch_id;
 
 		//Loop through fields to parse
 		for (var i in parse_fields) {
