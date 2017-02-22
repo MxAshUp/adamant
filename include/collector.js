@@ -12,37 +12,33 @@ class Collector {
 	/**
 	 * Creates an instance of Collector.
 	 *
-	 * @param {object} init_properties - An object of properties to initialize this class with
+	 * @param {object} config - An object of properties to initialize this class with
 	 * @param {object} args - An object of run args
 	 *
 	 * @memberOf Collector
 	 */
-	constructor(init_properties, args) {
+	constructor(config, args) {
 
-		this.default_args = {};
-		this.model_schema = {};
-		this.model_id_key = '';
-		this.model_name = '';
-		this.version = '';
-		this.plugin_name = '';
+    let defaults = {
+			default_args: {},
+			model_schema: {},
+			model_id_key: '',
+			model_name: '',
+			version: '',
+			plugin_name: ''
+    };
 
-		// Set object properties from args
-		for(let i in init_properties) {
-			this[i] = init_properties[i];
-		}
-
-		// Set run args
-		args = args ? args : {};
+		// Merge config and assign properties to this
+    Object.assign(this, defaults, config);
 
 		// Merges args with default args
 		this.args = this.default_args;
-		for (let attrname in args) { this.args[attrname] = args[attrname]; }
+		Object.assign(this.args, args);
 
 		// Set some initial variables
 		this.initialize_flag = false; // If true, initialize will execute before run
 		this.stop_flag = false; // Set to true to indicate we need to stop running
 		this.prepared_data = {};
-
 
 		// Registers the model if needed
 		if(!mongoose.modelExists(this.model_name)) {
