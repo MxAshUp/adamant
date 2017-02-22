@@ -45,7 +45,7 @@ function do_login(url,username,password) {
 //Gets HTML content of report from timeclock
 function get_report_html(url,start_date,end_date) {
 
-	var url = url + '/report.html';
+	url += '/report.html';
 
 	data = [];
 	data.rt = "1";

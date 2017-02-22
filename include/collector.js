@@ -12,14 +12,14 @@ class Collector {
 
 	/**
 	 * Creates an instance of Collector.
-	 * 
+	 *
 	 * @param {object} init_properties - An object of properties to initialize this class with
 	 * @param {object} args - An object of run args
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	constructor(init_properties, args) {
-		
+
 		// Below stuff would go into the constructor
 		this.default_args = {};
 		this.run_attempts_limit = 5;
@@ -51,7 +51,7 @@ class Collector {
 		this.run_attempts = 0; //Count of failed run attempts
 		this.last_run_start = 0; //Timestamp of last run
 		this.stop_flag = false; //Set to true to indicate we need to stop running
-		this.prepared_data;
+		this.prepared_data = {};
 
 
 		//Registers the model if needed
@@ -68,7 +68,7 @@ class Collector {
    * Assemble the data needed to establish an API connection
    * @param  {object} args
    * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
    */
 	initialize(_args) {	}
@@ -78,7 +78,7 @@ class Collector {
    * Check an API for data that we might need to insert, update, or delete from the db
    * @param  {object} args
    * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
    */
 	prepare(_args) {
@@ -91,11 +91,11 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	*collect(prepared_data, _args) {
-		for(item in prepared_data) {
+		for(var item in prepared_data) {
 			yield item;
 		}
 	}
@@ -106,7 +106,7 @@ class Collector {
 	 * @param  {object} prepared_data
 	 * @param  {object} _args
 	 * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	garbage(prepared_data, _args) {
@@ -117,7 +117,7 @@ class Collector {
 	/**
 	 * Run through the collector functions (initialize, prepare, collect, garbage)
 	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	run() {
@@ -187,15 +187,15 @@ class Collector {
 			.catch((err) => {
 				this.initialize_flag = false;
 				return Promise.reject(err);//We're not handling the error, throw it along
-			})
+			});
 	}
 
 
 	/**
 	 * Sets stop flag to initiate a stop
-	 * 
+	 *
 	 * @todo return a Promise indicating when stop is finished
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	stop() {
@@ -207,8 +207,8 @@ class Collector {
 	/**
 	 * Insert data into the database
 	 * @param  {object} data_row
-	 * @return {Promise} Promise resolves when success or rejects when error 
-	 * 
+	 * @return {Promise} Promise resolves when success or rejects when error
+	 *
 	 * @memberOf Collector
 	 */
 	_insert_data(data_row) {
@@ -226,7 +226,7 @@ class Collector {
 					upsert:true,
 					setDefaultsOnInsert:true,
 				}).then((old_doc) => {
-					const is_new = old_doc == null;
+					const is_new = old_doc === null;
 					return Promise.resolve(is_new);
 				});
 			}
@@ -246,7 +246,7 @@ class Collector {
 	 * Loop through items to remove, and remove them
 	 * @param  {object} lookup - Mongoose Lookup
 	 * @return {Promise}
-	 * 
+	 *
 	 * @memberOf Collector
 	 */
 	_remove_data(lookup) {
@@ -259,7 +259,7 @@ class Collector {
 			return Promise.resolve(typeof res !== 'undefined');
 		});
 	}
-};
+}
 
 //Extend to event emitter
 Collector.prototype.__proto__ = EventEmitter.prototype;

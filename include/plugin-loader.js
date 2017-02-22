@@ -13,10 +13,10 @@ var fs = require('fs'),
 class PluginLoader {
 
 	/**
-	 * Creates a new PluginLoader object. 
+	 * Creates a new PluginLoader object.
 	 * A PluginLoader loads plugin files into memeory and provides a way to bind with plugin events.
-	 * 
-	 * 
+	 *
+	 *
 	 * @memberOf PluginLoader
 	 */
 	constructor() {
@@ -26,10 +26,10 @@ class PluginLoader {
 
 	/**
 	 * Loads a plugin into memeory.
-	 * 
+	 *
 	 * @param {String} path - Path to plugin directory to be loaded
 	 * @param {Object} config - Configuration to pass to plugin on load
-	 * 
+	 *
 	 */
 	load_plugin(path, _config) {
 		//Load in the plugin
@@ -58,7 +58,7 @@ class PluginLoader {
 
 	/**
 	 * After plugins are loaded into memeory, a collector service can be initialized.
-	 * 
+	 *
 	 * @param {any} collector_config - Configuration used for initializing collector instance
 	 * @returns {LoopService} to interface with collector (start, stopm etc...)
 	 */
@@ -69,12 +69,12 @@ class PluginLoader {
 		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
 
 		//Find data collector in plugin
-		var collector = _.find(plugin.collectors, {model_name: collector_config.model_name})
+		var collector = _.find(plugin.collectors, {model_name: collector_config.model_name});
 		if(!collector) throw new Error(sprintf("Collection not found: %s", collector_config.model_name));
 
 		//Check version
 		if(collector.version && collector.version !== collector_config.version) {
-			/** 
+			/**
 			 * @todo Do better version check, and also maybe run update on current config
 			 */
 			throw new Error("Collection version not the same.");
@@ -97,13 +97,13 @@ class PluginLoader {
 
 	/**
 	 * A generic event handler for dispatching collector events.
-	 * 
+	 *
 	 * @param {String} model_name - Name of mongoose model associated with event
 	 * @param {String} event - Name/scope of event to trigger
 	 * @param {any} data - Data to pass to event handlers
 	 */
 	handle_event_emit(model_name, event, data) {
-		
+
 		this.emit(event, model_name, data);
 		this.emit(model_name + '_' + event, data);
 	}
