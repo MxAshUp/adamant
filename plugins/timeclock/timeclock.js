@@ -13,33 +13,33 @@ request = request.defaults({jar: cjar});
 //logs into mavenlink using non-api methods
 function do_login(url,username,password) {
 
-    var loginPage = url + '/login.html';
+	var loginPage = url + '/login.html';
 
-    loginFormData = [];
-    loginFormData.username = username;
-    loginFormData.password = password;
-    loginFormData.buttonClicked = "Submit";
+	loginFormData = [];
+	loginFormData.username = username;
+	loginFormData.password = password;
+	loginFormData.buttonClicked = "Submit";
 
-    return new Promise((resolve,reject) => {
-	    request.post({url:loginPage,form:loginFormData},(err,res,body) => {
-	    	//If we were successful, then we should get a redirect
-	        if(res && res.statusCode == '301') {
-	            //success login!
-	            resolve();
-	        } else {
-	        	//determine error message
-	        	var error_message = '';
-	        	if(err) {
-	        		error_message = err;
-	        	} else if(res.statusCode == '301') {
-	        		error_message = 'Double check username and password.';
-	        	} else if(!res) {
-	        		error_message = 'No data was returned from request.';
-	        	}
+	return new Promise((resolve,reject) => {
+		request.post({url:loginPage,form:loginFormData},(err,res,body) => {
+			//If we were successful, then we should get a redirect
+			if(res && res.statusCode == '301') {
+				//success login!
+				resolve();
+			} else {
+				//determine error message
+				var error_message = '';
+				if(err) {
+					error_message = err;
+				} else if(res.statusCode == '301') {
+					error_message = 'Double check username and password.';
+				} else if(!res) {
+					error_message = 'No data was returned from request.';
+				}
 				reject('Could not log into time clock: ' + error_message);
-	        }
-	    });
-    });
+			}
+		});
+	});
 }
 
 //Gets HTML content of report from timeclock
