@@ -19,7 +19,8 @@ class Collector {
 	 */
 	constructor(config, args) {
 
-    let defaults = {
+		//Default object properties
+    const defaults = {
 			default_args: {},
 			model_schema: {},
 			model_id_key: '',

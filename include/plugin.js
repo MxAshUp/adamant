@@ -4,29 +4,33 @@ class Plugin {
 
 	/**
 	 * Creates an instance of Plugin.
-	 * 
+	 *
 	 * @param {object} args
-	 * 
+	 *
 	 * @memberOf Plugin
 	 */
 	constructor(args) {
-		this.collectors = [];
-		this.enabled = false;
-		this.name = '';
 
-		//Set object properties from args
-		for(var i in args) {
-			this[i] = args[i];
-		}
+		//Default object properties
+    const defaults = {
+			collectors: [],
+			enabled: false,
+			name: ''
+    };
+
+		// Merge config and assign properties to this
+    Object.assign(this, defaults, config);
+
 	}
 
 	//Settable properties
 	on_load(_args) {
 		//Maybe we need somethign to run when plugin is loaded
-	};
+	}
+
 	on_unload(_args) {
 		//Maybe we need somethign to run when plugin is unloaded
-	};
+	}
 
 }
 
