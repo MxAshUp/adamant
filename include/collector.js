@@ -1,6 +1,5 @@
 const vsprintf = require("sprintf-js").vsprintf,
 	mongoose = require('./mongoose-utilities'),
-	utilities = require('./utilities'),
 	EventEmitter = require('events'),
 	_ = require('lodash'),
 	CollectorInitializeError = require('./errors').CollectorInitializeError,
@@ -21,15 +20,11 @@ class Collector {
 	constructor(init_properties, args) {
 
 		this.default_args = {};
-		this.run_attempts_limit = 5;
-		this.mseconds_between_run_attempts = 500;
-		this.min_mseconds_between_runs = 0;
 		this.model_schema = {};
 		this.model_id_key = '';
 		this.model_name = '';
 		this.version = '';
 		this.plugin_name = '';
-		this.last_run = 0;
 
 		// Set object properties from args
 		for(let i in init_properties) {
@@ -45,8 +40,6 @@ class Collector {
 
 		// Set some initial variables
 		this.initialize_flag = false; // If true, initialize will execute before run
-		this.run_attempts = 0; // Count of failed run attempts
-		this.last_run_start = 0; // Timestamp of last run
 		this.stop_flag = false; // Set to true to indicate we need to stop running
 		this.prepared_data = {};
 
@@ -122,9 +115,6 @@ class Collector {
 		// reset stop flag
 		this.stop_flag = false;
 
-		// Update last run date
-		this.last_run_start = Date.now();
-
 		// Begin the run promise chain
 		return Promise.resolve().then(() => {
 				// If not initialized, then try to initialize
@@ -176,8 +166,7 @@ class Collector {
 			})
 			// collect is success, cleanup and return data
 			.then((data) => {
-				this.run_attempts = 0;
-				this.initialize_flag = true; // Set initialize_flag to resolved
+				this.initialize_flag = true;
 				return data;
 			})
 			// If any error occurs during sync, we need to initialize again next time around
