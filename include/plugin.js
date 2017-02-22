@@ -23,10 +23,10 @@ class Plugin {
 	//Settable properties
 	on_load(_args) {
 		//Maybe we need somethign to run when plugin is loaded
-	};
+	}
 	on_unload(_args) {
 		//Maybe we need somethign to run when plugin is unloaded
-	};
+	}
 
 }
 
