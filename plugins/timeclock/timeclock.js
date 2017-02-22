@@ -3,7 +3,7 @@
 //Currently this is a static library in that you cannot login as mutliple users.
 
 //need to use cookies for logging in
-var request = require('request'),
+let request = require('request'),
   cjar = request.jar(),
   cheerio = require('cheerio'),
   moment = require('moment');
@@ -13,7 +13,7 @@ request = request.defaults({jar: cjar});
 //logs into mavenlink using non-api methods
 function do_login(url,username,password) {
 
-  var loginPage = `${url}/login.html`;
+  const loginPage = `${url}/login.html`;
 
   loginFormData = [];
   loginFormData.username = username;
@@ -28,7 +28,7 @@ function do_login(url,username,password) {
         resolve();
       } else {
         //determine error message
-        var error_message = '';
+        let error_message = '';
         if(err) {
           error_message = err;
         } else if(res.statusCode == '301') {
@@ -78,12 +78,12 @@ function try_parse_float(val) {
 
 //Parses html report and returns array of data
 function* parse_report(html) {
-  var $ = cheerio.load(html);
+  const $ = cheerio.load(html);
 
-  var current_date_str;
+  let current_date_str;
 
   //This is where we define how fields are parsed in the report
-  var parse_fields = [
+  const parse_fields = [
     {
       selector: '.punchEmployee > a',
       name: 'employeeId',
@@ -196,11 +196,11 @@ function* parse_report(html) {
 
 
   //Get all time entry rows and date rows
-  var entries = $('#pageContents > .noAccrual, #pageContents > .clear');
+  const entries = $('#pageContents > .noAccrual, #pageContents > .clear');
 
-  var data = [];
+  let data = [];
 
-  for (var j = entries.length - 1; j >= 0; j--) {
+  for (let j = entries.length - 1; j >= 0; j--) {
 
     //This is a row giving us the current_date_str, and that is all
     if($(entries[j]).attr('class') == 'clear') {
@@ -208,23 +208,23 @@ function* parse_report(html) {
       continue;
     }
 
-    var punch_id = $('.punchIn', entries[j]).attr('href');
+    let punch_id = $('.punchIn', entries[j]).attr('href');
     if(typeof punch_id === 'undefined') {
       continue;
     }
     punch_id = punch_id.match(/pid=([0-9]+)/)[1];
 
-    var data_row = {};
+    const data_row = {};
 
     data_row.pid = punch_id;
 
     //Loop through fields to parse
-    for (var i in parse_fields) {
+    for (let i in parse_fields) {
       data_row[parse_fields[i].name] = '';
 
-      var dom_find = $(parse_fields[i].selector, entries[j]);
+      const dom_find = $(parse_fields[i].selector, entries[j]);
 
-      var val = '';
+      let val = '';
 
       if(dom_find.length != 1) {
         val = '';
