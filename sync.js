@@ -60,7 +60,7 @@ function main() {
 	//Example of plugin/model specific event
 	plugins.on('toggl_timeEntry_create', data => console.log(`${chalk.green('NEW TIME ENTRY')}`));
 
-	var collect_services = _.each(collector_configs, (config) => {
+	const collect_services = _.each(collector_configs, (config) => {
 		try {
 
 			const service = plugins.initialize_collector_service(config);
