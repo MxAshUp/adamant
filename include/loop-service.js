@@ -102,7 +102,7 @@ class LoopService {
 
 		})
 		.then(() => {
-			if(typeof this.stop_callback === "function") {
+			if(typeof this.stop_callback === 'function') {
 				return this.stop_callback();
 			}
 		})
