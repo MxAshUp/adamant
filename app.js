@@ -2,7 +2,7 @@
 // Some code action is happening over in /test/
 
 // Handle command line arguments if passed
-var arg_handler = require('./include/arg-handle');
+const arg_handler = require('./include/arg-handle');
 
 
 // Sample definitions

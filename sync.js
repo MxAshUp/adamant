@@ -3,7 +3,7 @@
 /* THE FOLLOWING IS TESTING CODE FOR DATA COLLECTOR SERVICE */
 
 
-var PluginLoader = require('./include/plugin-loader'),
+const PluginLoader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
 	mongoose_util = require('./include/mongoose-utilities'),
 	_ = require('lodash'),
@@ -11,16 +11,16 @@ var PluginLoader = require('./include/plugin-loader'),
     utilities = require('./include/utilities'),
 	chalk = require('chalk');
 
-var plugins = new PluginLoader();
+const plugins = new PluginLoader();
 
 //Get directors of plugins
-var plugin_dirs = utilities.getPluginsDirectories();
+const plugin_dirs = utilities.getPluginsDirectories();
 
 //Load each plugin
 _.forEach(plugin_dirs, (plugin_path) => { plugins.load_plugin(plugin_path.path,_config); });
 
 
-var collector_configs = [
+const collector_configs = [
 	{
 		plugin_name: 'Toggl',
 		model_name: 'toggl_timeEntry',
@@ -63,7 +63,7 @@ function main() {
 	var collect_services = _.each(collector_configs, (config) => {
 		try {
 
-			var service = plugins.initialize_collector_service(config);
+			const service = plugins.initialize_collector_service(config);
 
 			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e.stack)}`));
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
