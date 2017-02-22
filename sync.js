@@ -72,7 +72,7 @@ function main() {
 			
 
 		} catch (e) {
-			console.log(`${chalk.bgYellow('Service Loop Error')}: ${chalk.grey(e)}`);
+			console.log(`${chalk.bgYellow('Service Loop Error')}: ${chalk.grey(e.stack)}`);
 		}
 	});
 
