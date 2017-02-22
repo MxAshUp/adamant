@@ -8,7 +8,7 @@ const PluginLoader = require('./include/plugin-loader'),
 	mongoose_util = require('./include/mongoose-utilities'),
 	_ = require('lodash'),
 	sprintf = require('sprintf-js').sprintf,
-    utilities = require('./include/utilities'),
+  utilities = require('./include/utilities'),
 	chalk = require('chalk');
 
 const plugins = new PluginLoader();
@@ -45,7 +45,6 @@ const collector_configs = [
 
 function main() {
 
-
 	//Maybe attach some event handlers?
 	plugins.on('create', (model, data) => {
 		console.log(`model ${chalk.bgCyan(model)} ${chalk.green('created')}: ${chalk.grey(JSON.stringify(data))}`);
@@ -69,7 +68,6 @@ function main() {
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
 			service.on('stopped',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('stopped')}.`));
 			service.start();
-
 
 		} catch (e) {
 			console.log(`${chalk.bgYellow('Service Loop Error')}: ${chalk.grey(e.stack)}`);
