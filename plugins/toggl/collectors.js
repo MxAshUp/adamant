@@ -52,7 +52,7 @@ module.exports = function() {
 							if(err.code == '403') {
 								err.data = err.data ? '' : ("Auth failed, check API token.");
 							}
-							reject("API Error (code: " + err.code + "): "+err.data);
+							reject(`API Error (code: ${err.code}): ${err.data}`);
 						} else {
 							resolve(data);
 						}
