@@ -83,7 +83,7 @@ module.exports = function() {
 					let entries_to_remove = _.difference(old_entries, new_entries);
 
 					//Make entries to remove into lookup objects
-					entries_to_remove = _.map(entries_to_remove, (idv) => {return {id:idv}});
+					entries_to_remove = _.map(entries_to_remove, (idv) => ({id: idv}));
 
 					return entries_to_remove;
 				});
