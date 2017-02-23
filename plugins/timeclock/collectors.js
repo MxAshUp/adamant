@@ -1,5 +1,5 @@
 //requires
-var moment = require('moment'),
+const moment = require('moment'),
 	timeclock = require('./timeclock.js');
 
 //******MAIN DATA COLLECTOR DEFINITION*********//
@@ -39,13 +39,13 @@ module.exports = function(_config) {
 			},
 			prepare: function(args) {
 				//Set report ranges
-				var start_report = moment().subtract(args.days_back_to_sync,'days');
-				var end_report = moment();
+				const start_report = moment().subtract(args.days_back_to_sync,'days');
+				const end_report = moment();
 				//Get report data Promise
 				return timeclock.get_report_html( args.url, start_report, end_report );
 			},
 			collect: function* (data, args) {
-				for(var data_row of timeclock.parse_report(data)) {
+				for(let data_row of timeclock.parse_report(data)) {
 					yield data_row;
 				}
 			},
