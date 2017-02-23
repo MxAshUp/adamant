@@ -31,7 +31,7 @@ module.exports = function() {
 				apiToken:''
 			},
 			initialize: function(args) {
-				var self = this;
+				const self = this;
 				try {
 					self.toggl = new TogglClient({apiToken: args.apiToken});
 					return Promise.resolve();
