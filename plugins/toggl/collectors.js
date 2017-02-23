@@ -50,7 +50,7 @@ module.exports = function() {
 						//Error getting data
 						if(err) {
 							if(err.code == '403') {
-								err.data = err.data ? '' : ("Auth failed, check API token.");
+								err.data = err.data ? '' : ('Auth failed, check API token.');
 							}
 							reject(`API Error (code: ${err.code}): ${err.data}`);
 						} else {
@@ -71,7 +71,7 @@ module.exports = function() {
 
 				//This function compares the entries in Toggl and the entries in local db,
 				//then returns the entries that are only in the local db. These need to be removed.
-				return this.model.find({at:{"$gte": start_report, "$lt": end_report}})
+				return this.model.find({at:{'$gte': start_report, '$lt': end_report}})
 				.then((old_entries) => {
 					//Get the id's of the new entries
 					const new_entries = _.map(data, (obj) => String(obj.id));
