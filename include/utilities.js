@@ -5,7 +5,7 @@ var fs = require('fs'),
 module.exports = {
 	/**
 	 * Gets the directory path for each plugin
-	 * 
+	 *
 	 * @returns {Array} Array of strings for each plugin path
 	 */
 	getPluginsDirectories: function() {
@@ -15,7 +15,7 @@ module.exports = {
 		}).map((path) => {
 			return {
 				name: path,
-				path: srcpath + '/' + path
+				path: `${srcpath}/${path}`
 			};
 		});
 	},

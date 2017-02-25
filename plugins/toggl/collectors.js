@@ -1,5 +1,5 @@
 //requires
-var TogglClient = require('toggl-api'),
+const TogglClient = require('toggl-api'),
 	moment = require('moment'),
 	_ = require('lodash');
 
@@ -31,7 +31,7 @@ module.exports = function() {
 				apiToken:''
 			},
 			initialize: function(args) {
-				var self = this;
+				const self = this;
 				try {
 					self.toggl = new TogglClient({apiToken: args.apiToken});
 					return Promise.resolve();
@@ -40,19 +40,19 @@ module.exports = function() {
 				}
 			},
 			prepare: function(args) {
-				var self = this;
+				const self = this;
 				//Set report ranges
-				var start_report = moment().subtract(args.days_back_to_sync,'days').format();
-				var end_report = moment().format();
+				const start_report = moment().subtract(args.days_back_to_sync,'days').format();
+				const end_report = moment().format();
 				//Get time entries
 				return new Promise((resolve,reject) => {
 					self.toggl.getTimeEntries(start_report, end_report, (err,data) => {
 						//Error getting data
 						if(err) {
 							if(err.code == '403') {
-								err.data = err.data ? '' : ("Auth failed, check API token.");
+								err.data = err.data ? '' : ('Auth failed, check API token.');
 							}
-							reject("API Error (code: " + err.code + "): "+err.data);
+							reject(new Error(`API Error (code: ${err.code}): ${err.data}`));
 						} else {
 							resolve(data);
 						}
@@ -66,24 +66,24 @@ module.exports = function() {
 			},
 			garbage: function(data, args) {
 
-				var start_report = moment().subtract(args.days_back_to_sync,'days');
-				var end_report = moment();
+				const start_report = moment().subtract(args.days_back_to_sync,'days');
+				const end_report = moment();
 
 				//This function compares the entries in Toggl and the entries in local db,
 				//then returns the entries that are only in the local db. These need to be removed.
-				return this.model.find({at:{"$gte": start_report, "$lt": end_report}})
+				return this.model.find({at:{'$gte': start_report, '$lt': end_report}})
 				.then((old_entries) => {
 					//Get the id's of the new entries
-					var new_entries = _.map(data, (obj) => String(obj.id));
+					const new_entries = _.map(data, (obj) => String(obj.id));
 
 					//Get the id's of the entries currently stored
 					old_entries = _.map(old_entries, (obj) => String(obj.id));
 
 					//Find which entries exist in the old, but not the new, these need to be removed
-					var entries_to_remove = _.difference(old_entries, new_entries);
+					let entries_to_remove = _.difference(old_entries, new_entries);
 
 					//Make entries to remove into lookup objects
-					entries_to_remove = _.map(entries_to_remove, (idv) => {return {id:idv}});
+					entries_to_remove = _.map(entries_to_remove, (idv) => ({id: idv}));
 
 					return entries_to_remove;
 				});

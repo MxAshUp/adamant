@@ -9,7 +9,7 @@ class Plugin {
 	 *
 	 * @memberOf Plugin
 	 */
-	constructor(args) {
+	constructor(config) {
 
 		//Default object properties
     const defaults = {

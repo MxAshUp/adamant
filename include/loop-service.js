@@ -2,7 +2,7 @@ const EventEmitter = require('events');
 const promiseLoop = require('promise-loop');
 
 
-class LoopService {
+class LoopService extends EventEmitter {
 
 	/**
 	 * Creates a LoopService object
@@ -13,6 +13,7 @@ class LoopService {
 	 * @param {function} stop_callback - The function that will run when run_callback stops
 	 */
 	constructor(run_callback, stop_callback) {
+		super();
 
 		//Set initial variables
 		this.run_flag = false;
@@ -128,7 +129,5 @@ class LoopService {
 		this.run_flag = false;
 	}
 }
-
-LoopService.prototype.__proto__ = EventEmitter.prototype;
 
 module.exports = LoopService;

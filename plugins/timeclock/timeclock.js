@@ -36,7 +36,7 @@ function do_login(url,username,password) {
         } else if(!res) {
           error_message = 'No data was returned from request.';
         }
-        reject(`Could not log into time clock: ${error_message}`);
+        reject(new Error(`Could not log into time clock: ${error_message}`));
       }
     });
   });
@@ -57,9 +57,9 @@ function get_report_html(url,start_date,end_date) {
   return new Promise((resolve,reject) => {
     request.get({url:url,qs:data},(err,response,body) => {
       if(err || !body) {
-        reject(`Could not get timeclock report. Maybe reboot timeclock? ${err}`);
+        reject(new Error(`Could not get timeclock report. Maybe reboot timeclock? ${err}`));
       } else if(response.statusCode == '301') {
-        reject('Could not get timeclock report. User session probably timed out.');
+        reject(new Error('Could not get timeclock report. User session probably timed out.'));
       } else {
         resolve(body);
       }
