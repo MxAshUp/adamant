@@ -7,7 +7,7 @@ const vsprintf = require("sprintf-js").vsprintf,
 
 
 
-class Collector {
+class Collector extends EventEmitter {
 
 	/**
 	 * Creates an instance of Collector.
@@ -18,6 +18,7 @@ class Collector {
 	 * @memberOf Collector
 	 */
 	constructor(config, args) {
+		super();
 
 		//Default object properties
     const defaults = {
@@ -243,8 +244,5 @@ class Collector {
 		});
 	}
 }
-
-// Extend to event emitter
-Collector.prototype.__proto__ = EventEmitter.prototype;
 
 module.exports = Collector;

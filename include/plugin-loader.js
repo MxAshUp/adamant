@@ -10,7 +10,7 @@ const fs = require('fs'),
     EventEmitter = require('events');
 
 
-class PluginLoader {
+class PluginLoader extends EventEmitter {
 
 	/**
 	 * Creates a new PluginLoader object.
@@ -20,6 +20,7 @@ class PluginLoader {
 	 * @memberOf PluginLoader
 	 */
 	constructor() {
+		super();
 		this.plugins = [];
 	}
 
@@ -108,7 +109,5 @@ class PluginLoader {
 		this.emit(model_name + '_' + event, data);
 	}
 }
-
-PluginLoader.prototype.__proto__ = EventEmitter.prototype;
 
 module.exports = PluginLoader;
