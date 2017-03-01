@@ -5,7 +5,6 @@ const fs = require('fs'),
 	_ = require('lodash'),
 	Collector = require('./collector'),
     LoopService = require('./loop-service'),
-    sprintf = require('sprintf-js').sprintf,
     mongoose = require('./mongoose-utilities').mongoose,
     EventEmitter = require('events');
 
@@ -34,7 +33,7 @@ class PluginLoader extends EventEmitter {
 	 */
 	load_plugin(path, _config) {
 		//Load in the plugin
-		let plugin_args = require('../' + path);
+		let plugin_args = require(`../${path}`);
 
 		//Could not load it, or it's not a valid plugin_args
 		if(typeof plugin_args !== 'function') {
@@ -67,11 +66,11 @@ class PluginLoader extends EventEmitter {
 
 		//Find plugin
 		const plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
-		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
+		if(!plugin) throw new Error(`Plugin not loaded: ${collector_config.plugin_name}`);
 
 		//Find data collector in plugin
 		let collector = _.find(plugin.collectors, {model_name: collector_config.model_name});
-		if(!collector) throw new Error(sprintf("Collection not found: %s", collector_config.model_name));
+		if(!collector) throw new Error(`Collection not found: ${collector_config.model_name}`);
 
 		//Check version
 		if(collector.version && collector.version !== collector_config.version) {
@@ -85,7 +84,7 @@ class PluginLoader extends EventEmitter {
 		try {
 			collector = new Collector(collector, collector_config.config);
 		} catch (e) {
-			throw new Error(sprintf("Error creating data collector instance: %s", e));
+			throw new Error(`Error creating data collector instance: ${e}`);
 		}
 
 		//Add event handling
