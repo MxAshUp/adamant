@@ -34,7 +34,7 @@ class PluginLoader extends EventEmitter {
 	 */
 	load_plugin(path, _config) {
 		//Load in the plugin
-		var plugin_args = require('../' + path);
+		let plugin_args = require('../' + path);
 
 		//Could not load it, or it's not a valid plugin_args
 		if(typeof plugin_args !== 'function') {
@@ -45,7 +45,7 @@ class PluginLoader extends EventEmitter {
 		plugin_args = plugin_args(_config);
 
 		//Initialize plugin
-		var plugin = new Plugin(plugin_args);
+		const plugin = new Plugin(plugin_args);
 
 		//If plugin wasn't given a name, name it after the directory
 		plugin.name = plugin.name ? plugin.name : plugin_dirs[i].name;
@@ -66,11 +66,11 @@ class PluginLoader extends EventEmitter {
 	initialize_collector_service(collector_config) {
 
 		//Find plugin
-		var plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
+		const plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
 		if(!plugin) throw new Error(sprintf("Plugin not loaded: %s", collector_config.plugin_name));
 
 		//Find data collector in plugin
-		var collector = _.find(plugin.collectors, {model_name: collector_config.model_name});
+		let collector = _.find(plugin.collectors, {model_name: collector_config.model_name});
 		if(!collector) throw new Error(sprintf("Collection not found: %s", collector_config.model_name));
 
 		//Check version
