@@ -9,6 +9,30 @@ class EventDispatcher extends EventEmitter {
   }
 
   /**
+  * Adds event handler to memeory
+  *
+  * @param {EventHandler} handler
+  *
+  * @memberOf EventDispatcher
+  */
+  load_event_handler(handler) {
+    // Add handler to array of EventHandlers
+
+  }
+
+  /**
+   * Looks up the event handler by id
+   *
+   * @param {number} handler_instance_id - id of event handler
+   * @returns {EventHandler}
+   *
+   * @memberOf EventDispatcher
+   */
+  get_event_handler(handler_instance_id) {
+
+  }
+
+  /**
   * Runs all callbacks for event asynchronously
   *
   * @param {string} event - Name of event
@@ -27,56 +51,31 @@ class EventDispatcher extends EventEmitter {
   /**
   * Run revert for a particular event
   *
-  * @param {number} event_handler_id - Id of event handler instance
+  * @param {number} handler_instance_id - Id of event handler instance
   *
   * @memberOf EventDispatcher
   */
-  revert_event(event_handler_id, data) {
+  revert_event(handler_instance_id, data) {
     // Lookup event handler by id
     // Run revert with args
   }
 
   /**
-  * Adds event handler to memeory
-  *
-  * @param {EventHandler} handler
-  *
-  * @memberOf EventDispatcher
-  */
-  load_event_handler(handler) {
-    // Add handler to array of EventHandlers
-
-  }
-
-  /**
-   * Looks up the event handler by id
-   *
-   * @param {number} event_handler_id - id of event handler
-   * @returns {EventHandler}
-   *
-   * @memberOf EventDispatcher
-   */
-  get_event_handler(event_handler_id) {
-
-  }
-
-  /**
-  * Enqueues an event in database to be handled when ready
+  * Enqueues an event to be handled
   *
   * @param {string} event - Name of event to enqueue
   * @param {any} data - Passed along to event handlers
-  * @param {number} timestamp - UTC timestamp the event occurred at
   *
   * @memberOf EventDispatcher
   */
-  enqueue_event(event, data, timestamp) {
+  enqueue_event(event, data) {
     // Add event with data and timestamp to queue
   }
 
   /**
-   * Gets and marks the earliest undispatched event
+   * Gets and earliest undispatched event and removes it from the list
    *
-   * @return {any} - Event data
+   * @return {object} - Event name and event data {event: {String}, data: {any}}
    *
    * @memberOf EventDispatcher
    */

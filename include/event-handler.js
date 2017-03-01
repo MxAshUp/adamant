@@ -1,6 +1,5 @@
 const mongoose = require('./mongoose-utilities'),
 _ = require('lodash');
-//CollectorInitializeError = require('./errors').CollectorInitializeError,
 
 class EventHandler {
 
@@ -18,7 +17,8 @@ class EventHandler {
       event_name: '',
       supports_revert: true,
       version: '',
-      plugin_name: ''
+      plugin_name: '',
+      instance_id: ''
     };
 
     // Merge config and assign properties to this
