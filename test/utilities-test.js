@@ -37,7 +37,7 @@ describe('Utility Functions', function() {
 					isDirectory: function() {
 						return mock_plugins.indexOf(path.replace(/^[^\/]*\//,'')) !== -1;
 					}
-				}
+				};
 			}
 		});
 

@@ -58,7 +58,7 @@ class PluginLoader extends EventEmitter {
 	}
 
 	/**
-	 * After plugins are loaded into memeory, a collector service can be initialized.
+	 * After plugins are loaded into memory, a collector service can be initialized.
 	 *
 	 * @param {any} collector_config - Configuration used for initializing collector instance
 	 * @returns {LoopService} to interface with collector (start, stopm etc...)

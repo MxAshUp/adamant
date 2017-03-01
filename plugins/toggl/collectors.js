@@ -87,7 +87,7 @@ module.exports = function() {
 
 					return entries_to_remove;
 				});
-			},
+			}
 		}
 	];
 };
