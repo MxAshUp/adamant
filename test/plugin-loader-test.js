@@ -1,6 +1,7 @@
 const expect = require('chai').expect;
 const rewire = require('rewire');
 const PluginLoader = rewire('../include/plugin-loader');
+const Plugin = require('../include/plugin');
 const LoopService = require('../include/loop-service');
 const _config = require('../include/config.js');
 const utilities = rewire('../include/utilities');
@@ -20,6 +21,14 @@ describe('Plugin Loader', function() {
 
     it('Should load correct number of plugins', function () {
       expect(plugin_loader.plugins).to.have.lengthOf(plugin_dir_count);
+    });
+
+    it('Each plugin should be an instance of Plugin', function () {
+      expect(plugin_loader.plugins).to.satisfy(function(plugins) {
+        return plugins.every(function(plugin) {
+          return plugin instanceof Plugin;
+        });
+      });
     });
 
     it('Each plugin should be enabled', function () {
