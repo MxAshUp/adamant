@@ -60,14 +60,14 @@ describe('Initialize Collector Service', function() {
   _.forEach( plugin_dirs, (plugin_path) => { plugin_loader.load_plugin(plugin_path.path, _config); } );
 
   const collector_configs = [
-  	// {
-  	// 	plugin_name: 'Toggl',
-  	// 	model_name: 'toggl_timeEntry',
-  	// 	version: '1.0',
-  	// 	config: {
-  	// 		apiToken:'771a871d9670b874655a25e20391640f'
-  	// 	}
-  	// },
+  	{
+  		plugin_name: 'Toggl',
+  		model_name: 'toggl_timeEntry',
+  		version: '1.0',
+  		config: {
+  			apiToken:'771a871d9670b874655a25e20391640f'
+  		}
+  	},
   	{
   		plugin_name: 'TimeClock',
   		model_name: 'timeclock_timeEntry',
@@ -80,13 +80,14 @@ describe('Initialize Collector Service', function() {
   		}
   	},
   ];
-  const collector_config = collector_configs[0];
 
-  const service = plugin_loader.initialize_collector_service(collector_config);
-  // service.start();
-
-  it('Should return instance of Loop Service', function () {
-    expect(service).to.be.instanceOf(LoopService);
+  it('Should return an instance of Loop Service for each collector config object', function () {
+    expect(collector_configs).to.satisfy(function(configs) {
+      return configs.every(function(config) {
+        const service = plugin_loader.initialize_collector_service(config);
+        return service instanceof LoopService;
+      });
+    });
   });
 
 });
