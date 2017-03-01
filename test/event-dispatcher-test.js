@@ -17,11 +17,11 @@ chai.use(chaiSubset);
 describe('Event System - ', () => {
 
   // Need some spies and a mock handler for running tests
-  const test_1_dispatch_db = sinon.spy();
+  const test_1_dispatch_cb = sinon.spy();
   const test_1_revert_cb = sinon.spy();
-  const test_2_dispatch_db = sinon.spy();
+  const test_2_dispatch_cb = sinon.spy();
   const test_2_revert_cb = sinon.spy();
-  const test_3_dispatch_db = sinon.spy();
+  const test_3_dispatch_cb = sinon.spy();
   const test_3_revert_cb = sinon.spy();
   const test_1_config = {
     default_args: {},
@@ -29,7 +29,7 @@ describe('Event System - ', () => {
     supports_revert: true,
     version: '0.1',
     plugin_name: '_test',
-    dispatch: test_1_dispatch_db,
+    dispatch: test_1_dispatch_cb,
     revert: test_1_revert_cb,
     instance_id: '1'
   };
@@ -39,7 +39,7 @@ describe('Event System - ', () => {
     supports_revert: true,
     version: '0.1',
     plugin_name: '_test',
-    dispatch: test_2_dispatch_db,
+    dispatch: test_2_dispatch_cb,
     revert: test_2_revert_cb,
     instance_id: '2'
   };
@@ -49,7 +49,7 @@ describe('Event System - ', () => {
     supports_revert: true,
     version: '0.1.5',
     plugin_name: '_test',
-    dispatch: test_3_dispatch_db,
+    dispatch: test_3_dispatch_cb,
     revert: test_3_revert_cb,
     instance_id: '3'
   };
@@ -72,16 +72,16 @@ describe('Event System - ', () => {
     it('Should call dispatch with data', () => {
       const sample_data = Math.random();
       test_handler_1.dispatch(sample_data);
-      expect(test_1_dispatch_db.calledOnce).to.be.true;
-      expect(test_1_dispatch_db.calledWith(sample_data)).to.be.true;
+      sinon.assert.calledOnce(test_1_dispatch_cb);
+      sinon.assert.calledWith(test_1_dispatch_cb, sample_data);
     });
 
     it('Should call revert with data', () => {
 
       const sample_revert_data = Math.random();
       test_handler_1.revert(sample_revert_data);
-      expect(test_1_revert_cb.calledOnce).to.be.true;
-      expect(test_1_revert_cb.calledWith(sample_revert_data)).to.be.true;
+      sinon.assert.calledOnce(test_1_revert_cb);
+      sinon.assert.calledWith(test_1_revert_cb, sample_revert_data);
 
     });
   });
@@ -92,6 +92,7 @@ describe('Event System - ', () => {
 
     dispatcher.load_event_handler(test_handler_1);
     dispatcher.load_event_handler(test_handler_2);
+    dispatcher.load_event_handler(test_handler_3);
 
     // Create some random data to enqueue event with
     const test_1_event_data = Math.random();
@@ -101,6 +102,15 @@ describe('Event System - ', () => {
     dispatcher.enqueue_event('test.to_remove_event', test_3_event_data);
     dispatcher.enqueue_event('test.event_1', test_1_event_data);
     dispatcher.enqueue_event('test.event_2', test_2_event_data);
+
+    afterEach(() => {
+      test_1_dispatch_cb.reset();
+      test_1_revert_cb.reset();
+      test_2_dispatch_cb.reset();
+      test_2_revert_cb.reset();
+      test_3_dispatch_cb.reset();
+      test_3_revert_cb.reset();
+    });
 
     it('Should add event handler to dispatcher', () => {
       // Check dispatcher event handler array
@@ -127,30 +137,27 @@ describe('Event System - ', () => {
 
     it('Should dispatch event with one handler', (done) => {
       const test_event_data = Math.random();
-      dispatcher.dispatch_event('test.event_1',test_event_data).then(() => {
+      let ret = dispatcher.dispatch_event('test.event_1',test_event_data).then(() => {
         // Event handler dispatch should have been called with correct args
-        expect(test_1_dispatch_db.firstCall.args).to.equal([test_event_data]);
-        // Only 1 event handler should have been dispatched
-        expect(test_1_dispatch_db.callCount).to.equal(1);
-        done();
-      }).catch(done);
+        sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
+        sinon.assert.callCount(test_1_dispatch_cb, 1);
+      }).then(done).catch(done);
 
-      //Make sure promise was filfilled
+      //Make sure promise was fulfilled
       assert.isFulfilled(ret);
 
     });
 
     it('Should dispatch event with two handlers', (done) => {
       const test_event_data = Math.random();
-      dispatcher.dispatch_event('test.event_2',test_event_data).then(() => {
+      let ret = dispatcher.dispatch_event('test.event_2', test_event_data).then(() => {
         // Event handler dispatch should have been called with correct args
-        expect(test_2_dispatch_db.firstCall.args).to.equal([test_event_data]);
-        expect(test_3_dispatch_db.firstCall.args).to.equal([test_event_data]);
-        // Only 1 event handler should have been dispatched
-        expect(test_2_dispatch_db.callCount).to.equal(1);
-        expect(test_3_dispatch_db.callCount).to.equal(1);
-        done();
-      }).catch(done);
+        sinon.assert.calledWith(test_2_dispatch_cb, test_event_data);
+        sinon.assert.callCount(test_2_dispatch_cb, 1);
+        sinon.assert.calledWith(test_3_dispatch_cb, test_event_data);
+        sinon.assert.callCount(test_3_dispatch_cb, 1);
+
+      }).then(done).catch(done);
 
       //Make sure promise was filfilled
       assert.isFulfilled(ret);
@@ -164,8 +171,8 @@ describe('Event System - ', () => {
         expect(test_3_revert_cb.firstCall.args).to.equal([test_event_data]);
         // Only 1 event handler should have been dispatched
         expect(test_3_revert_cb.callCount).to.equal(1);
-        done();
-      }).catch(done);
+
+      }).then(done).catch(done);
 
       //Make sure promise was filfilled
       assert.isFulfilled(ret);
