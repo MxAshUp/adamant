@@ -31,17 +31,6 @@ class EventHandler {
   }
 
   /**
-  * Method that reverts actions performed in dispatch
-  *
-  * @param {any} data - Data returned from dispatch event
-  *
-  * @memberOf EventHandler
-  */
-  revert(data) {
-
-  }
-
-  /**
   * Method that performs action when event is dispatched
   *
   * @param {any} data
@@ -49,6 +38,17 @@ class EventHandler {
   * @memberOf EventHandler
   */
   dispatch(data) {
+
+  }
+
+  /**
+  * Method that reverts actions performed in dispatch
+  *
+  * @param {any} data - Data returned from dispatch event
+  *
+  * @memberOf EventHandler
+  */
+  revert(data) {
 
   }
 
