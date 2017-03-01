@@ -117,7 +117,7 @@ describe('Event System - ', () => {
     });
 
     it('Should enqueue 3 events', () => {
-      expect(dispatcher.event_queue_count()).to.equal(3);
+      expect(dispatcher.event_queue_count).to.equal(3);
     });
 
     it('Should remove event 3 data from queue', () => {
@@ -125,7 +125,7 @@ describe('Event System - ', () => {
         event: test.to_remove_event,
         data: test_3_event_data
       });
-      expect(dispatcher.event_queue_count()).to.equal(2);
+      expect(dispatcher.event_queue_count).to.equal(2);
     });
 
     it('Should dispatch event with one handler', (done) => {
