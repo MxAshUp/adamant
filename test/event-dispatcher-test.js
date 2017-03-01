@@ -139,8 +139,8 @@ describe('Event System - ', () => {
       const test_event_data = Math.random();
       let ret = dispatcher.dispatch_event('test.event_1',test_event_data).then(() => {
         // Event handler dispatch should have been called with correct args
-        sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
         sinon.assert.callCount(test_1_dispatch_cb, 1);
+        sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
       }).then(done).catch(done);
 
       //Make sure promise was fulfilled
@@ -152,10 +152,10 @@ describe('Event System - ', () => {
       const test_event_data = Math.random();
       let ret = dispatcher.dispatch_event('test.event_2', test_event_data).then(() => {
         // Event handler dispatch should have been called with correct args
-        sinon.assert.calledWith(test_2_dispatch_cb, test_event_data);
         sinon.assert.callCount(test_2_dispatch_cb, 1);
-        sinon.assert.calledWith(test_3_dispatch_cb, test_event_data);
         sinon.assert.callCount(test_3_dispatch_cb, 1);
+        sinon.assert.calledWith(test_2_dispatch_cb, test_event_data);
+        sinon.assert.calledWith(test_3_dispatch_cb, test_event_data);
 
       }).then(done).catch(done);
 
@@ -166,11 +166,11 @@ describe('Event System - ', () => {
 
     it('Should revert event', (done) => {
       const test_event_data = Math.random();
-      dispatcher.revert_event(3, test_event_data).then(() => {
-        // Event handler dispatch should have been called with correct args
-        expect(test_3_revert_cb.firstCall.args).to.equal([test_event_data]);
+      let ret = dispatcher.revert_event('3', test_event_data).then(() => {
         // Only 1 event handler should have been dispatched
-        expect(test_3_revert_cb.callCount).to.equal(1);
+        sinon.assert.callCount(test_3_revert_cb, 1);
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.calledWith(test_3_revert_cb, test_event_data);
 
       }).then(done).catch(done);
 
