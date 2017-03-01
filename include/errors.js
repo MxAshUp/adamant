@@ -1,5 +1,3 @@
-`use strict`;
-
 class CustomError extends Error {
   constructor() {
     super();
@@ -23,5 +21,7 @@ class CollectorDatabaseError extends CustomError {
 }
 
 module.exports = {
-  CollectorInitializeError: CollectorInitializeError
-}
+  CollectorInitializeError: CollectorInitializeError,
+  CollectorDatabaseError: CollectorDatabaseError
+};
+
