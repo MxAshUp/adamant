@@ -98,10 +98,9 @@ describe('Event System - ', () => {
     const test_2_event_data = Math.random();
     const test_3_event_data = Math.random();
 
+    dispatcher.enqueue_event('test.to_remove_event', test_3_event_data);
     dispatcher.enqueue_event('test.event_1', test_1_event_data);
     dispatcher.enqueue_event('test.event_2', test_2_event_data);
-    dispatcher.enqueue_event('test.to_remove_event', test_3_event_data);
-
 
     it('Should add event handler to dispatcher', () => {
       // Check dispatcher event handler array
@@ -122,7 +121,7 @@ describe('Event System - ', () => {
 
     it('Should remove event 3 data from queue', () => {
       expect(dispatcher.shift_event()).to.deep.equal({
-        event: test.to_remove_event,
+        event: 'test.to_remove_event',
         data: test_3_event_data
       });
       expect(dispatcher.event_queue_count).to.equal(2);
