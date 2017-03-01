@@ -77,7 +77,7 @@ class PluginLoader extends EventEmitter {
 			/**
 			 * @todo Do better version check, and also maybe run update on current config
 			 */
-			throw new Error("Collection version not the same.");
+			throw new Error('Collection version not the same.');
 		}
 
 		//Create data colector instance
