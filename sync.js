@@ -7,7 +7,6 @@ const PluginLoader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
 	mongoose_util = require('./include/mongoose-utilities'),
 	_ = require('lodash'),
-	sprintf = require('sprintf-js').sprintf,
   utilities = require('./include/utilities'),
 	chalk = require('chalk');
 
