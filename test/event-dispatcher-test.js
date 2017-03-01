@@ -41,7 +41,7 @@ describe('Event System - ', () => {
     plugin_name: '_test',
     dispatch: test_2_dispatch_db,
     revert: test_2_revert_cb,
-    instance_id: '1'
+    instance_id: '2'
   };
   const test_3_config = {
     default_args: {},
@@ -51,7 +51,7 @@ describe('Event System - ', () => {
     plugin_name: '_test',
     dispatch: test_3_dispatch_db,
     revert: test_3_revert_cb,
-    instance_id: '1'
+    instance_id: '3'
   };
   const test_handler_1 = new EventHandler(test_1_config);
   const test_handler_2 = new EventHandler(test_2_config);
@@ -110,9 +110,7 @@ describe('Event System - ', () => {
 
     it('Should fail to add event handler to dispatcher (duplicate ids)', () => {
       // Try to load same handler again, should throw error
-      expect(() => {
-        dispatcher.load_event_handler(test_handler_1);
-      }).to.throw(Error);
+      expect(dispatcher.load_event_handler.bind(null, test_handler_1)).to.throw(Error);
     });
 
     it('Should enqueue 3 events', () => {
