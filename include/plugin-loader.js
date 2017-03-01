@@ -105,7 +105,7 @@ class PluginLoader extends EventEmitter {
   handle_event_emit(model_name, event, data) {
 
     this.emit(event, model_name, data);
-    this.emit(model_name + '_' + event, data);
+    this.emit(`${model_name}_${event}`, data);
   }
 }
 
