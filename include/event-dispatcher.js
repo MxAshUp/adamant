@@ -1,4 +1,5 @@
 const mongoose = require('./mongoose-utilities'),
+  _ = require('lodash'),
 	EventEmitter = require('events');
 
 class EventDispatcher extends EventEmitter {
@@ -6,6 +7,7 @@ class EventDispatcher extends EventEmitter {
   constructor() {
     super();
     this.event_handlers = [];
+    this.event_queue = [];
   }
 
   /**
@@ -16,8 +18,12 @@ class EventDispatcher extends EventEmitter {
   * @memberOf EventDispatcher
   */
   load_event_handler(handler) {
+    //Check if handler id already in array
+    if(typeof _.find(this.event_handlers, { instance_id: handler.instance_id }) !== 'undefined') {
+      throw new Error('Cannot load EventHandler: Duplicate instance id.');
+    }
     // Add handler to array of EventHandlers
-
+    this.event_handlers.push(handler);
   }
 
   /**
@@ -43,9 +49,15 @@ class EventDispatcher extends EventEmitter {
   dispatch_event(event, data) {
     // Loop through handlers listening to event
     // Trigger each callback
-    // Maybe emit errors
-    // Maybe emit event Enqueues
+    // @todo: Maybe emit errors
+    // @todo: Maybe emit event Enqueues
     // Return promise
+    return Promise.all(
+      _.map(
+        _.filter(this.event_handlers, {event_name: event}),
+        handler => Promise.resolve(handler.dispatch.apply(null, [data]))
+      )
+    );
   }
 
   /**
@@ -58,6 +70,12 @@ class EventDispatcher extends EventEmitter {
   revert_event(handler_instance_id, data) {
     // Lookup event handler by id
     // Run revert with args
+    return Promise.all(
+      _.map(
+        _.filter(this.event_handlers, {instance_id: handler_instance_id}),
+        handler => Promise.resolve(handler.revert.apply(null, [data]))
+      )
+    );
   }
 
   /**
@@ -69,7 +87,10 @@ class EventDispatcher extends EventEmitter {
   * @memberOf EventDispatcher
   */
   enqueue_event(event, data) {
-    // Add event with data and timestamp to queue
+    this.event_queue.push({
+      event: event,
+      data: data
+    });
   }
 
   /**
@@ -80,7 +101,7 @@ class EventDispatcher extends EventEmitter {
    * @memberOf EventDispatcher
    */
   shift_event() {
-
+    return this.event_queue.shift();
   }
 
   /**
@@ -93,7 +114,7 @@ class EventDispatcher extends EventEmitter {
    * @memberOf EventDispatcher
    */
   get event_queue_count() {
-
+    return this.event_queue.length;
   }
 
 }
