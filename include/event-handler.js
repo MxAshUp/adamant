@@ -24,6 +24,11 @@ class EventHandler {
     // Merge config and assign properties to this
     Object.assign(this, defaults, config);
 
+    //If revert not supported, throw error if called
+    if(!this.supports_revert) {
+      this.revert = () => {throw Error('Handler does not support revert.');};
+    }
+
     // Merges args with default args
     this.args = this.default_args;
     Object.assign(this.args, args);
