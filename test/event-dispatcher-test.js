@@ -118,6 +118,10 @@ describe('Event System - ', () => {
       expect(dispatcher.event_handlers).to.contain(test_handler_2);
     });
 
+    it('Should return event handler by instance_id', () => {
+      expect(dispatcher.get_event_handler('2')).to.deep.equal(test_handler_2);
+    });
+
     it('Should fail to add event handler to dispatcher (duplicate ids)', () => {
       // Try to load same handler again, should throw error
       expect(dispatcher.load_event_handler.bind(null, test_handler_1)).to.throw(Error);
