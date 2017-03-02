@@ -106,10 +106,7 @@ describe('Event System - ', () => {
     const test_3_event_data = Math.random();
 
     let event_handler_id_1, event_handler_id_2, event_handler_id_3;
-
-    dispatcher.enqueue_event('test.to_remove_event', test_3_event_data);
-    dispatcher.enqueue_event('test.event_1', test_1_event_data);
-    dispatcher.enqueue_event('test.event_2', test_2_event_data);
+    let event_id_1, event_id_2, event_id_3;
 
     afterEach(() => {
       test_1_dispatch_cb.reset();
@@ -130,18 +127,25 @@ describe('Event System - ', () => {
       expect(dispatcher.event_handlers).to.contain(test_handler_3);
     });
 
-    it('All event handler instance ID\'s should be unique');
+    it('All event handlers should have unique ID');
 
     it('Should return event handler by instance_id', () => {
       expect(dispatcher.get_event_handler(event_handler_id_2)).to.deep.equal(test_handler_2);
     });
 
     it('Should enqueue 3 events', () => {
+      event_id_1 = dispatcher.enqueue_event('test.to_remove_event', test_3_event_data);
+      event_id_2 = dispatcher.enqueue_event('test.event_1', test_1_event_data);
+      event_id_3 = dispatcher.enqueue_event('test.event_2', test_2_event_data);
+
       expect(dispatcher.event_queue_count).to.equal(3);
     });
 
+    it('All events should have have unique ID');
+
     it('Should remove event 3 data from queue', () => {
       expect(dispatcher.shift_event()).to.deep.equal({
+        id: event_id_1,
         event: 'test.to_remove_event',
         data: test_3_event_data
       });
