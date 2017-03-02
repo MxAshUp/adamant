@@ -30,8 +30,7 @@ describe('Event System - ', () => {
     version: '0.1',
     plugin_name: '_test',
     dispatch: test_1_dispatch_cb,
-    revert: test_1_revert_cb,
-    instance_id: '1'
+    revert: test_1_revert_cb
   };
   const test_2_config = {
     default_args: {},
@@ -40,8 +39,7 @@ describe('Event System - ', () => {
     version: '0.1',
     plugin_name: '_test',
     dispatch: test_2_dispatch_cb,
-    revert: test_2_revert_cb,
-    instance_id: '2'
+    revert: test_2_revert_cb
   };
   const test_3_config = {
     default_args: {},
@@ -50,8 +48,7 @@ describe('Event System - ', () => {
     version: '0.1.5',
     plugin_name: '_test',
     dispatch: test_3_dispatch_cb,
-    revert: test_3_revert_cb,
-    instance_id: '3'
+    revert: test_3_revert_cb
   };
   const test_handler_1 = new EventHandler(test_1_config);
   const test_handler_2 = new EventHandler(test_2_config);
@@ -92,8 +89,7 @@ describe('Event System - ', () => {
         supports_revert: false,
         version: '0.1.5',
         plugin_name: '_test',
-        dispatch: null,
-        instance_id: '3'
+        dispatch: null
       });
       expect(test_handler_1.revert.bind(null)).to.throw('Handler does not support revert.');
     });
@@ -104,14 +100,12 @@ describe('Event System - ', () => {
 
     const dispatcher = new EventDispatcher();
 
-    dispatcher.load_event_handler(test_handler_1);
-    dispatcher.load_event_handler(test_handler_2);
-    dispatcher.load_event_handler(test_handler_3);
-
     // Create some random data to enqueue event with
     const test_1_event_data = Math.random();
     const test_2_event_data = Math.random();
     const test_3_event_data = Math.random();
+
+    let event_handler_id_1, event_handler_id_2, event_handler_id_3;
 
     dispatcher.enqueue_event('test.to_remove_event', test_3_event_data);
     dispatcher.enqueue_event('test.event_1', test_1_event_data);
@@ -128,17 +122,18 @@ describe('Event System - ', () => {
 
     it('Should add event handler to dispatcher', () => {
       // Check dispatcher event handler array
+      event_handler_id_1 = dispatcher.load_event_handler(test_handler_1);
+      event_handler_id_2 = dispatcher.load_event_handler(test_handler_2);
+      event_handler_id_3 = dispatcher.load_event_handler(test_handler_3);
       expect(dispatcher.event_handlers).to.contain(test_handler_1);
       expect(dispatcher.event_handlers).to.contain(test_handler_2);
+      expect(dispatcher.event_handlers).to.contain(test_handler_3);
     });
+
+    it('All event handler instance ID\'s should be unique');
 
     it('Should return event handler by instance_id', () => {
-      expect(dispatcher.get_event_handler('2')).to.deep.equal(test_handler_2);
-    });
-
-    it('Should fail to add event handler to dispatcher (duplicate ids)', () => {
-      // Try to load same handler again, should throw error
-      expect(dispatcher.load_event_handler.bind(null, test_handler_1)).to.throw(Error);
+      expect(dispatcher.get_event_handler(event_handler_id_2)).to.deep.equal(test_handler_2);
     });
 
     it('Should enqueue 3 events', () => {
@@ -184,7 +179,7 @@ describe('Event System - ', () => {
 
     it('Should revert event', (done) => {
       const test_event_data = Math.random();
-      let ret = dispatcher.revert_event('3', test_event_data).then(() => {
+      let ret = dispatcher.revert_event(event_handler_id_3, test_event_data).then(() => {
         // Only 1 event handler should have been dispatched
         sinon.assert.callCount(test_3_revert_cb, 1);
         // Event handler dispatch should have been called with correct args
