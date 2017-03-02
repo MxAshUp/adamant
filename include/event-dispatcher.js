@@ -8,6 +8,7 @@ class EventDispatcher extends EventEmitter {
     super();
     this.event_handlers = [];
     this.event_queue = [];
+    this.instance_count = 0;
   }
 
   /**
@@ -18,12 +19,14 @@ class EventDispatcher extends EventEmitter {
   * @memberOf EventDispatcher
   */
   load_event_handler(handler) {
-    //Check if handler id already in array
-    if(typeof this.get_event_handler(handler.instance_id) !== 'undefined') {
-      throw new Error('Cannot load EventHandler: Duplicate instance id.');
-    }
+    // Assign an instance id
+    handler.instance_id = this.instance_count++;
+
     // Add handler to array of EventHandlers
     this.event_handlers.push(handler);
+
+    //Return id
+    return handler.instance_id;
   }
 
   /**
