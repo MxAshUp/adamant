@@ -8,7 +8,8 @@ class EventDispatcher extends EventEmitter {
     super();
     this.event_handlers = [];
     this.event_queue = [];
-    this.instance_count = 0;
+    this.handler_count = 0;
+    this.event_count = 0;
   }
 
   /**
@@ -20,7 +21,7 @@ class EventDispatcher extends EventEmitter {
   */
   load_event_handler(handler) {
     // Assign an instance id
-    handler.instance_id = this.instance_count++;
+    handler.instance_id = this.handler_count++;
 
     // Add handler to array of EventHandlers
     this.event_handlers.push(handler);
@@ -54,6 +55,7 @@ class EventDispatcher extends EventEmitter {
     // Trigger each callback
     // @todo: Maybe emit errors
     // @todo: Maybe emit event Enqueues
+    // @todo: Emit event to confirm event was handled (ie, for updating db)
     // Return promise
     return Promise.all(
       _.map(
@@ -90,10 +92,18 @@ class EventDispatcher extends EventEmitter {
   * @memberOf EventDispatcher
   */
   enqueue_event(event, data) {
+    // Create event id
+    let event_id = this.event_count++;
+
+    // Add new event to queue
     this.event_queue.push({
+      id: event_id,
       event: event,
       data: data
     });
+
+    // Return event id
+    return event_id;
   }
 
   /**
