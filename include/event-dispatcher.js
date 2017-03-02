@@ -19,7 +19,7 @@ class EventDispatcher extends EventEmitter {
   */
   load_event_handler(handler) {
     //Check if handler id already in array
-    if(typeof _.find(this.event_handlers, { instance_id: handler.instance_id }) !== 'undefined') {
+    if(typeof this.get_event_handler(handler.instance_id) !== 'undefined') {
       throw new Error('Cannot load EventHandler: Duplicate instance id.');
     }
     // Add handler to array of EventHandlers
@@ -35,7 +35,7 @@ class EventDispatcher extends EventEmitter {
    * @memberOf EventDispatcher
    */
   get_event_handler(handler_instance_id) {
-
+    return _.find(this.event_handlers, { instance_id: handler_instance_id });
   }
 
   /**
