@@ -84,6 +84,20 @@ describe('Event System - ', () => {
       sinon.assert.calledWith(test_1_revert_cb, sample_revert_data);
 
     });
+
+    it('Should throw error if supports_revert is false and revert() is called', () => {
+        const test_handler_1 = new EventHandler({
+          default_args: {},
+          event_name: 'test.event_2',
+          supports_revert: false,
+          version: '0.1.5',
+          plugin_name: '_test',
+          dispatch: null,
+          instance_id: '3'
+        });
+        expect(test_handler_1.revert.bind(null)).to.throw(Error);
+    });
+
   });
 
   describe('Event Dispatcher', () => {
