@@ -2,6 +2,7 @@ const expect = require('chai').expect;
 const rewire = require('rewire');
 const PluginLoader = rewire('../include/plugin-loader');
 const Plugin = require('../include/plugin');
+const Collector = require('../include/collector');
 const LoopService = require('../include/loop-service');
 const _config = require('../include/config.js');
 const utilities = rewire('../include/utilities');
@@ -15,6 +16,8 @@ describe('Plugin Loader', function() {
     const plugin_loader = new PluginLoader();
     const plugin_dirs = utilities.getPluginsDirectories();
     const plugin_dir_count = plugin_dirs.length;
+
+    // rewire plugin_loader here: require.__set__
 
     // load plugins
     _.forEach( plugin_dirs, (plugin_path) => { plugin_loader.load_plugin(plugin_path.path, _config); } );
@@ -49,45 +52,47 @@ describe('Plugin Loader', function() {
 
   });
 
-  // describe('Initialize Collector Service', function() {
-  //
-  //   const plugin_loader = new PluginLoader();
-  //   const plugin_dirs = utilities.getPluginsDirectories();
-  //
-  //   // load plugins
-  //   _.forEach( plugin_dirs, (plugin_path) => { plugin_loader.load_plugin(plugin_path.path, _config); } );
-  //
-  //   const collector_configs = [
-  //   	{
-  //   		plugin_name: 'Toggl',
-  //   		model_name: 'toggl_timeEntry',
-  //   		version: '1.0',
-  //   		config: {
-  //   			apiToken:'771a871d9670b874655a25e20391640f'
-  //   		}
-  //   	},
-  //   	{
-  //   		plugin_name: 'TimeClock',
-  //   		model_name: 'timeclock_timeEntry',
-  //   		version: '1.0',
-  //   		config: {
-  //   			days_back_to_sync: 1,
-  //   			url:'http://192.168.1.29/',
-  //   			user:'admin',
-  //   			password:'FVnZaHD8HyCe'
-  //   		}
-  //   	},
-  //   ];
-  //
-  //   it('Should return an instance of Loop Service for each collector config object', function () {
-  //     expect(collector_configs).to.satisfy(function(configs) {
-  //       return configs.every(function(config) {
-  //         const service = plugin_loader.initialize_collector_service(config);
-  //         return service instanceof LoopService;
-  //       });
-  //     });
-  //   });
-  //
-  // });
+  describe('Create Collector Instance', function() {
+
+    const plugin_loader = new PluginLoader();
+    const plugin_dirs = utilities.getPluginsDirectories();
+
+    // rewire plugin_loader here: require.__set__
+
+    // load plugins
+    _.forEach( plugin_dirs, (plugin_path) => { plugin_loader.load_plugin(plugin_path.path, _config); } );
+
+    const collector_configs = [
+    	// {
+    	// 	plugin_name: 'Toggl',
+    	// 	model_name: 'toggl_timeEntry',
+    	// 	version: '1.0',
+    	// 	config: {
+    	// 		apiToken:'771a871d9670b874655a25e20391640f'
+    	// 	}
+    	// },
+    	{
+    		plugin_name: 'TimeClock',
+    		model_name: 'timeclock_timeEntry',
+    		version: '1.0',
+    		config: {
+    			days_back_to_sync: 1,
+    			url:'http://192.168.1.29/',
+    			user:'admin',
+    			password:'FVnZaHD8HyCe'
+    		}
+    	},
+    ];
+
+    it('Should return an instance of Collector for each collector config object', function () {
+      expect(collector_configs).to.satisfy(function(configs) {
+        return configs.every(function(config) {
+          const collector = plugin_loader.create_collector_instance(config);
+          return collector instanceof Collector;
+        });
+      });
+    });
+
+  });
 
 });
