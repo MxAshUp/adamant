@@ -62,7 +62,7 @@ class PluginLoader extends EventEmitter {
    * @param {any} collector_config - Configuration used for initializing collector instance
    * @returns {LoopService} to interface with collector (start, stopm etc...)
    */
-  initialize_collector_service(collector_config) {
+  create_collector_instance(collector_config) {
 
     //Find plugin
     const plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
@@ -92,7 +92,7 @@ class PluginLoader extends EventEmitter {
       collector.on(event, (data) => this.handle_event_emit(collector.model_name, event, data));
     });
 
-    return new LoopService(collector.run.bind(collector), collector.stop.bind(collector));
+    return collector;
   }
 
   /**
