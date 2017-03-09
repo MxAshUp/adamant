@@ -7,6 +7,7 @@ const
   chaiAsPromised = require("chai-as-promised"),
   rewire = require('rewire'),
   sinon = require('sinon'),
+  _ = require('lodash'),
   // Modules to test
   EventHandler = require('../include/event-handler'),
   EventDispatcher = require('../include/event-dispatcher');
@@ -53,6 +54,7 @@ describe('Event System - ', () => {
   const test_handler_1 = new EventHandler(test_1_config);
   const test_handler_2 = new EventHandler(test_2_config);
   const test_handler_3 = new EventHandler(test_3_config);
+  const test_handler_4 = new EventHandler(test_3_config);
 
   describe('Event Handler', () => {
 
@@ -105,7 +107,7 @@ describe('Event System - ', () => {
     const test_2_event_data = Math.random();
     const test_3_event_data = Math.random();
 
-    let event_handler_id_1, event_handler_id_2, event_handler_id_3;
+    let event_handler_id_1, event_handler_id_2, event_handler_id_3, event_handler_id_4;
     let event_id_1, event_id_2, event_id_3;
 
     afterEach(() => {
@@ -122,12 +124,23 @@ describe('Event System - ', () => {
       event_handler_id_1 = dispatcher.load_event_handler(test_handler_1);
       event_handler_id_2 = dispatcher.load_event_handler(test_handler_2);
       event_handler_id_3 = dispatcher.load_event_handler(test_handler_3);
+      event_handler_id_4 = dispatcher.load_event_handler(test_handler_4);
       expect(dispatcher.event_handlers).to.contain(test_handler_1);
       expect(dispatcher.event_handlers).to.contain(test_handler_2);
       expect(dispatcher.event_handlers).to.contain(test_handler_3);
+      expect(dispatcher.event_handlers).to.contain(test_handler_4);
     });
 
-    it('All event handlers should have unique ID');
+    it('Should remove event handler', () => {
+      // Removed event handler, check if proper object returned
+      expect(dispatcher.remove_event_handler(event_handler_id_4)).to.deep.equal(test_handler_4);
+      // Make sure it's no longer in dispatcher
+      expect(dispatcher.get_event_handler(event_handler_id_4)).to.be.undefined;
+    });
+
+    it('All event handlers should have unique ID', () => {
+      expect(dispatcher.event_handlers.length).to.equal(_.uniqBy(dispatcher.event_handlers, (handler) => handler.instance_id).length);
+    });
 
     it('Should return event handler by instance_id', () => {
       expect(dispatcher.get_event_handler(event_handler_id_2)).to.deep.equal(test_handler_2);
@@ -141,7 +154,9 @@ describe('Event System - ', () => {
       expect(dispatcher.event_queue_count).to.equal(3);
     });
 
-    it('All events should have have unique ID');
+    it('All events should have have unique ID', () => {
+      expect(dispatcher.event_queue.length).to.equal(_.uniqBy(dispatcher.event_queue, (event) => event.id).length);
+    });
 
     it('Should remove event 3 data from queue', () => {
       expect(dispatcher.shift_event()).to.deep.equal({
@@ -195,6 +210,7 @@ describe('Event System - ', () => {
       assert.isFulfilled(ret);
 
     });
+
 
   });
 

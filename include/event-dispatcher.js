@@ -16,7 +16,7 @@ class EventDispatcher extends EventEmitter {
   * Adds event handler to memeory
   *
   * @param {EventHandler} handler
-  *
+  * @returns {number} id of event handler as reference
   * @memberOf EventDispatcher
   */
   load_event_handler(handler) {
@@ -28,6 +28,23 @@ class EventDispatcher extends EventEmitter {
 
     //Return id
     return handler.instance_id;
+  }
+
+  /**
+   * Removes an event handler from memeory
+   *
+   * @param {number} handler_id
+   * @returns {mixed} removed handler object if success, false if no event handler with handler_id found
+   * @memberOf EventDispatcher
+   */
+  remove_event_handler(handler_id) {
+    // Remove by id
+    const removed_handlers = _.remove(this.event_handlers, (handler) => {
+      return handler.instance_id == handler_id;
+    });
+
+    // Check if the new length is different
+    return removed_handlers.length ? removed_handlers[0] : false;
   }
 
   /**
