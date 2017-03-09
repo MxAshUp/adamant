@@ -67,7 +67,7 @@ class EventDispatcher extends EventEmitter {
   *
   * @memberOf EventDispatcher
   */
-  dispatch_event(event, data) {
+  dispatch_event(event_name, data) {
     // Loop through handlers listening to event
     // Trigger each callback
     // @todo: Maybe emit errors
@@ -76,7 +76,7 @@ class EventDispatcher extends EventEmitter {
     // Return promise
     return Promise.all(
       _.map(
-        _.filter(this.event_handlers, {event_name: event}),
+        _.filter(this.event_handlers, {event_name: event_name}),
         handler => Promise.resolve(handler.dispatch.apply(null, [data]))
       )
     );

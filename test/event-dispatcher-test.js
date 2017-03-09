@@ -211,6 +211,8 @@ describe('Event System - ', () => {
 
     });
 
+    it('Should catch and emit error from event handler dispatch');
+
 
   });
 
