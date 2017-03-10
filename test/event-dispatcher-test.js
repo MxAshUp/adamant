@@ -152,8 +152,6 @@ describe('Event System - ', () => {
     });
 
 
-
-
     it('Should enqueue 3 events', () => {
 
       test_1_event = new Event('test.to_remove_event', test_3_event_data);
@@ -184,7 +182,7 @@ describe('Event System - ', () => {
         sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
       }).then(done).catch(done);
 
-      //Make sure promise was fulfilled
+      // Make sure promise was fulfilled
       assert.isFulfilled(ret);
 
     });
@@ -200,26 +198,57 @@ describe('Event System - ', () => {
 
       }).then(done).catch(done);
 
-      //Make sure promise was filfilled
+      // Make sure promise was filfilled
       assert.isFulfilled(ret);
 
     });
 
-    it('Should dispatch event only for specific handler');
+    it('Should dispatch event only for specific handler', (done) => {
+      const test_event_data = Math.random();
+      let ret = dispatcher.dispatch_event(new Event('test.event_2', test_event_data), event_handler_id_3).then(() => {
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.callCount(test_2_dispatch_cb, 0);
+        sinon.assert.callCount(test_3_dispatch_cb, 1);
+        sinon.assert.calledWith(test_3_dispatch_cb, test_event_data);
 
-    it('Should revert event');
+      }).then(done).catch(done);
+
+      // Make sure promise was filfilled
+      assert.isFulfilled(ret);
+
+    });
+
+    it('Should revert event', (done) => {
+      const test_event_data = Math.random();
+      let ret = dispatcher.revert_event(new Event('test.event_2', test_event_data)).then(() => {
+        // Only 1 event handler should have been dispatched
+        sinon.assert.callCount(test_3_revert_cb, 1);
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.calledWith(test_3_revert_cb, test_event_data);
+        // Only 1 event handler should have been dispatched
+        sinon.assert.callCount(test_2_revert_cb, 1);
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.calledWith(test_2_revert_cb, test_event_data);
+
+      }).then(done).catch(done);
+
+      // Make sure promise was fulfilled
+      assert.isFulfilled(ret);
+
+    });
 
     it('Should revert event on specific handler', (done) => {
       const test_event_data = Math.random();
       let ret = dispatcher.revert_event(new Event('test.event_2', test_event_data), event_handler_id_3).then(() => {
         // Only 1 event handler should have been dispatched
         sinon.assert.callCount(test_3_revert_cb, 1);
+        sinon.assert.callCount(test_2_revert_cb, 0);
         // Event handler dispatch should have been called with correct args
         sinon.assert.calledWith(test_3_revert_cb, test_event_data);
 
       }).then(done).catch(done);
 
-      //Make sure promise was filfilled
+      // Make sure promise was fulfilled
       assert.isFulfilled(ret);
 
     });
