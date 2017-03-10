@@ -9,6 +9,7 @@ const
   sinon = require('sinon'),
   _ = require('lodash'),
   // Modules to test
+  EventHandleError = require('../include/errors').EventHandleError,
   EventHandler = require('../include/event-handler'),
   EventDispatcher = require('../include/event-dispatcher'),
   Event = require('../include/event');
@@ -169,7 +170,7 @@ describe('Event System - ', () => {
       expect(dispatcher.event_queue.length).to.equal(_.uniqBy(dispatcher.event_queue, (event) => event.queue_id).length);
     });
 
-    it('Should remove event 1 data from queue', () => {
+    it('Should shift first event from queue', () => {
       expect(dispatcher.shift_event()).to.deep.equal(test_1_event);
       expect(dispatcher.event_queue_count).to.equal(2);
     });
@@ -253,7 +254,23 @@ describe('Event System - ', () => {
 
     });
 
-    it('Should catch and emit error from event handler dispatch');
+    it('Should catch and emit error from event handler dispatch', (done) => {
+      const test_event_data = Math.random();
+      const spy_thrower = sinon.stub().throws();
+      const spy_catcher = sinon.spy();
+      test_handler_1.dispatch = spy_thrower;
+      dispatcher.on('Error', spy_catcher);
+      const temp_test_event = new Event('test.event_1', test_event_data);
+      let ret = dispatcher.dispatch_event(temp_test_event).then(() => {
+        sinon.assert.callCount(spy_thrower, 1);
+        sinon.assert.calledWith(spy_thrower, test_event_data);
+        sinon.assert.callCount(spy_catcher, 1);
+        let error_thrown = spy_catcher.lastCall.args[0];
+        expect(error_thrown).to.be.instanceof(EventHandleError);
+        expect(error_thrown.event).to.deep.equal(temp_test_event);
+        expect(error_thrown.handler).to.deep.equal(test_handler_1);
+      }).then(done).catch(done);
+    });
 
 
   });

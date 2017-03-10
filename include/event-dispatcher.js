@@ -1,4 +1,5 @@
 const _ = require('lodash'),
+  EventHandleError = require('../include/errors').EventHandleError,
 	EventEmitter = require('events');
 
 class EventDispatcher extends EventEmitter {
@@ -84,7 +85,9 @@ class EventDispatcher extends EventEmitter {
     return Promise.all(
       _.map(
         _.filter(this.event_handlers, search),
-        handler => Promise.resolve(handler.dispatch.apply(null, [event_obj.data]))
+        handler => Promise.resolve().then(handler.dispatch.bind(null, event_obj.data)).catch((e) => {
+          this.emit('Error', new EventHandleError(e, event_obj, handler));
+        })
       )
     );
   }
