@@ -10,7 +10,8 @@ const
   _ = require('lodash'),
   // Modules to test
   EventHandler = require('../include/event-handler'),
-  EventDispatcher = require('../include/event-dispatcher');
+  EventDispatcher = require('../include/event-dispatcher'),
+  Event = require('../include/event');
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -107,6 +108,10 @@ describe('Event System - ', () => {
     const test_2_event_data = Math.random();
     const test_3_event_data = Math.random();
 
+    let test_1_event = {};
+    let test_2_event = {};
+    let test_3_event = {};
+
     let event_handler_id_1, event_handler_id_2, event_handler_id_3, event_handler_id_4;
     let event_id_1, event_id_2, event_id_3;
 
@@ -146,30 +151,34 @@ describe('Event System - ', () => {
       expect(dispatcher.get_event_handler(event_handler_id_2)).to.deep.equal(test_handler_2);
     });
 
+
+
+
     it('Should enqueue 3 events', () => {
-      event_id_1 = dispatcher.enqueue_event('test.to_remove_event', test_3_event_data);
-      event_id_2 = dispatcher.enqueue_event('test.event_1', test_1_event_data);
-      event_id_3 = dispatcher.enqueue_event('test.event_2', test_2_event_data);
+
+      test_1_event = new Event('test.to_remove_event', test_3_event_data);
+      test_2_event = new Event('test.event_1', test_1_event_data);
+      test_3_event = new Event('test.event_2', test_2_event_data);
+
+      event_id_1 = dispatcher.enqueue_event(test_1_event);
+      event_id_2 = dispatcher.enqueue_event(test_2_event);
+      event_id_3 = dispatcher.enqueue_event(test_3_event);
 
       expect(dispatcher.event_queue_count).to.equal(3);
     });
 
     it('All events should have have unique ID', () => {
-      expect(dispatcher.event_queue.length).to.equal(_.uniqBy(dispatcher.event_queue, (event) => event.id).length);
+      expect(dispatcher.event_queue.length).to.equal(_.uniqBy(dispatcher.event_queue, (event) => event.queue_id).length);
     });
 
-    it('Should remove event 3 data from queue', () => {
-      expect(dispatcher.shift_event()).to.deep.equal({
-        id: event_id_1,
-        event: 'test.to_remove_event',
-        data: test_3_event_data
-      });
+    it('Should remove event 1 data from queue', () => {
+      expect(dispatcher.shift_event()).to.deep.equal(test_1_event);
       expect(dispatcher.event_queue_count).to.equal(2);
     });
 
     it('Should dispatch event with one handler', (done) => {
       const test_event_data = Math.random();
-      let ret = dispatcher.dispatch_event('test.event_1',test_event_data).then(() => {
+      let ret = dispatcher.dispatch_event(new Event('test.event_1',test_event_data)).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(test_1_dispatch_cb, 1);
         sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
@@ -182,7 +191,7 @@ describe('Event System - ', () => {
 
     it('Should dispatch event with two handlers', (done) => {
       const test_event_data = Math.random();
-      let ret = dispatcher.dispatch_event('test.event_2', test_event_data).then(() => {
+      let ret = dispatcher.dispatch_event(new Event('test.event_2', test_event_data)).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(test_2_dispatch_cb, 1);
         sinon.assert.callCount(test_3_dispatch_cb, 1);
@@ -196,9 +205,13 @@ describe('Event System - ', () => {
 
     });
 
-    it('Should revert event', (done) => {
+    it('Should dispatch event only for specific handler');
+
+    it('Should revert event');
+
+    it('Should revert event on specific handler', (done) => {
       const test_event_data = Math.random();
-      let ret = dispatcher.revert_event(event_handler_id_3, test_event_data).then(() => {
+      let ret = dispatcher.revert_event(new Event('test.event_2', test_event_data), event_handler_id_3).then(() => {
         // Only 1 event handler should have been dispatched
         sinon.assert.callCount(test_3_revert_cb, 1);
         // Event handler dispatch should have been called with correct args
