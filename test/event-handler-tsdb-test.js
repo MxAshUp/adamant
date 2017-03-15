@@ -43,7 +43,15 @@ describe('Event Handler TSDB', function() {
     it('Should return the same data passed to it', () => {
 
       const data = {
-        'here_is_a_key': 'here_is_a_value',
+        measurement: 'cpu_load_short',
+        timestamp: 1434055562000000000,
+        tags: {
+          'host': 'server01',
+          'region': 'us-west',
+        },
+        fields: {
+          'value': 0.64,
+        },
       };
       const returned_data = metric_write_handler.dispatch(data, 0);
 
