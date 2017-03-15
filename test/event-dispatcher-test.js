@@ -188,6 +188,24 @@ describe('Event System - ', () => {
 
     });
 
+    it('Should dispatch event and emit event', (done) => {
+
+      const test_event_data = Math.random();
+      const spy_handler = sinon.spy();
+
+      dispatcher.on('Dispatched', spy_handler);
+
+      let ret = dispatcher.dispatch_event(new Event('test.event_1',test_event_data)).then(() => {
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.callCount(spy_handler, 1);
+        sinon.assert.calledWith(spy_handler, ''); //TODO, idk, what should it be called with?
+      }).then(done).catch(done);
+
+      // Make sure promise was fulfilled
+      assert.isFulfilled(ret);
+
+    });
+
     it('Should dispatch event with two handlers', (done) => {
       const test_event_data = Math.random();
       let ret = dispatcher.dispatch_event(new Event('test.event_2', test_event_data)).then(() => {
