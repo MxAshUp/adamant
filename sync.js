@@ -7,8 +7,8 @@ const PluginLoader = require('./include/plugin-loader'),
 	_config = require('./include/config.js'),
 	mongoose_util = require('./include/mongoose-utilities'),
 	_ = require('lodash'),
-	sprintf = require('sprintf-js').sprintf,
   utilities = require('./include/utilities'),
+  LoopService = require('./include/loop-service'),
 	chalk = require('chalk');
 
 const plugins = new PluginLoader();
@@ -21,14 +21,14 @@ _.forEach(plugin_dirs, (plugin_path) => { plugins.load_plugin(plugin_path.path,_
 
 
 const collector_configs = [
-	{
-		plugin_name: 'Toggl',
-		model_name: 'toggl_timeEntry',
-		version: '1.0',
-		config: {
-			apiToken:'771a871d9670b874655a25e20391640f'
-		}
-	},
+	// {
+	// 	plugin_name: 'Toggl',
+	// 	model_name: 'toggl_timeEntry',
+	// 	version: '1.0',
+	// 	config: {
+	// 		apiToken:'771a871d9670b874655a25e20391640f'
+	// 	}
+	// },
 	{
 		plugin_name: 'TimeClock',
 		model_name: 'timeclock_timeEntry',
@@ -62,7 +62,8 @@ function main() {
 	const collect_services = _.each(collector_configs, (config) => {
 		try {
 
-			const service = plugins.initialize_collector_service(config);
+			const collector = plugins.create_collector_instance(config);
+			const service = new LoopService(collector.run.bind(collector), collector.stop.bind(collector));
 
 			service.on('error',		(e) => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.red('Error')}: ${chalk.grey(e.stack)}`));
 			service.on('started',	() => console.log(`${chalk.bgCyan(config.model_name)} service ${chalk.bold('started')}.`));
