@@ -20,8 +20,18 @@ class CollectorDatabaseError extends CustomError {
   }
 }
 
+class EventHandleError extends CustomError {
+  constructor(culprit, event_obj, handler) {
+    super();
+    this.culprit = culprit;
+    this.event = event_obj;
+    this.handler = handler;
+  }
+}
+
 module.exports = {
   CollectorInitializeError: CollectorInitializeError,
-  CollectorDatabaseError: CollectorDatabaseError
+  CollectorDatabaseError: CollectorDatabaseError,
+  EventHandleError: EventHandleError
 };
 
