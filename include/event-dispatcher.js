@@ -151,6 +151,16 @@ class EventDispatcher extends EventEmitter {
   }
 
   /**
+   * Shifts and dispatches all enqueued events
+   *
+   *
+   * @memberOf EventDispatcher
+   */
+  run() {
+    while(this.event_queue_count > 0) this.dispatch_event(this.shift_event());
+  }
+
+  /**
    * Gets the number of undispatched events in queue
    *
    * @return {number}

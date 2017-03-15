@@ -290,6 +290,7 @@ describe('Event System - ', () => {
       }).then(done).catch(done);
     });
 
+    it('Should shift and dispatch all events in queue');
 
   });
 
