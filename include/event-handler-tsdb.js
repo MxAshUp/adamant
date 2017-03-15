@@ -11,13 +11,7 @@ module.exports = (influx) => {
         // @todo - write data to tsdb
         // @todo - return data maybe necessary for revert()
 
-				// InfluxDB records consist of a measurement, tags, fields, and a timestamp.
-
-				// - measurement (name/slug): `cpu_load_short`
-				// - timestamp: `1434055562000000000`
-				// - tags: `host=server01,region=us-west`
-				// - fields:
-					// - value (value is a field): `0.64`
+				// InfluxDB records consist of a measurement, tags, fields, and a timestamp:
 
 				// {
 				// 	measurement: 'cpu_load_short',
