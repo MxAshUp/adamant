@@ -80,7 +80,7 @@ class EventDispatcher extends EventEmitter {
     if(!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
-
+    console.log(search);
     // Create promise return
     return Promise.all(
       _.map(
@@ -88,7 +88,7 @@ class EventDispatcher extends EventEmitter {
         handler => Promise.resolve().then(handler.dispatch.bind(null, event_obj.data)).then(() => {
           // TODO: emit event success
         }).catch((e) => {
-          this.emit('Error', new EventHandleError(e, event_obj, handler));
+          this.emit('error', new EventHandleError(e, event_obj, handler));
         })
       )
     );
