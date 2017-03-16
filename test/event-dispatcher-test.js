@@ -86,7 +86,7 @@ describe('Event System - ', () => {
 
     });
 
-    it('Should throw error if supports_revert is false and revert() is called', () => {
+    it('Should throw error if supporttest_1_dispatch_cbs_revert is false and revert() is called', () => {
       const test_handler_1 = new EventHandler({
         default_args: {},
         event_name: 'test.event_2',
@@ -291,7 +291,19 @@ describe('Event System - ', () => {
       }).then(done).catch(done);
     });
 
-    it('Should shift and dispatch all events in queue');
+    it('Should shift and dispatch all events in queue', (done) => {
+      // This test isn't valid if we don't have anything enqueued
+      expect(dispatcher.event_queue_count).to.not.equal(0);
+      test_handler_1.dispatch = test_1_dispatch_cb;
+      test_handler_2.dispatch = test_2_dispatch_cb;
+      dispatcher.run().then(() => {
+        expect(dispatcher.event_queue_count).to.equal(0);
+        sinon.assert.callCount(test_1_dispatch_cb, 1);
+        sinon.assert.calledWith(test_1_dispatch_cb, test_2_event.data);
+        sinon.assert.callCount(test_2_dispatch_cb, 1);
+        sinon.assert.calledWith(test_2_dispatch_cb, test_3_event.data);
+      }).then(done).catch(done);
+    });
 
     it('Should enqueue an event while being dispatched');
 
