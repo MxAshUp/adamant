@@ -305,7 +305,19 @@ describe('Event System - ', () => {
       }).then(done).catch(done);
     });
 
-    it('Should enqueue an event while being dispatched');
+    it('Should enqueue an event while being dispatched', () => {
+      const test_event_data = Math.random();
+      test_event_a = new Event('test.event_2', test_event_data);
+
+      test_handler_1.dispatch = function() {
+        this.emit('enqueue_event', test_event_a);
+      };
+
+      test_handler_1.dispatch.apply(test_handler_1);
+
+      expect(dispatcher.shift_event()).to.deep.equal(test_event_a);
+
+    });
 
   });
 

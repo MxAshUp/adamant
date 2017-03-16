@@ -24,7 +24,7 @@ class EventDispatcher extends EventEmitter {
     handler.instance_id = this.handler_count++;
 
     // Handle enqueue event
-    handler.on('enqueue_event', this.enqueue_event);
+    handler.on('enqueue_event', this.enqueue_event.bind(this));
 
     // Add handler to array of EventHandlers
     this.event_handlers.push(handler);
