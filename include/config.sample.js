@@ -3,7 +3,7 @@ module.exports = {
 		uri: 'mongodb://db/test'
 	},
 	influxdb: {
-		host: 'influxdb',
+		host: 'localhost',
 		database: 'mydb',
 	},
 };
