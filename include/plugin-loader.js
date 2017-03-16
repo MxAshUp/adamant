@@ -89,23 +89,16 @@ class PluginLoader extends EventEmitter {
 
     //Add event handling
     _.each(['create','update','remove'], (event) => {
-      collector.on(event, (data) => this.handle_event_emit(collector.model_name, event, data));
+      collector.on(event, (data) => {
+        try {
+          this.emit(event, collector.model_name, data);
+        } catch (e) {
+          this.emit('error', e);
+        }
+      });
     });
 
     return collector;
-  }
-
-  /**
-   * A generic event handler for dispatching collector events.
-   *
-   * @param {String} model_name - Name of mongoose model associated with event
-   * @param {String} event - Name/scope of event to trigger
-   * @param {any} data - Data to pass to event handlers
-   */
-  handle_event_emit(model_name, event, data) {
-
-    this.emit(event, model_name, data);
-    this.emit(`${model_name}_${event}`, data);
   }
 }
 
