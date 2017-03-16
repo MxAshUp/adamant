@@ -89,7 +89,4 @@ class App {
   }
 }
 
-      // console.log(`model ${chalk.bgCyan(model)} ${chalk.green('created')}: ${chalk.grey(JSON.stringify(data))}`);
-      // console.log(`model ${chalk.bgCyan(model)} ${chalk.yellow('updated')}: ${chalk.grey(JSON.stringify(data))}`);
-      // console.log(`model ${chalk.bgCyan(model)} ${chalk.red('removed')}: ${chalk.grey(JSON.stringify(data))}`);
 module.exports = App;
