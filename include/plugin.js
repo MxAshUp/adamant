@@ -14,6 +14,7 @@ class Plugin {
 		//Default object properties
     const defaults = {
 			collectors: [],
+			event_handlers: [],
 			enabled: false,
 			name: ''
     };

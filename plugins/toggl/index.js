@@ -7,6 +7,7 @@ module.exports = function(_config) {
 
 	return {
 		name: 'Toggl',
-		collectors: require('./collectors.js')(_config)
+		collectors: require('./collectors.js')(_config),
+		event_handlers: require('./event-handlers.js')(_config)
 	};
 };
