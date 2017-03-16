@@ -38,7 +38,9 @@ class App {
   }
 
   load_plugin_event_handlers() {
+    // Look at each plugin
     _.each(this.plugin_loader.plugins, (plugin) => {
+      // Look at each event handler
       _.each(plugin.event_handlers, (event_handler) => {
         let handler = new EventHandler(event_handler);
         this.event_dispatcher.load_event_handler(handler);
