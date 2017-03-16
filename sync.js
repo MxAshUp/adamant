@@ -10,6 +10,8 @@ const app = new App();
 
 app.load_plugins(utilities.getPluginsDirectories());
 
+app.load_plugin_event_handlers();
+
 app.load_collector({
 	plugin_name: 'Toggl',
 	model_name: 'toggl_timeEntry',
