@@ -157,7 +157,13 @@ class EventDispatcher extends EventEmitter {
    * @memberOf EventDispatcher
    */
   run() {
-    while(this.event_queue_count > 0) this.dispatch_event(this.shift_event());
+    let promises = [];
+
+    while(this.event_queue_count > 0) {
+      promises.push(this.dispatch_event(this.shift_event()));
+    }
+
+    return Promise.all(promises);
   }
 
   /**
