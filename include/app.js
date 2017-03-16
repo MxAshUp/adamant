@@ -4,6 +4,7 @@ const PluginLoader = require('./plugin-loader'),
 	_ = require('lodash'),
   LoopService = require('./loop-service'),
   EventDispatcher = require('./event-dispatcher'),
+  EventHandler = require('./event-handler'),
   Event = require('./event'),
 	chalk = require('chalk');
 
@@ -15,6 +16,7 @@ class App {
     this.event_dispatcher = new EventDispatcher();
     this.event_dispatcher_service = new LoopService(this.event_dispatcher.run.bind(this.event_dispatcher));
     this.event_dispatcher_service.name = 'Event dispatcher';
+    this.event_dispatcher.on('error', console.log);
     this.bind_model_events();
     this.bind_service_events(this.event_dispatcher_service);
   }
@@ -32,6 +34,15 @@ class App {
   load_plugins(plugin_dirs) {
     _.forEach(plugin_dirs, (plugin_path) => {
       this.plugin_loader.load_plugin(plugin_path.path, _config);
+    });
+  }
+
+  load_plugin_event_handlers() {
+    _.each(this.plugin_loader.plugins, (plugin) => {
+      _.each(plugin.event_handlers, (event_handler) => {
+        let handler = new EventHandler(event_handler);
+        this.event_dispatcher.load_event_handler(handler);
+      });
     });
   }
 
