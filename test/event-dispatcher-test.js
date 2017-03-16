@@ -207,6 +207,25 @@ describe('Event System - ', () => {
 
     });
 
+    it('Should revert event and emit event', (done) => {
+
+      const test_event_data = Math.random();
+      const spy_handler = sinon.spy();
+      const test_event = new Event('test.event_1',test_event_data);
+
+      dispatcher.on('reverted', spy_handler);
+
+      let ret = dispatcher.revert_event(test_event).then(() => {
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.callCount(spy_handler, 1);
+        sinon.assert.calledWith(spy_handler, test_event, test_handler_1);
+      }).then(done).catch(done);
+
+      // Make sure promise was fulfilled
+      assert.isFulfilled(ret);
+
+    });
+
     it('Should dispatch event with two handlers', (done) => {
       const test_event_data = Math.random();
       let ret = dispatcher.dispatch_event(new Event('test.event_2', test_event_data)).then(() => {
@@ -281,6 +300,24 @@ describe('Event System - ', () => {
       dispatcher.on('error', spy_catcher);
       const temp_test_event = new Event('test.event_1', test_event_data);
       let ret = dispatcher.dispatch_event(temp_test_event).then(() => {
+        sinon.assert.callCount(spy_thrower, 1);
+        sinon.assert.calledWith(spy_thrower, test_event_data);
+        sinon.assert.callCount(spy_catcher, 1);
+        let error_thrown = spy_catcher.lastCall.args[0];
+        expect(error_thrown).to.be.instanceof(EventHandleError);
+        expect(error_thrown.event).to.deep.equal(temp_test_event);
+        expect(error_thrown.handler).to.deep.equal(test_handler_1);
+      }).then(done).catch(done);
+    });
+
+    it('Should catch and emit error from event handler revert', (done) => {
+      const test_event_data = Math.random();
+      const spy_thrower = sinon.stub().throws();
+      const spy_catcher = sinon.spy();
+      test_handler_1.revert = spy_thrower;
+      dispatcher.on('error', spy_catcher);
+      const temp_test_event = new Event('test.event_1', test_event_data);
+      let ret = dispatcher.revert_event(temp_test_event).then(() => {
         sinon.assert.callCount(spy_thrower, 1);
         sinon.assert.calledWith(spy_thrower, test_event_data);
         sinon.assert.callCount(spy_catcher, 1);
