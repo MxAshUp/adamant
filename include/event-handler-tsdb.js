@@ -25,6 +25,17 @@ module.exports = (influx) => {
 				// 	},
 				// }
 
+				influx.writePoints([
+		      // {
+		      //   measurement: 'response_times',
+		      //   tags: { host: os.hostname() },
+		      //   fields: { duration, path: req.path },
+		      // },
+					data,
+		    ]).catch(err => {
+		      console.error(`Error saving data to InfluxDB! ${err.stack}`)
+		    });
+
 				return data;
 
       },
