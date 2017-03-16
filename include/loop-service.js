@@ -93,7 +93,12 @@ class LoopService extends EventEmitter {
 			this.run_count++;
 
 			//run the start function
-			return this.run_callback();
+			return new Promise((resolve,reject) => {
+				// Here we are forcing run_callback to be async, otherwise we'd get stuck in a breaking loop
+				setImmediate(() => {
+					this.run_callback().then(resolve).catch(reject);
+				});
+			});
 
 		}, promiseLoop.catchRejectPromise)()
 		.catch((e) => {
