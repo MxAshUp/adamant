@@ -23,6 +23,9 @@ class EventDispatcher extends EventEmitter {
     // Assign an instance id
     handler.instance_id = this.handler_count++;
 
+    // Handle enqueue event
+    handler.on('enqueue_event', this.enqueue_event);
+
     // Add handler to array of EventHandlers
     this.event_handlers.push(handler);
 
@@ -80,13 +83,13 @@ class EventDispatcher extends EventEmitter {
     if(!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
-    console.log(search);
+
     // Create promise return
     return Promise.all(
       _.map(
         _.filter(this.event_handlers, search),
         handler => Promise.resolve().then(handler.dispatch.bind(null, event_obj.data)).then(() => {
-          // TODO: emit event success
+          this.emit('dispatched', event_obj, handler);
         }).catch((e) => {
           this.emit('error', new EventHandleError(e, event_obj, handler));
         })

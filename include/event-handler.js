@@ -1,7 +1,8 @@
 const mongoose = require('./mongoose-utilities'),
+	EventEmitter = require('events'),
 _ = require('lodash');
 
-class EventHandler {
+class EventHandler extends EventEmitter {
 
   /**
   * Creates an instance of EventHandler.
@@ -10,6 +11,7 @@ class EventHandler {
   * @memberOf EventHandler
   */
   constructor(config, args) {
+    super();
 
     //Default object properties
     const defaults = {

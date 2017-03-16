@@ -192,13 +192,14 @@ describe('Event System - ', () => {
 
       const test_event_data = Math.random();
       const spy_handler = sinon.spy();
+      const test_event = new Event('test.event_1',test_event_data);
 
-      dispatcher.on('Dispatched', spy_handler);
+      dispatcher.on('dispatched', spy_handler);
 
-      let ret = dispatcher.dispatch_event(new Event('test.event_1',test_event_data)).then(() => {
+      let ret = dispatcher.dispatch_event(test_event).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(spy_handler, 1);
-        sinon.assert.calledWith(spy_handler, ''); //TODO, idk, what should it be called with?
+        sinon.assert.calledWith(spy_handler, test_event, test_handler_1);
       }).then(done).catch(done);
 
       // Make sure promise was fulfilled
@@ -277,7 +278,7 @@ describe('Event System - ', () => {
       const spy_thrower = sinon.stub().throws();
       const spy_catcher = sinon.spy();
       test_handler_1.dispatch = spy_thrower;
-      dispatcher.on('Error', spy_catcher);
+      dispatcher.on('error', spy_catcher);
       const temp_test_event = new Event('test.event_1', test_event_data);
       let ret = dispatcher.dispatch_event(temp_test_event).then(() => {
         sinon.assert.callCount(spy_thrower, 1);
@@ -291,6 +292,8 @@ describe('Event System - ', () => {
     });
 
     it('Should shift and dispatch all events in queue');
+
+    it('Should enqueue an event while being dispatched');
 
   });
 
