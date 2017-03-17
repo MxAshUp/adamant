@@ -39,7 +39,6 @@ class Collector extends EventEmitter {
 
 		// Set some initial variables
 		this.initialize_flag = false; // If true, initialize will execute before run
-		this.stop_flag = false; // Set to true to indicate we need to stop running
 		this.prepared_data = {};
 
 		// Registers the model if needed
@@ -110,9 +109,6 @@ class Collector extends EventEmitter {
 	 */
 	run() {
 
-		// reset stop flag
-		this.stop_flag = false;
-
 		// Begin the run promise chain
 		return Promise.resolve().then(() => {
 				// If not initialized, then try to initialize
@@ -121,10 +117,6 @@ class Collector extends EventEmitter {
 			// Reformat possible error
 			.catch((err) => {
 				return Promise.reject(new CollectorInitializeError(err));
-			})
-			// Maybe abort if stop_flag enabled
-			.then(() => {
-				return this.stop_flag ? Promise.reject('Stop initiated.') : Promise.resolve();
 			})
 			// Prepare to collect and remove data
 			.then(() => {
@@ -173,20 +165,6 @@ class Collector extends EventEmitter {
 				return Promise.reject(err);// We're not handling the error, throw it along
 			});
 	}
-
-
-	/**
-	 * Sets stop flag to initiate a stop
-	 *
-	 * @todo return a Promise indicating when stop is finished
-	 *
-	 * @memberOf Collector
-	 */
-	stop() {
-		this.stop_flag = true;
-		this.emit('stop');
-	}
-
 
 	/**
 	 * Insert data into the database

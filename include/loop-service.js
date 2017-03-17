@@ -8,16 +8,14 @@ class LoopService extends EventEmitter {
 	 * It will stop when stop() is called, an error is caught, or has reached a run limit.
 	 *
 	 * @param {function} run_callback - The function to run continuously. Can be a Promise-returning function.
-	 * @param {function} stop_callback - The function that will run when run_callback stops
 	 */
-	constructor(run_callback, stop_callback) {
+	constructor(run_callback) {
 		super();
 
 		//Set initial variables
 		this.run_flag = false;
 		this.run_status = false;
 		this.run_callback = run_callback;
-		this.stop_callback = stop_callback;
 		this.run_count = 0;
 		this.stop_on_run = 0;
 
@@ -115,11 +113,6 @@ class LoopService extends EventEmitter {
 		.catch((e) => {
 			// Turn errors into emitted event
 			this.emit('error', e);
-		})
-		.then(() => {
-			if(typeof this.stop_callback === 'function') {
-				return this.stop_callback();
-			}
 		})
 		.then(() => {
 			this.run_status = false;

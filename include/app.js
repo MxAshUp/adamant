@@ -56,7 +56,7 @@ class App {
    */
   load_collector(config) {
     const collector = this.plugin_loader.create_collector_instance(config);
-    const service = new LoopService(collector.run.bind(collector), collector.stop.bind(collector));
+    const service = new LoopService(collector.run.bind(collector));
     service.name = `${collector.model_name} collector`;
     this.bind_service_events(service);
     this.collect_services.push(service);

@@ -10,7 +10,6 @@ chai.use(chaiAsPromised);
 describe('Loop Service', () => {
 
   const sync_fn_spy = new sinon.spy();
-  const sync_stop_fn_spy = new sinon.spy();
   const async_fn_spy = new sinon.spy();
 
   const async_fn_spy_wrapper = function() {
@@ -31,11 +30,10 @@ describe('Loop Service', () => {
     });
   };
 
-  const loopy_mc_loopface = new LoopService(async_fn_spy_wrapper, sync_stop_fn_spy);
+  const loopy_mc_loopface = new LoopService(async_fn_spy_wrapper);
 
   afterEach(() => {
     sync_fn_spy.reset();
-    sync_stop_fn_spy.reset();
     async_fn_spy.reset();
     loopy_mc_loopface.stop_on_run = 0;
     loopy_mc_loopface.run_count = 0;
@@ -46,7 +44,6 @@ describe('Loop Service', () => {
   it('Should create instance with run and stop callback', () => {
     expect(loopy_mc_loopface.run_count).to.equal(0);
     expect(loopy_mc_loopface.run_callback).to.deep.equal(async_fn_spy_wrapper);
-    expect(loopy_mc_loopface.stop_callback).to.deep.equal(sync_stop_fn_spy);
   });
 
   it('Should not run if run_count >= stop_on_run', () => {
