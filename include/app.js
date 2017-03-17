@@ -97,7 +97,7 @@ class App {
   }
 
   run() {
-    this.event_dispatcher_service.start().catch((e) => console.log);
+    this.event_dispatcher_service.start().catch(console.log);
     _.each(this.collect_services, (service) => service.start().catch(console.log));
   }
 }
