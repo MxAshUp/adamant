@@ -6,7 +6,7 @@ module.exports = function(_config) {
 	/*Plugin initializing done here...*/
 
 	return {
-		name: 'Toggl',
-		collectors: require('./collectors.js')(_config)
+		name: 'Debug Tools',
+		event_handlers: require('./event-handlers.js')(_config)
 	};
 };
