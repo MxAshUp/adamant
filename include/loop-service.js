@@ -96,7 +96,11 @@ class LoopService extends EventEmitter {
 			return new Promise((resolve,reject) => {
 				// Here we are forcing run_callback to be async, otherwise we'd get stuck in a breaking loop
 				setImmediate(() => {
-					this.run_callback().then(resolve).catch(reject);
+					try {
+						Promise.resolve(this.run_callback()).then(resolve).catch(reject);
+					} catch(e) {
+						reject(e);
+					}
 				});
 			});
 

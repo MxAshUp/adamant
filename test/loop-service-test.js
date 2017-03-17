@@ -1,0 +1,141 @@
+const LoopService = require('../include/loop-service'),
+  sinon = require('sinon'),
+  chai = require('chai'),
+  chaiAsPromised = require("chai-as-promised"),
+  expect = chai.expect,
+  assert = chai.assert;
+
+chai.use(chaiAsPromised);
+
+describe('Loop Service', () => {
+
+  const sync_fn_spy = new sinon.spy();
+  const sync_stop_fn_spy = new sinon.spy();
+  const async_fn_spy = new sinon.spy();
+
+  const async_fn_spy_wrapper = function() {
+    return new Promise((resolve,reject) => {
+      setImmediate(() => {
+        async_fn_spy();
+        resolve();
+      });
+    });
+  };
+
+  const async_fn_spy_wrapper_100 = function() {
+    return new Promise((resolve,reject) => {
+      setTimeout(() => {
+        async_fn_spy();
+        resolve();
+      },100);
+    });
+  };
+
+  const loopy_mc_loopface = new LoopService(async_fn_spy_wrapper, sync_stop_fn_spy);
+
+  afterEach(() => {
+    sync_fn_spy.reset();
+    sync_stop_fn_spy.reset();
+    async_fn_spy.reset();
+    loopy_mc_loopface.stop_on_run = 0;
+    loopy_mc_loopface.run_count = 0;
+    loopy_mc_loopface.run_flag = false;
+    loopy_mc_loopface.run_callback = async_fn_spy_wrapper;
+  });
+
+  it('Should create instance with run and stop callback', () => {
+    expect(loopy_mc_loopface.run_count).to.equal(0);
+    expect(loopy_mc_loopface.run_callback).to.deep.equal(async_fn_spy_wrapper);
+    expect(loopy_mc_loopface.stop_callback).to.deep.equal(sync_stop_fn_spy);
+  });
+
+  it('Should not run if run_count >= stop_on_run', () => {
+    loopy_mc_loopface.run_count = 5;
+    loopy_mc_loopface.stop_on_run = 3;
+    expect(loopy_mc_loopface._should_run).to.equal(false);
+
+  });
+
+  it('Should run if run count < stop_on_run and run_flag is true', () => {
+    loopy_mc_loopface.stop_on_run = 3;
+    loopy_mc_loopface.run_count = 2;
+    loopy_mc_loopface.run_flag = true;
+    expect(loopy_mc_loopface._should_run).to.equal(true);
+  });
+
+  it('Should not run if run_flag is flase', () => {
+    loopy_mc_loopface.run_flag = false;
+    expect(loopy_mc_loopface._should_run).to.equal(false);
+  });
+
+  it('Should run function once', (done) => {
+    loopy_mc_loopface.start(true).then(() => {
+      sinon.assert.callCount(async_fn_spy, 1);
+    }).then(done).catch(done);
+  });
+
+  it('Should interrupt after 3 times', (done) => {
+    loopy_mc_loopface.run_callback = async_fn_spy_wrapper_100;
+
+    loopy_mc_loopface.start().then(() => {
+      sinon.assert.callCount(async_fn_spy, 3);
+    }).then(done).catch(done);
+
+    let count = 0;
+    let toid = setInterval(() => {
+      if(count > 3) {
+        loopy_mc_loopface.stop();
+        clearInterval(toid);
+      }
+      count++;
+    }, 50);
+
+  });
+
+  it('Should by async even if run fn is not', (done) => {
+    loopy_mc_loopface.run_callback = sync_fn_spy;
+
+    loopy_mc_loopface.start().then(() => {
+      sinon.assert.callCount(sync_fn_spy, 1);
+    }).then(done).catch(done);
+
+    setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
+
+  });
+
+  it('Should emit started event', (done) => {
+    const event_spy = new sinon.spy();
+    loopy_mc_loopface.on('started', event_spy);
+
+    loopy_mc_loopface.start(true).then(() => {
+      sinon.assert.callCount(event_spy, 1);
+    }).then(done).catch(done);
+
+  });
+
+  it('Should emit stopped event', (done) => {
+    const event_spy = new sinon.spy();
+    loopy_mc_loopface.on('stopped', event_spy);
+
+    loopy_mc_loopface.start().then(() => {
+      sinon.assert.callCount(event_spy, 1);
+    }).then(done).catch(done);
+
+    setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
+
+  });
+
+  it('Should emit error event', (done) => {
+    const event_spy = new sinon.spy();
+    const spy_thrower = sinon.stub().throws();
+    loopy_mc_loopface.run_callback = spy_thrower;
+
+    loopy_mc_loopface.on('error', event_spy);
+
+    loopy_mc_loopface.start().then(() => {
+      sinon.assert.callCount(event_spy, 1);
+    }).then(done).catch(done);
+
+  });
+
+});
