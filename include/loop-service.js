@@ -1,6 +1,4 @@
 const EventEmitter = require('events');
-const promiseLoop = require('promise-loop');
-
 
 class LoopService extends EventEmitter {
 
@@ -79,37 +77,44 @@ class LoopService extends EventEmitter {
 			this.stop_on_run = this.run_count + 1;
 		}
 
-		//trigger start event
+		// Trigger start event
 		this.emit('started');
 
-		return promiseLoop(() => {
+		return new Promise((resolve, reject) => {
+			// Loop function
+			let loopfn = (function() {
 
-			//Check if need to keep running
-			if(!this._should_run) {
-				return Promise.reject();
-			}
+				// Check if need to keep running
+				if(!this._should_run) {
+					resolve();
+					return;
+				}
 
-			//increment run count
-			this.run_count++;
+				// Increment run count
+				this.run_count++;
 
-			//run the start function
-			return new Promise((resolve,reject) => {
-				// Here we are forcing run_callback to be async, otherwise we'd get stuck in a breaking loop
-				setImmediate(() => {
-					try {
-						Promise.resolve(this.run_callback()).then(resolve).catch(reject);
-					} catch(e) {
-						reject(e);
-					}
-				});
-			});
+				// Try to call run_callback
+				try {
+					Promise.resolve(this.run_callback()).catch(reject).then(() => {
+						// If all went well, let's do it again!
+						setImmediate(loopfn);
+					});
+				} catch(e) {
+					// Send up error
+					reject(e);
+				}
+				// That's it!
+				return;
 
-		}, promiseLoop.catchRejectPromise)()
+			}).bind(this); // Make sure to bind function to this
+
+			// Start the loop
+			setImmediate(loopfn);
+
+		})
 		.catch((e) => {
-
-			//Emit error event
+			// Turn errors into emitted event
 			this.emit('error', e);
-
 		})
 		.then(() => {
 			if(typeof this.stop_callback === 'function') {
