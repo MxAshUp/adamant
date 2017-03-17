@@ -81,14 +81,7 @@ describe('Loop Service', () => {
       sinon.assert.callCount(async_fn_spy, 3);
     }).then(done).catch(done);
 
-    let count = 0;
-    let toid = setInterval(() => {
-      if(count > 3) {
-        loopy_mc_loopface.stop();
-        clearInterval(toid);
-      }
-      count++;
-    }, 50);
+    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 290); // Enough time for almost 4 runs
 
   });
 
