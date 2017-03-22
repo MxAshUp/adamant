@@ -1,10 +1,9 @@
-const
-  // Test tools
-  chai = require('chai'),
+const // Test tools
+chai = require('chai'),
   expect = chai.expect,
   assert = chai.assert,
   chaiSubset = require('chai-subset'),
-  chaiAsPromised = require("chai-as-promised"),
+  chaiAsPromised = require('chai-as-promised'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   _config = require('../include/config.js'),
@@ -17,7 +16,6 @@ chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
 describe('Event Handler TSDB', function() {
-
   const influx = new Influx.InfluxDB({
     host: _config.influxdb.host,
     database: _config.influxdb.database,
@@ -34,58 +32,60 @@ describe('Event Handler TSDB', function() {
     //   }
     // ],
   });
-  const event_handler_tsdb = require('../include/event-handler-tsdb')( influx );
+  const event_handler_tsdb = require('../include/event-handler-tsdb')(influx);
 
-  describe('metric.write event handler', function() {
-
-    const metric_write_handler = new EventHandler( event_handler_tsdb[0] );
+  describe('metric.write event handler', () => {
+    const metric_write_handler = new EventHandler(event_handler_tsdb[0]);
     const data = {
       measurement: 'cpu_load_short',
-      timestamp: 1434055562000000000,
+      // timestamp: 1434055562000000000,
+      timestamp: Date.now(),
       tags: {
-        'host': 'server01',
-        'region': 'us-west',
+        host: 'server01',
+        region: 'us-west',
       },
       fields: {
-        'value': 0.44,
+        value: 0.55,
+        event_id: 0,
       },
     };
-    const returned_data = metric_write_handler.dispatch(data, 0);
+    // console.log('timestamp: ' + data.timestamp);
 
-    it('Should return the same data passed to it', () => {
+    describe('dispatch method', () => {
+      const returned_data = metric_write_handler.dispatch(data, 0);
 
-      expect(returned_data).to.equal(data);
+      it('Should return the same data passed to it', () => {
+        expect(returned_data).to.equal(data);
+      });
 
+      it('Should add a record to the database', done => {
+        const query = `
+          SELECT * FROM ${data.measurement}
+          WHERE host = '${data.tags.host}' AND region = '${data.tags.region}' AND event_id = ${data.fields.event_id} AND value = ${data.fields.value}
+        `;
+        influx
+          .query(query)
+          .then(result => {
+            // console.log('result: ');
+            // console.log(result);
+            // console.log('result length: ' + result.length);
+            // expect(result).to.have.lengthOf(1);
+            expect(result).to.have.length.above(0);
+            // expect(result).equal(result);
+            done();
+          })
+          .catch(err => {
+            done(err.stack);
+          });
+      });
     });
 
-    it('Should add a record to the database', (done) => {
+    describe('revert method', () => {
+      const revert = metric_write_handler.revert(data, 0);
 
-      // influx.query(`
-      //   select * from cpu_load_short
-      //   where host = ${data.tags.host} and region = ${data.tags.region}
-      //   order by time desc
-      //   limit 10
-      // `).then(result => {
-      //   // res.json(result);
-      //   // expect(result).to.have.length.above(0);
-      //   done();
-      // }).catch(err => {
-      //   // res.status(500).send(err.stack);
-      //   done(err.stack);
-      // });
-
-      const query = influx.query(`
-        select * from cpu_load_short
-        where host = ${data.tags.host} and region = ${data.tags.region}
-        order by time desc
-        limit 10
-      `);
-
-      // return query.should.eventually.have.length.above(0);
-      return expect(query).to.eventually.be.a('array');
-
+      it('Should remove a record from the database', () => {
+        expect(1).to.equal(1);
+      });
     });
-
   });
-
 });
