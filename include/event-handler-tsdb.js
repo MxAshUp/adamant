@@ -11,7 +11,6 @@ module.exports = influx => {
         // @todo - return data maybe necessary for revert()
 
         // InfluxDB records consist of a measurement, tags, fields, and a timestamp:
-
         // {
         // 	measurement: 'cpu_load_short',
         // 	timestamp: 1434055562000000000,
@@ -24,18 +23,9 @@ module.exports = influx => {
         // 	},
         // }
 
-        influx
-          .writePoints([
-            // {
-            //   measurement: 'response_times',
-            //   tags: { host: os.hostname() },
-            //   fields: { duration, path: req.path },
-            // },
-            data,
-          ])
-          .catch(err => {
-            console.error(`Error saving data to InfluxDB! ${err.stack}`);
-          });
+        influx.writePoints([data]).catch(err => {
+          console.error(`Error saving data to InfluxDB! ${err.stack}`);
+        });
 
         return data;
       },
