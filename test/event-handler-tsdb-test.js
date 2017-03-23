@@ -15,7 +15,7 @@ chai = require('chai'),
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
-describe('Event Handler TSDB', function() {
+describe('Event Handler TSDB', () => {
   const influx = new Influx.InfluxDB({
     host: _config.influxdb.host,
     database: _config.influxdb.database,
@@ -36,6 +36,7 @@ describe('Event Handler TSDB', function() {
 
   describe('metric.write event handler', () => {
     const metric_write_handler = new EventHandler(event_handler_tsdb[0]);
+    // InfluxDB records consist of a measurement, tags, fields, and a timestamp:
     const data = {
       measurement: 'cpu_load_short',
       // timestamp: 1434055562000000000,
@@ -84,7 +85,7 @@ describe('Event Handler TSDB', function() {
     describe('revert method', () => {
       const revert = metric_write_handler.revert(data, 0);
 
-      it('Should remove a record from the database', () => {
+      it('Should remove a record from the database', done => {
         // expect(1).to.equal(1);
 
         const query = `
