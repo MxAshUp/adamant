@@ -61,14 +61,15 @@ describe('Event Handler TSDB', function() {
       it('Should add a record to the database', done => {
         const query = `
           SELECT * FROM ${data.measurement}
-          WHERE host = '${data.tags.host}' AND region = '${data.tags.region}' AND event_id = ${data.fields.event_id} AND value = ${data.fields.value}
+          WHERE time = ${data.timestamp}
+          AND host = '${data.tags.host}'
+          AND region = '${data.tags.region}'
+          AND event_id = ${data.fields.event_id}
+          AND value = ${data.fields.value}
         `;
         influx
           .query(query)
           .then(result => {
-            // console.log('result: ');
-            // console.log(result);
-            // console.log('result length: ' + result.length);
             // expect(result).to.have.lengthOf(1);
             expect(result).to.have.length.above(0);
             // expect(result).equal(result);
@@ -84,7 +85,27 @@ describe('Event Handler TSDB', function() {
       const revert = metric_write_handler.revert(data, 0);
 
       it('Should remove a record from the database', () => {
-        expect(1).to.equal(1);
+        // expect(1).to.equal(1);
+
+        const query = `
+          SELECT * FROM ${data.measurement}
+          WHERE time = ${data.timestamp}
+          AND host = '${data.tags.host}'
+          AND region = '${data.tags.region}'
+          AND event_id = ${data.fields.event_id}
+          AND value = ${data.fields.value}
+        `;
+        influx
+          .query(query)
+          .then(result => {
+            expect(result).to.have.lengthOf(0);
+            // expect(result).to.equal(0);
+            // expect(result).equal(result);
+            done();
+          })
+          .catch(err => {
+            done(err.stack);
+          });
       });
     });
   });
