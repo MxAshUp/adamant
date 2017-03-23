@@ -18,7 +18,7 @@ class EventHandler extends EventEmitter {
       default_args: {},
       args: {},
       event_name: '',
-      supports_revert: true,
+      supports_revert: false,
       version: '',
       plugin_name: '',
       instance_id: ''
@@ -50,7 +50,7 @@ class EventHandler extends EventEmitter {
   revert(data) {
     //If revert not supported, throw error if called
     if(!this.supports_revert) {
-      this.revert = () => {throw Error('Handler does not support revert.');};
+      throw Error('Handler does not support revert.');
     }
   }
 

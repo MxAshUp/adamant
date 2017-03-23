@@ -26,48 +26,80 @@ describe('Event System - ', () => {
   const test_2_revert_cb = sinon.spy();
   const test_3_dispatch_cb = sinon.spy();
   const test_3_revert_cb = sinon.spy();
-  const test_1_config = {
-    default_args: {},
-    event_name: 'test.event_1',
-    supports_revert: true,
-    version: '0.1',
-    plugin_name: '_test',
-    dispatch: test_1_dispatch_cb,
-    revert: test_1_revert_cb
-  };
-  const test_2_config = {
-    default_args: {},
-    event_name: 'test.event_2',
-    supports_revert: true,
-    version: '0.1',
-    plugin_name: '_test',
-    dispatch: test_2_dispatch_cb,
-    revert: test_2_revert_cb
-  };
-  const test_3_config = {
-    default_args: {},
-    event_name: 'test.event_2',
-    supports_revert: true,
-    version: '0.1.5',
-    plugin_name: '_test',
-    dispatch: test_3_dispatch_cb,
-    revert: test_3_revert_cb
-  };
-  const test_handler_1 = new EventHandler(test_1_config);
-  const test_handler_2 = new EventHandler(test_2_config);
-  const test_handler_3 = new EventHandler(test_3_config);
-  const test_handler_4 = new EventHandler(test_3_config);
+
+  class test_1_handler_class extends EventHandler {
+    constructor(args) {
+      super();
+      this.default_args = {};
+
+      // Merges args with default args
+      Object.assign(this.args, this.default_args, args);
+
+      this.event_name = 'test.event_1';
+      this.supports_revert = true;
+      this.version = '0.2';
+      this.plugin_name = '_test';
+    }
+    dispatch() {
+      test_1_dispatch_cb.apply(this,arguments);
+    }
+    revert() {
+      test_1_revert_cb.apply(this,arguments);
+    }
+  }
+
+  class test_2_handler_class extends EventHandler {
+    constructor(args) {
+      super();
+      this.default_args = {};
+
+      // Merges args with default args
+      Object.assign(this.args, this.default_args, args);
+
+      this.event_name = 'test.event_2';
+      this.supports_revert = true;
+      this.version = '0.2';
+      this.plugin_name = '_test';
+    }
+    dispatch() {
+      test_2_dispatch_cb.apply(this,arguments);
+    }
+    revert() {
+      test_2_revert_cb.apply(this,arguments);
+    }
+  }
+
+  class test_3_handler_class extends EventHandler {
+    constructor(args) {
+      super();
+      this.default_args = {};
+
+      // Merges args with default args
+      Object.assign(this.args, this.default_args, args);
+
+      this.event_name = 'test.event_2';
+      this.supports_revert = true;
+      this.version = '0.2';
+      this.plugin_name = '_test';
+    }
+    dispatch() {
+      test_3_dispatch_cb.apply(this,arguments);
+    }
+    revert() {
+      test_3_revert_cb.apply(this,arguments);
+    }
+  }
+
+  const test_handler_1 = new test_1_handler_class();
+  const test_handler_2 = new test_2_handler_class();
+  const test_handler_3 = new test_3_handler_class();
+  const test_handler_4 = new test_3_handler_class();
 
   describe('Event Handler', () => {
 
     it('Should create two Event Handler instances', () => {
       expect(test_handler_1).to.be.instanceof(EventHandler);
       expect(test_handler_2).to.be.instanceof(EventHandler);
-    });
-
-    it('Should have correct properties', () => {
-      expect(test_handler_1).to.containSubset(test_1_config);
-      expect(test_handler_2).to.containSubset(test_2_config);
     });
 
     it('Should call dispatch with data', () => {
@@ -87,15 +119,8 @@ describe('Event System - ', () => {
     });
 
     it('Should throw error if supporttest_1_dispatch_cbs_revert is false and revert() is called', () => {
-      const test_handler_1 = new EventHandler({
-        default_args: {},
-        event_name: 'test.event_2',
-        supports_revert: false,
-        version: '0.1.5',
-        plugin_name: '_test',
-        dispatch: null
-      });
-      expect(test_handler_1.revert.bind(null)).to.throw('Handler does not support revert.');
+      const test_handler_1 = new EventHandler();
+      expect(test_handler_1.revert.bind(test_handler_1)).to.throw('Handler does not support revert.');
     });
 
   });
