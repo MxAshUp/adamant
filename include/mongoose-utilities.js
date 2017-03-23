@@ -23,6 +23,11 @@ function getModel(model_name) {
 	return mongoose.model(model_name);
 }
 
+function getModelKey(model_name) {
+	return 'id';
+	// @todo - implement
+}
+
 function createModel(model_name, model_schema) {
 
 	var schema = mongoose.Schema(model_schema);
@@ -35,6 +40,7 @@ module.exports = {
 	mongoose: mongoose,
 	connect: connect,
 	modelExists: modelExists,
+	getModelKey: getModelKey,
 	getModel: getModel,
 	createModel: createModel,
 };
