@@ -11,6 +11,11 @@ const PluginLoader = require('./plugin-loader'),
 class App {
 
   constructor() {
+    // Set global base dir for easy require
+    global.app_require = function(name) {
+        return require(__dirname + '/' + name);
+    };
+
     this.plugin_loader = new PluginLoader();
     this.collect_services = [];
     this.event_dispatcher = new EventDispatcher();
@@ -79,6 +84,7 @@ class App {
       this.event_dispatcher.enqueue_event(new Event(`${model}.remove`, data));
     });
     this.plugin_loader.on('error', (e) => {
+      console.log(e);
       console.log(`${chalk.red('error')}: ${chalk.grey(e.stack)}`);
     });
   }
@@ -91,7 +97,12 @@ class App {
    * @memberOf App
    */
   bind_service_events(service) {
-    service.on('error',		(e) => console.log(`${chalk.bgCyan(service.name)} service ${chalk.red('error')}: ${chalk.grey(e.stack)}`));
+    service.on('error',		(e) => {
+      console.log(`${chalk.bgCyan(service.name)} service ${chalk.red('error')}: ${chalk.grey(e.stack)}`);
+      if(e.culprit) {
+        console.log(`${chalk.red('error details')}: ${chalk.grey(e.culprit)}`);
+      }
+    });
     service.on('started',	( ) => console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('started')}.`));
     service.on('stopped',	( ) => console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('stopped')}.`));
   }
