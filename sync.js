@@ -14,7 +14,7 @@ app.load_plugin_event_handlers();
 
 app.load_collector({
 	plugin_name: 'Toggl',
-	model_name: 'toggl_timeEntry',
+	collector_name: 'CollectorTimeEntries',
 	version: '1.0',
 	config: {
 		apiToken:'771a871d9670b874655a25e20391640f'
