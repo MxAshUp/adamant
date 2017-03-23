@@ -3,5 +3,6 @@
  */
 module.exports = {
 	name: 'TimeClock',
-	//collectors: require('./collectors.js')(_config)
+	collectors: [require('./collectors/punch')],
+	models: [require('./models/punch')]
 };
