@@ -22,7 +22,6 @@ class App {
     this.event_dispatcher_service = new LoopService(this.event_dispatcher.run.bind(this.event_dispatcher));
     this.event_dispatcher_service.name = 'Event dispatcher';
     this.event_dispatcher.on('error', console.log);
-    this.bind_model_events();
     this.bind_service_events(this.event_dispatcher_service);
   }
 
@@ -60,10 +59,11 @@ class App {
    * @memberOf App
    */
   load_collector(config) {
-    const collector = this.plugin_loader.create_collector_instance(config);
+    const collector = this.plugin_loader.create_collector(config);
     const service = new LoopService(collector.run.bind(collector));
     service.name = `${collector.model_name} collector`;
     this.bind_service_events(service);
+    this.bind_model_events(collector);
     this.collect_services.push(service);
   }
 
@@ -80,23 +80,21 @@ class App {
   }
 
   /**
-   * Binds model data events in plugin to event dispatcher queue
+   * Binds model data events in colelctor to event dispatcher queue
    *
+   *  @param {Collector} collector
    *
    * @memberOf App
    */
-  bind_model_events() {
-    this.plugin_loader.on('create', (model, data) => {
-      this.event_dispatcher.enqueue_event(new Event(`${model}.create`, data));
+  bind_model_events(collector) {
+    //Add event handling
+    _.each(['create','update','remove'], (event) => {
+      collector.on(event, (data) => {
+        this.event_dispatcher.enqueue_event(new Event(`${collector.model_name}.${event}`, data));
+      });
     });
-    this.plugin_loader.on('update', (model, data) => {
-      this.event_dispatcher.enqueue_event(new Event(`${model}.update`, data));
-    });
-    this.plugin_loader.on('remove', (model, data) => {
-      this.event_dispatcher.enqueue_event(new Event(`${model}.remove`, data));
-    });
-    this.plugin_loader.on('error', (e) => {
-      console.log(e);
+
+    collector.on('error', (err) => {
       console.log(`${chalk.red('error')}: ${chalk.grey(e.stack)}`);
     });
   }

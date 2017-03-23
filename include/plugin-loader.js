@@ -1,25 +1,22 @@
 const fs = require('fs'),
   path = require('path'),
   Plugin = require('./plugin'),
-  semver = require('semver'),
   _ = require('lodash'),
   Collector = require('./collector'),
   LoopService = require('./loop-service'),
-  mongoose = require('./mongoose-utilities').mongoose,
-  EventEmitter = require('events');
+  mongoose = require('./mongoose-utilities').mongoose;
 
 
-class PluginLoader extends EventEmitter {
+class PluginLoader {
 
   /**
    * Creates a new PluginLoader object.
-   * A PluginLoader loads plugin files into memeory and provides a way to bind with plugin events.
+   * A PluginLoader loads plugin files into memory, and provide factory for creating instances of plugin components.
    *
    *
    * @memberOf PluginLoader
    */
   constructor() {
-    super();
     this.plugins = [];
   }
 
@@ -64,76 +61,35 @@ class PluginLoader extends EventEmitter {
    * @param {any} collector_config - Configuration used for initializing collector instance
    * @returns {LoopService} to interface with collector (start, stopm etc...)
    */
-  create_collector_instance(collector_config) {
-
-    let collector, collector_class;
-
-    //Find plugin
-    const plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
-    if(!plugin) throw new Error(`Plugin not loaded: ${collector_config.plugin_name}`);
-
-    //Find data collector in plugin
-    collector_class = _.find(plugin.collectors, {name: collector_config.collector_name});
-    if(!collector_class) throw new Error(`Collector not found: ${collector_config.collector_name}`);
-
-    //Create data colector instance
-    try {
-      collector = new collector_class(collector_config.config);
-    } catch (e) {
-      throw new Error(`Error creating data collector instance: ${e}`);
-    }
-
-    //Check version
-    if(collector.version && collector.version !== collector_config.version) {
-      /**
-       * @todo Do better version check, and also maybe run update on current config
-       */
-      throw new Error('Collection version not the same.');
-    }
-
-    //Add event handling
-    _.each(['create','update','remove'], (event) => {
-      collector.on(event, (data) => {
-        try {
-          this.emit(event, collector.model_name, data);
-        } catch (e) {
-          this.emit('error', e);
-        }
-      });
-    });
-
-    return collector;
+  create_collector(collector_config) {
+    return this.get_plugin_by_name(collector_config.plugin_name)
+      .create_component('collectors', collector_config.collector_name, collector_config.config, collector_config.version);
   }
 
+  /**
+   * Creates an event handler instance. First looks up plugin, then event handler class by name
+   *
+   * @param {object} handler_config
+   * @returns {EventHandler}
+   *
+   * @memberOf PluginLoader
+   */
   create_event_handler(handler_config) {
-    let handler, handler_class;
-
-    //Find plugin
-    const plugin = _.find(this.plugins, {name: handler_config.plugin_name, enabled: true});
-    if(!plugin) throw new Error(`Plugin not loaded: ${handler_config.plugin_name}`);
-
-    //Find data collector in plugin
-    handler_class = _.find(plugin.event_handlers, {name: handler_config.handler_name});
-    if(!handler_class) throw new Error(`Handler not found: ${handler_config.handler_name}`);
-
-    //Create data colector instance
-    try {
-      handler = new handler_class(handler_config.config);
-    } catch (e) {
-      throw new Error(`Error creating event handler instance: ${e}`);
-    }
-
-    //Check version
-    if(handler.version && handler.version !== handler_config.version) {
-      /**
-       * @todo Do better version check, and also maybe run update on current config
-       */
-      throw new Error('Collection version not the same.');
-    }
-
-    return handler;
-
+    return this.get_plugin_by_name(handler_config.plugin_name)
+      .create_component('event_handlers', handler_config.handler_name, handler_config.config, handler_config.version);
   }
+
+  get_plugin_by_name(plugin_name, exclude_disabled = true) {
+    // Find plugin
+    const find = {name: plugin_name};
+    if(exclude_disabled) {
+      find.enabled = true;
+    }
+    const plugin = _.find(this.plugins, find);
+    if(!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
+    return plugin;
+  }
+
 }
 
 module.exports = PluginLoader;
