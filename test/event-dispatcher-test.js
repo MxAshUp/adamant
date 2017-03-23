@@ -206,6 +206,8 @@ describe('Event System - ', () => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(test_1_dispatch_cb, 1);
         sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
+        // Make sure this args is same as handler
+        sinon.assert.calledOn(test_1_dispatch_cb, test_handler_1);
       }).then(done).catch(done);
 
       // Make sure promise was fulfilled
@@ -293,6 +295,8 @@ describe('Event System - ', () => {
         sinon.assert.callCount(test_2_revert_cb, 1);
         // Event handler dispatch should have been called with correct args
         sinon.assert.calledWith(test_2_revert_cb, test_event_data);
+        // Make sure this args is same as handler
+        sinon.assert.calledOn(test_2_revert_cb, test_handler_2);
 
       }).then(done).catch(done);
 
