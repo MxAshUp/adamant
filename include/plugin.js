@@ -1,4 +1,4 @@
-/* This is an abstract plugin */
+const mongoose = require('./mongoose-utilities');
 
 class Plugin {
 
@@ -15,6 +15,7 @@ class Plugin {
     const defaults = {
 			collectors: [],
 			event_handlers: [],
+			models: [],
 			enabled: false,
 			name: ''
     };
@@ -24,13 +25,20 @@ class Plugin {
 
 	}
 
-	//Settable properties
-	on_load(_args) {
-		//Maybe we need somethign to run when plugin is loaded
+	// Load models
+	load_models() {
+		for(let model of this.models) {
+			mongoose.createModel(model.name, model.schema);
+		}
+	}
+
+	// Settable properties
+	on_load() {
+		this.load_models();
 	}
 
 	on_unload(_args) {
-		//Maybe we need somethign to run when plugin is unloaded
+		// Maybe we need somethign to run when plugin is unloaded
 	}
 
 }

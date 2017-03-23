@@ -17,13 +17,11 @@ class Collector extends EventEmitter {
 	 *
 	 * @memberOf Collector
 	 */
-	constructor(config, args) {
+	constructor() {
 		super();
 
 		//Default object properties
     const defaults = {
-			default_args: {},
-			model_schema: {},
 			model_id_key: '',
 			model_name: '',
 			version: '',
@@ -31,23 +29,13 @@ class Collector extends EventEmitter {
     };
 
 		// Merge config and assign properties to this
-    Object.assign(this, defaults, config);
-
-		// Merges args with default args
-		this.args = this.default_args;
-		Object.assign(this.args, args);
+    Object.assign(this, defaults);
 
 		// Set some initial variables
 		this.initialize_flag = false; // If true, initialize will execute before run
 		this.prepared_data = {};
 
-		// Registers the model if needed
-		if(!mongoose.modelExists(this.model_name)) {
-			mongoose.createModel(this.model_name, this.model_schema);
-		}
-
-		// Get model
-		this.model = mongoose.getModel(this.model_name);
+		this.args = {};
 	}
 
 
@@ -136,15 +124,8 @@ class Collector extends EventEmitter {
 				for(let to_collect of this.collect(this.prepared_data, this.args)) {
 					promises.push(
 						Promise.resolve(to_collect)
-						.then((data) => this._insert_data(data))
-						.catch((err) => {
-							if(err instanceof CollectorDatabaseError) {
-								/**
-								 * @todo - Decide how to handle database errors
-								 */
-							}
-							this.emit('error', err);
-						})
+						.then(this._insert_data.bind(this))
+						.catch(this._handle_collect_error.bind(this))
 					);
 				}
 
@@ -197,10 +178,26 @@ class Collector extends EventEmitter {
 			return Promise.reject(new CollectorDatabaseError(err));
 		})
 		.then((is_inserted_row) => {
-			if(typeof is_inserted_row === 'undefined') return;
+			if(typeof is_inserted_row === 'undefined') return; // Nothing happened
 			const event = is_inserted_row === true ? 'create' : 'update';
 			this.emit(event, data_row);
 		});
+	}
+
+	/**
+	 * Handles errors when collecting a single document
+	 *
+	 * @param {any} err
+	 *
+	 * @memberOf Collector
+	 */
+	_handle_collect_error(err) {
+		if(err instanceof CollectorDatabaseError) {
+			/**
+			 * @todo - Decide how to handle database errors
+			 */
+		}
+		this.emit('error', err);
 	}
 
 
@@ -220,6 +217,22 @@ class Collector extends EventEmitter {
 			}
 			return Promise.resolve(typeof res !== 'undefined');
 		});
+	}
+
+	/**
+	 * Gets model object from mongooose
+	 *
+	 * @param {any} model_name
+	 *
+	 * @memberOf Collector
+	 */
+	_setup_model(model_name) {
+		if(typeof this.model !== 'undefined') {
+			throw Error('Model already setup.');
+		}
+		this.model_name = model_name;
+		this.model = mongoose.getModel(this.model_name);
+    this.model_id_key = mongoose.getModelKey(this.model_name);
 	}
 }
 

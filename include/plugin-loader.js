@@ -36,12 +36,12 @@ class PluginLoader extends EventEmitter {
     let plugin_args = require(`../${path}`);
 
     //Could not load it, or it's not a valid plugin_args
-    if(typeof plugin_args !== 'function') {
+    if(typeof plugin_args !== 'object') {
       throw `Error loading plugin: ${path}`;
     }
 
     //Initialize plugin_args
-    plugin_args = plugin_args(_config);
+    //plugin_args = plugin_args(_config);
 
     //Initialize plugin
     const plugin = new Plugin(plugin_args);
@@ -51,6 +51,8 @@ class PluginLoader extends EventEmitter {
 
     //If all went well loading it...
     plugin.enabled = true;
+
+    plugin.on_load();
 
     //Add plugin to registered array
     this.plugins.push(plugin);
@@ -64,13 +66,22 @@ class PluginLoader extends EventEmitter {
    */
   create_collector_instance(collector_config) {
 
+    let collector, collector_class;
+
     //Find plugin
     const plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
     if(!plugin) throw new Error(`Plugin not loaded: ${collector_config.plugin_name}`);
 
     //Find data collector in plugin
-    let collector = _.find(plugin.collectors, {model_name: collector_config.model_name});
-    if(!collector) throw new Error(`Collection not found: ${collector_config.model_name}`);
+    collector_class = _.find(plugin.collectors, {name: collector_config.collector_name});
+    if(!collector_class) throw new Error(`Collector not found: ${collector_config.collector_name}`);
+
+    //Create data colector instance
+    try {
+      collector = new collector_class(collector_config.config);
+    } catch (e) {
+      throw new Error(`Error creating data collector instance: ${e}`);
+    }
 
     //Check version
     if(collector.version && collector.version !== collector_config.version) {
@@ -78,13 +89,6 @@ class PluginLoader extends EventEmitter {
        * @todo Do better version check, and also maybe run update on current config
        */
       throw new Error('Collection version not the same.');
-    }
-
-    //Create data colector instance
-    try {
-      collector = new Collector(collector, collector_config.config);
-    } catch (e) {
-      throw new Error(`Error creating data collector instance: ${e}`);
     }
 
     //Add event handling
