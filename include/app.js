@@ -68,6 +68,18 @@ class App {
   }
 
   /**
+   * Loads an event handler instance into event dispatcher
+   *
+   * @param {object} config
+   *
+   * @memberOf App
+   */
+  load_event_handler(config) {
+    const handler = this.plugin_loader.create_event_handler(config);
+    this.event_dispatcher.load_event_handler(handler);
+  }
+
+  /**
    * Binds model data events in plugin to event dispatcher queue
    *
    *

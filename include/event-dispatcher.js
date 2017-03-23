@@ -88,7 +88,7 @@ class EventDispatcher extends EventEmitter {
     return Promise.all(
       _.map(
         _.filter(this.event_handlers, search),
-        handler => Promise.resolve().then(handler.dispatch.bind(null, event_obj.data)).then(() => {
+        handler => Promise.resolve().then(handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)).then(() => {
           this.emit('dispatched', event_obj, handler);
         }).catch((e) => {
           this.emit('error', new EventHandleError(e, event_obj, handler));

@@ -104,6 +104,36 @@ class PluginLoader extends EventEmitter {
 
     return collector;
   }
+
+  create_event_handler(handler_config) {
+    let handler, handler_class;
+
+    //Find plugin
+    const plugin = _.find(this.plugins, {name: handler_config.plugin_name, enabled: true});
+    if(!plugin) throw new Error(`Plugin not loaded: ${handler_config.plugin_name}`);
+
+    //Find data collector in plugin
+    handler_class = _.find(plugin.event_handlers, {name: handler_config.handler_name});
+    if(!handler_class) throw new Error(`Handler not found: ${handler_config.handler_name}`);
+
+    //Create data colector instance
+    try {
+      handler = new handler_class(handler_config.config);
+    } catch (e) {
+      throw new Error(`Error creating event handler instance: ${e}`);
+    }
+
+    //Check version
+    if(handler.version && handler.version !== handler_config.version) {
+      /**
+       * @todo Do better version check, and also maybe run update on current config
+       */
+      throw new Error('Collection version not the same.');
+    }
+
+    return handler;
+
+  }
 }
 
 module.exports = PluginLoader;

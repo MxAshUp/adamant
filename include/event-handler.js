@@ -10,12 +10,13 @@ class EventHandler extends EventEmitter {
   *
   * @memberOf EventHandler
   */
-  constructor(config, args) {
+  constructor() {
     super();
 
     //Default object properties
     const defaults = {
       default_args: {},
+      args: {},
       event_name: '',
       supports_revert: true,
       version: '',
@@ -24,16 +25,7 @@ class EventHandler extends EventEmitter {
     };
 
     // Merge config and assign properties to this
-    Object.assign(this, defaults, config);
-
-    //If revert not supported, throw error if called
-    if(!this.supports_revert) {
-      this.revert = () => {throw Error('Handler does not support revert.');};
-    }
-
-    // Merges args with default args
-    this.args = this.default_args;
-    Object.assign(this.args, args);
+    Object.assign(this, defaults);
 
   }
 
@@ -56,7 +48,10 @@ class EventHandler extends EventEmitter {
   * @memberOf EventHandler
   */
   revert(data) {
-
+    //If revert not supported, throw error if called
+    if(!this.supports_revert) {
+      this.revert = () => {throw Error('Handler does not support revert.');};
+    }
   }
 
 }
