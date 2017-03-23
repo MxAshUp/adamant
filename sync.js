@@ -46,10 +46,16 @@ app.load_event_handler({
 	version: '1.0',
 	config: {
 		event_name: 'toggl.time_entry.create',
-		label_style: 'bgCyan'
+		label_style: 'bgGreen'
 	}
 });
-// toggl.time_entry.create
-// toggl.time_entry.update
-// toggl.time_entry.remove
+app.load_event_handler({
+	plugin_name: 'Debug Tools',
+	handler_name: 'HandlerConsoleLogger',
+	version: '1.0',
+	config: {
+		event_name: 'toggl.time_entry.remove',
+		label_style: 'bgRed'
+	}
+});
 app.init().then(app.run.bind(app));
