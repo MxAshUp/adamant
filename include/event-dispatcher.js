@@ -119,7 +119,7 @@ class EventDispatcher extends EventEmitter {
     return Promise.all(
       _.map(
         _.filter(this.event_handlers, search),
-        handler => Promise.resolve().then(handler.revert.bind(null, event_obj.data)).then(() => {
+        handler => Promise.resolve().then(handler.revert.bind(handler, event_obj.data)).then(() => {
           this.emit('reverted', event_obj, handler);
         }).catch((e) => {
           this.emit('error', new EventHandleError(e, event_obj, handler));
