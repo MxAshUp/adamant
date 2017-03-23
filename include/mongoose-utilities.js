@@ -1,6 +1,9 @@
 /* This is shared, so only one db connection is meant to be served*/
 
 const mongoose = require('mongoose');
+const _ = require('lodash');
+
+let models = [];
 
 //Set promise library to ES6 default
 mongoose.Promise = global.Promise;
@@ -23,9 +26,22 @@ function getModel(model_name) {
 	return mongoose.model(model_name);
 }
 
+function getModelByName(model_name) {
+	let ret = _.find(models, {name: model_name});
+	if(typeof(ret) === 'undefined') {
+		throw Error(`Model ${model_name} not found.`);
+	}
+	return ret;
+}
+
 function getModelKey(model_name) {
-	return 'id';
-	// @todo - implement
+	return getModelByName(model_name).primary_key;
+}
+
+function loadModel(model) {
+	let ret_model = createModel(model.name, model.schema);
+	models.push(model);
+	return ret_model;
 }
 
 function createModel(model_name, model_schema) {
@@ -43,4 +59,5 @@ module.exports = {
 	getModelKey: getModelKey,
 	getModel: getModel,
 	createModel: createModel,
+	loadModel: loadModel
 };

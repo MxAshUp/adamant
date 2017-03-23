@@ -28,7 +28,7 @@ class Plugin {
 	// Load models
 	load_models() {
 		for(let model of this.models) {
-			mongoose.createModel(model.name, model.schema);
+			mongoose.loadModel(model);
 		}
 	}
 
