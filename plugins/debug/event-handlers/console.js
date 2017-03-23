@@ -1,7 +1,19 @@
 const EventHandler = app_require('event-handler'),
   chalk = require('chalk');
 
+/**
+ * Event handler for debugging events. Simply logs event data to console based on event being listened for.
+ *
+ * @class HandlerConsoleLogger
+ * @extends {EventHandler}
+ */
 class HandlerConsoleLogger extends EventHandler {
+  /**
+   * Creates an instance of HandlerConsoleLogger.
+   * @param {object} args
+   *
+   * @memberOf HandlerConsoleLogger
+   */
   constructor(args) {
     super();
     this.default_args = {

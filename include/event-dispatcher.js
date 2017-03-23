@@ -2,6 +2,12 @@ const _ = require('lodash'),
   EventHandleError = require('../include/errors').EventHandleError,
 	EventEmitter = require('events');
 
+/**
+ * Handles enqueing of events, loading of event handlers, and dispatching events to handlers
+ *
+ * @class EventDispatcher
+ * @extends {EventEmitter}
+ */
 class EventDispatcher extends EventEmitter {
 
   constructor() {
