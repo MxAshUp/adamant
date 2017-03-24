@@ -14,24 +14,35 @@ global.app_require = function(name) {
 
 _config = app_require('config.js');
 
-describe('Event Handler TSDB', () => {
-  const influx_client = new Influx.InfluxDB({
-    host: _config.influxdb.host,
-    database: _config.influxdb.database,
-    // schema: [
-    //   {
-    //     measurement: 'response_times',
-    //     fields: {
-    //       path: Influx.FieldType.STRING,
-    //       duration: Influx.FieldType.INTEGER
-    //     },
-    //     tags: [
-    //       'host'
-    //     ]
-    //   }
-    // ],
-  });
-  const HandlerWritePoints = require('../event-handlers/write-point');
+// const influx_client = new Influx.InfluxDB({
+//   host: _config.influxdb.host,
+//   database: _config.influxdb.database,
+//   // schema: [
+//   //   {
+//   //     measurement: 'response_times',
+//   //     fields: {
+//   //       path: Influx.FieldType.STRING,
+//   //       duration: Influx.FieldType.INTEGER
+//   //     },
+//   //     tags: [
+//   //       'host'
+//   //     ]
+//   //   }
+//   // ],
+// });
+const influx_client = {
+  writePoints: data => {
+    return new Promise((resolve, reject) => {
+      // spy_var(data[0]);
+      console.log('*** Rewiring stuff yo');
+      resolve(data[0]);
+      // reject('Your mom!');
+    });
+  },
+};
+const HandlerWritePoints = rewire('../event-handlers/write-point');
+
+describe('InfluxDB Plugin Event Handlers', () => {
   const metric_write_handler = new HandlerWritePoints({
     influxdb_client: influx_client,
   });
@@ -54,7 +65,10 @@ describe('Event Handler TSDB', () => {
     // console.log('timestamp: ' + data.timestamp);
 
     describe('dispatch method', () => {
-      const dispatch = metric_write_handler.dispatch(data, 0);
+      const dispatch = metric_write_handler.dispatch(
+        data,
+        data.fields.event_id
+      );
 
       it('Should return the same data passed to it', done => {
         dispatch.then(result => {
@@ -62,63 +76,16 @@ describe('Event Handler TSDB', () => {
           done();
         });
       });
-
-      it('Should add a record to the database', done => {
-        const query = `
-          SELECT * FROM ${data.measurement}
-          WHERE time = ${data.timestamp}
-          AND host = '${data.tags.host}'
-          AND region = '${data.tags.region}'
-          AND event_id = ${data.fields.event_id}
-          AND value = ${data.fields.value}
-        `;
-        influx_client
-          .query(query)
-          .then(result => {
-            // expect(result).to.have.lengthOf(1);
-            expect(result).to.have.length.above(0);
-            // expect(result).equal(result);
-            done();
-          })
-          .catch(err => {
-            done(err.stack);
-          });
-      });
     });
 
     describe('revert method', () => {
-      const event_id = 0;
-      const revert = metric_write_handler.revert(data, event_id);
+      const revert = metric_write_handler.revert(data, data.fields.event_id);
 
-      it('Should return the 2nd param passed to it', done => {
+      it('Should return the event id', done => {
         revert.then(result => {
           expect(result).to.equal(event_id);
           done();
         });
-      });
-
-      it('Should remove a record from the database', done => {
-        // expect(1).to.equal(1);
-
-        const query = `
-          SELECT * FROM ${data.measurement}
-          WHERE time = ${data.timestamp}
-          AND host = '${data.tags.host}'
-          AND region = '${data.tags.region}'
-          AND event_id = ${data.fields.event_id}
-          AND value = ${data.fields.value}
-        `;
-        influx_client
-          .query(query)
-          .then(result => {
-            expect(result).to.have.lengthOf(0);
-            // expect(result).to.equal(0);
-            // expect(result).equal(result);
-            done();
-          })
-          .catch(err => {
-            done(err.stack);
-          });
       });
     });
   });

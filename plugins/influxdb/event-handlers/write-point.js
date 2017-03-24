@@ -34,7 +34,7 @@ class HandlerWritePoint extends EventHandler {
     return new Promise((resolve, reject) => {
       this.args.influxdb_client
         .writePoints([data])
-        .then(result => {
+        .then(() => {
           console.log(`Success adding record with event id: ${event_id}`);
           resolve(data);
         })
@@ -60,7 +60,7 @@ class HandlerWritePoint extends EventHandler {
     return new Promise((resolve, reject) => {
       this.args.influxdb_client
         .writePoints([record])
-        .then(result => {
+        .then(() => {
           console.log(`Success zeroing record with event id: ${event_id}`);
           resolve(event_id);
         })
