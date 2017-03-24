@@ -3,5 +3,5 @@
  */
 module.exports = {
 	name: 'InfluxDB Tools',
-	event_handlers: [require('./event-handlers/write-points')]
+	event_handlers: [require('./event-handlers/write-point')]
 };
