@@ -29,8 +29,6 @@ class HandlerWritePoint extends EventHandler {
   }
 
   dispatch(data, event_id) {
-    //@todo - log event_id too!
-
     if (data.fields) {
       data.fields.event_id = event_id;
     }
