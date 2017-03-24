@@ -87,7 +87,15 @@ describe('Event Handler TSDB', () => {
     });
 
     describe('revert method', () => {
-      const revert = metric_write_handler.revert(data, 0);
+      const event_id = 0;
+      const revert = metric_write_handler.revert(data, event_id);
+
+      it('Should return the 2nd param passed to it', done => {
+        revert.then(result => {
+          expect(result).to.equal(event_id);
+          done();
+        });
+      });
 
       it('Should remove a record from the database', done => {
         // expect(1).to.equal(1);

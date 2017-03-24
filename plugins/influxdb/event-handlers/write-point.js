@@ -51,30 +51,32 @@ class HandlerWritePoint extends EventHandler {
       },
     });
 
-    this.args.influxdb_client
-      .writePoints([record])
-      .then(result => {
-        // do stuff
-        console.log(`Success zeroing record with event id: ${event_id}`);
-      })
-      .catch(err => {
-        console.error(`Error saving data to InfluxDB! ${err.stack}`);
-      });
+    return new Promise((resolve, reject) => {
+      this.args.influxdb_client
+        .writePoints([record])
+        .then(result => {
+          // do stuff
+          console.log(`Success zeroing record with event id: ${event_id}`);
+          resolve(event_id);
+        })
+        .catch(err => {
+          console.error(`Error saving data to InfluxDB! ${err.stack}`);
+          reject(new Error(`Error: ${err.stack}`));
+        });
 
-    // influx
-    //   .dropSeries({
-    //     measurement: data.measurement,
-    //     // where: '"event_id" = 0',
-    //   })
-    //   .then(result => {
-    //     // success
-    //     console.log(`Success removing record with event id: ${event_id}`);
-    //   })
-    //   .catch(err => {
-    //     console.error(`Error removing data from InfluxDB! ${err.stack}`);
-    //   });
-
-    return event_id;
+      // influx
+      //   .dropSeries({
+      //     measurement: data.measurement,
+      //     // where: '"event_id" = 0',
+      //   })
+      //   .then(result => {
+      //     // success
+      //     console.log(`Success removing record with event id: ${event_id}`);
+      //   })
+      //   .catch(err => {
+      //     console.error(`Error removing data from InfluxDB! ${err.stack}`);
+      //   });
+    });
   }
 }
 
