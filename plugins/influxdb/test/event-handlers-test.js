@@ -34,7 +34,7 @@ const influx_client = {
   writePoints: data => {
     return new Promise((resolve, reject) => {
       // spy_var(data[0]);
-      console.log('*** Rewiring stuff yo');
+      // console.log('*** Rewiring stuff yo');
       resolve(data[0]);
       // reject('Your mom!');
     });
