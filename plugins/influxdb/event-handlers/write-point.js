@@ -33,7 +33,6 @@ class HandlerWritePoint extends EventHandler {
 
     return new Promise((resolve, reject) => {
       this.args.influxdb_client.writePoints([data]).then(result => {
-        console.log('result: ', result);
         resolve(data);
       });
     });
@@ -42,7 +41,7 @@ class HandlerWritePoint extends EventHandler {
   revert(data, event_id) {
     // @todo - remove data from tsdb
 
-    console.log('Revert Event ID: ' + event_id);
+    // console.log('Revert Event ID: ' + event_id);
 
     // data.fields.value = 0;
     const record = Object.assign({}, data, {
