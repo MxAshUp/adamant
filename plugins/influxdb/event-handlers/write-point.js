@@ -16,7 +16,7 @@ class HandlerWritePoint extends EventHandler {
   constructor(args) {
     super();
     this.default_args = {
-      influxdb_client: ''
+      influxdb_client: '',
     };
 
     // Merges args with default args
@@ -30,9 +30,13 @@ class HandlerWritePoint extends EventHandler {
 
   dispatch(data, event_id) {
     //@todo - log event_id too!
-    this.args.influxdb_client.writePoints([data]);
 
-    return data;
+    return new Promise((resolve, reject) => {
+      this.args.influxdb_client.writePoints([data]).then(result => {
+        console.log('result: ', result);
+        resolve(data);
+      });
+    });
   }
 
   revert(data, event_id) {
@@ -72,7 +76,6 @@ class HandlerWritePoint extends EventHandler {
 
     return event_id;
   }
-
 }
 
 module.exports = HandlerWritePoint;

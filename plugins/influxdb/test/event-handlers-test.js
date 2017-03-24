@@ -5,11 +5,11 @@ chai = require('chai'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   Influx = require('influx');
-  // Modules to test
+// Modules to test
 
 // @todo - somehow put this in all plugin tests... maybe
 global.app_require = function(name) {
-    return require('../../../include/' + name);
+  return require('../../../include/' + name);
 };
 
 _config = app_require('config.js');
@@ -32,7 +32,9 @@ describe('Event Handler TSDB', () => {
     // ],
   });
   const HandlerWritePoints = require('../event-handlers/write-point');
-  const metric_write_handler = new HandlerWritePoints({influxdb_client: influx_client});
+  const metric_write_handler = new HandlerWritePoints({
+    influxdb_client: influx_client,
+  });
 
   describe('metric.write event handler', () => {
     // InfluxDB records consist of a measurement, tags, fields, and a timestamp:
@@ -52,10 +54,13 @@ describe('Event Handler TSDB', () => {
     // console.log('timestamp: ' + data.timestamp);
 
     describe('dispatch method', () => {
-      const returned_data = metric_write_handler.dispatch(data, 0);
+      const dispatch = metric_write_handler.dispatch(data, 0);
 
-      it('Should return the same data passed to it', () => {
-        expect(returned_data).to.equal(data);
+      it('Should return the same data passed to it', done => {
+        dispatch.then(result => {
+          expect(result).to.equal(data);
+          done();
+        });
       });
 
       it('Should add a record to the database', done => {
