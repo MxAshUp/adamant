@@ -3,5 +3,5 @@
  */
 module.exports = {
 	name: 'Debug Tools',
-	event_handlers: [require('./event-handlers/console')]
+	event_handlers: [require('./event-handlers/console'), require('./event-handlers/adapter')]
 };
