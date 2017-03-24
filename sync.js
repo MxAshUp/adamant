@@ -1,15 +1,12 @@
-
-
-/* THE FOLLOWING IS TESTING CODE FOR DATA COLLECTOR SERVICE */
-
-
 const App = require('./include/app'),
   utilities = require('./include/utilities');
 
 const app = new App();
 
+// Load plugins
 app.load_plugins(utilities.getPluginsDirectories());
 
+// Load toggl collector
 app.load_collector({
 	plugin_name: 'Toggl',
 	collector_name: 'CollectorTimeEntries',
@@ -19,6 +16,7 @@ app.load_collector({
 	}
 });
 
+// Load TimeClock collector
 // app.load_collector({
 // 	plugin_name: 'TimeClock',
 // 	collector_name: 'CollectorPunches',
@@ -31,6 +29,7 @@ app.load_collector({
 // 	}
 // });
 
+// Simply log details about toggl update event to console
 app.load_event_handler({
 	plugin_name: 'Debug Tools',
 	handler_name: 'HandlerConsoleLogger',
@@ -40,6 +39,8 @@ app.load_event_handler({
 		label_style: 'bgYellow'
 	}
 });
+
+// Simply log details about toggl create event to console
 app.load_event_handler({
 	plugin_name: 'Debug Tools',
 	handler_name: 'HandlerConsoleLogger',
@@ -49,6 +50,8 @@ app.load_event_handler({
 		label_style: 'bgGreen'
 	}
 });
+
+// Simply log details about toggl remove event to console
 app.load_event_handler({
 	plugin_name: 'Debug Tools',
 	handler_name: 'HandlerConsoleLogger',
@@ -58,4 +61,39 @@ app.load_event_handler({
 		label_style: 'bgRed'
 	}
 });
+
+// Add handler for writing data to influxdb
+// app.load_event_handler({
+// 	plugin_name: 'Debug Tools',
+// 	handler_name: 'HandlerWritePoint',
+// 	version: '1.0',
+// 	config: {
+// 		influxdb_client: '',
+// 	}
+// });
+
+// This handler will listen for a time entry update event, and enqueue a new event
+app.load_event_handler({
+	plugin_name: 'Debug Tools',
+	handler_name: 'HandlerAdapter',
+	version: '1.0',
+	config: {
+		listen_event_name: 'toggl.time_entry.update',
+		call_event_name: '_adapter.time_entry.log',
+		mutator_fn: (data) => `A beautiful string ${data.id}`
+	}
+});
+
+// This handler will listen for the custom event triggered in the above adaper
+app.load_event_handler({
+	plugin_name: 'Debug Tools',
+	handler_name: 'HandlerConsoleLogger',
+	version: '1.0',
+	config: {
+		event_name: '_adapter.time_entry.log',
+		label_style: 'underline'
+	}
+});
+
+// Get things going!
 app.init().then(app.run.bind(app));
