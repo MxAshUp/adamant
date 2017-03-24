@@ -83,7 +83,7 @@ describe('InfluxDB Plugin Event Handlers', () => {
 
       it('Should return the event id', done => {
         revert.then(result => {
-          expect(result).to.equal(event_id);
+          expect(result).to.equal(data.fields.event_id);
           done();
         });
       });
