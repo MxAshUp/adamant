@@ -3,15 +3,15 @@ const EventHandler = app_require('event-handler');
 /**
  * Event handler for writing data to influxdb.
  *
- * @class HandlerConsoleLogger
+ * @class HandlerWritePoint
  * @extends {EventHandler}
  */
 class HandlerWritePoint extends EventHandler {
   /**
-   * Creates an instance of HandlerConsoleLogger.
+   * Creates an instance of HandlerWritePoint.
    * @param {object} args
    *
-   * @memberOf HandlerConsoleLogger
+   * @memberOf HandlerWritePoint
    */
   constructor(args) {
     super();
