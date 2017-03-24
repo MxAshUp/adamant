@@ -40,14 +40,14 @@ const influx_client = {
     });
   },
 };
-const HandlerWritePoints = rewire('../event-handlers/write-point');
+const HandlerWritePoints = require('../event-handlers/write-point');
 
 describe('InfluxDB Plugin Event Handlers', () => {
-  const metric_write_handler = new HandlerWritePoints({
-    influxdb_client: influx_client,
-  });
-
   describe('metric.write event handler', () => {
+    const metric_write_handler = new HandlerWritePoints({
+      influxdb_client: influx_client,
+    });
+
     // InfluxDB records consist of a measurement, tags, fields, and a timestamp:
     const data = {
       measurement: 'cpu_load_short',
@@ -59,19 +59,18 @@ describe('InfluxDB Plugin Event Handlers', () => {
       },
       fields: {
         value: 0.55,
-        event_id: 0,
       },
     };
     // console.log('timestamp: ' + data.timestamp);
 
-    describe('dispatch method', () => {
-      const dispatch = metric_write_handler.dispatch(
-        data,
-        data.fields.event_id
-      );
+    const event_id = 0;
 
-      it('Should return the same data passed to it', done => {
+    describe('dispatch method', () => {
+      const dispatch = metric_write_handler.dispatch(data, event_id);
+
+      it('Should return same data passed to it with added event id', done => {
         dispatch.then(result => {
+          result.fields.event_id = event_id;
           expect(result).to.equal(data);
           done();
         });
@@ -79,11 +78,11 @@ describe('InfluxDB Plugin Event Handlers', () => {
     });
 
     describe('revert method', () => {
-      const revert = metric_write_handler.revert(data, data.fields.event_id);
+      const revert = metric_write_handler.revert(data, event_id);
 
       it('Should return the event id', done => {
         revert.then(result => {
-          expect(result).to.equal(data.fields.event_id);
+          expect(result).to.equal(event_id);
           done();
         });
       });
