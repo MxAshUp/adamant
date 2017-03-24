@@ -2,21 +2,20 @@ const // Test tools
 chai = require('chai'),
   expect = chai.expect,
   assert = chai.assert,
-  chaiSubset = require('chai-subset'),
-  chaiAsPromised = require('chai-as-promised'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  _config = require('../include/config.js'),
-  Influx = require('influx'),
+  Influx = require('influx');
   // Modules to test
-  EventHandler = require('../include/event-handler'),
-  EventDispatcher = require('../include/event-dispatcher');
 
-chai.use(chaiAsPromised);
-chai.use(chaiSubset);
+// @todo - somehow put this in all plugin tests... maybe
+global.app_require = function(name) {
+    return require('../../../include/' + name);
+};
+
+_config = app_require('config.js');
 
 describe('Event Handler TSDB', () => {
-  const influx = new Influx.InfluxDB({
+  const influx_client = new Influx.InfluxDB({
     host: _config.influxdb.host,
     database: _config.influxdb.database,
     // schema: [
@@ -32,10 +31,10 @@ describe('Event Handler TSDB', () => {
     //   }
     // ],
   });
-  const event_handler_tsdb = require('../include/event-handler-tsdb')(influx);
+  const HandlerWritePoints = require('../event-handlers/write-point');
+  const metric_write_handler = new HandlerWritePoints({influxdb_client: influx_client});
 
   describe('metric.write event handler', () => {
-    const metric_write_handler = new EventHandler(event_handler_tsdb[0]);
     // InfluxDB records consist of a measurement, tags, fields, and a timestamp:
     const data = {
       measurement: 'cpu_load_short',
@@ -68,7 +67,7 @@ describe('Event Handler TSDB', () => {
           AND event_id = ${data.fields.event_id}
           AND value = ${data.fields.value}
         `;
-        influx
+        influx_client
           .query(query)
           .then(result => {
             // expect(result).to.have.lengthOf(1);
@@ -96,7 +95,7 @@ describe('Event Handler TSDB', () => {
           AND event_id = ${data.fields.event_id}
           AND value = ${data.fields.value}
         `;
-        influx
+        influx_client
           .query(query)
           .then(result => {
             expect(result).to.have.lengthOf(0);
