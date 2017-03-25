@@ -76,13 +76,11 @@ describe('InfluxDB Plugin Event Handlers', () => {
     });
 
     describe('revert method', () => {
-      const revert = metric_write_handler.revert(data, event_id);
+      // const revert = metric_write_handler.revert(data, event_id);
 
-      it('Should return the event id', done => {
-        revert.then(result => {
-          expect(result).to.equal(event_id);
-          done();
-        });
+      it('Should return the event id', async () => {
+        const result = await metric_write_handler.revert(data, event_id);
+        expect(result).to.equal(event_id);
       });
     });
   });
