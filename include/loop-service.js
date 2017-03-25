@@ -17,6 +17,12 @@ class LoopService extends EventEmitter {
     this.run_callback = run_callback;
     this.run_count = 0;
     this.stop_on_run = 0;
+
+    this.retry_attempts = 0;
+    this.retry_max_attempts = 2;
+    this.retry_time_between = 0;
+    this.retry_errors = [];
+    this.retry_errors_to_skip = [];
   }
 
   /**
@@ -45,6 +51,30 @@ class LoopService extends EventEmitter {
     }
 
     //Proceed
+    return true;
+  }
+
+  /**
+	 * Checks if LoopService object should retry
+	 *
+	 * @return {boolean} True if running, False if not
+	 */
+  _maybe_retry(err) {
+    console.log('_maybe_retry');
+    console.log('err: ', err);
+    console.log('this.retry_attempts: ', this.retry_attempts);
+    console.log('this.retry_max_attempts: ', this.retry_max_attempts);
+    console.log('this.retry_time_between: ', this.retry_time_between);
+    console.log('this.retry_errors: ', this.retry_errors);
+    console.log('this.retry_errors_to_skip: ', this.retry_errors_to_skip);
+
+    this.retry_attempts++;
+
+    if (this.retry_attempts > this.retry_max_attempts) {
+      return true;
+    }
+
+    // return false;
     return true;
   }
 
@@ -103,6 +133,11 @@ class LoopService extends EventEmitter {
       .catch(e => {
         // Turn errors into emitted event
         this.emit('error', e);
+
+        if (this._maybe_retry(e)) {
+          console.log('_maybe_retry says retry yo!');
+          // this.start();
+        }
       })
       .then(() => {
         this.run_status = false;
