@@ -66,14 +66,12 @@ describe('InfluxDB Plugin Event Handlers', () => {
     const event_id = 0;
 
     describe('dispatch method', () => {
-      const dispatch = metric_write_handler.dispatch(data, event_id);
+      // const dispatch = metric_write_handler.dispatch(data, event_id);
 
-      it('Should return same data passed to it with added event id', done => {
-        dispatch.then(result => {
-          result.fields.event_id = event_id;
-          expect(result).to.equal(data);
-          done();
-        });
+      it('Should return same data passed to it with added event id', async () => {
+        const result = await metric_write_handler.dispatch(data, event_id);
+        result.fields.event_id = event_id;
+        expect(result).to.equal(data);
       });
     });
 
