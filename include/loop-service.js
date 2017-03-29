@@ -57,7 +57,7 @@ class LoopService extends EventEmitter {
   /**
 	 * Checks if LoopService object should retry
 	 *
-	 * @return {boolean} True if running, False if not
+	 * @return {boolean} True if should retry, False if not
 	 */
   _maybe_retry(err) {
     console.log('_maybe_retry');
