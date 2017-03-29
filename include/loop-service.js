@@ -154,7 +154,7 @@ class LoopService extends EventEmitter {
           setTimeout(
             () => {
               console.log('_maybe_retry says retry!');
-              // this.start();
+              this.start(run_once);
             },
             this.retry_time_between
           );
