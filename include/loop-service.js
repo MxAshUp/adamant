@@ -65,19 +65,19 @@ class LoopService extends EventEmitter {
 
     // max retry attempts reached
     if (this.retry_attempts > this.retry_max_attempts) {
-      console.log('max retry attempts reached!');
+      // console.log('max retry attempts reached!');
       return false;
     }
 
     // error not in errors to catch
     if (this.retry_errors.indexOf(err) === -1) {
-      console.log('error not in errors to catch!');
+      // console.log('error not in errors to catch!');
       return false;
     }
 
     // error is in errors to skip
     if (this.retry_errors_to_skip.indexOf(err) > -1) {
-      console.log('error is in errors to skip!');
+      // console.log('error is in errors to skip!');
       return false;
     }
 
@@ -122,10 +122,10 @@ class LoopService extends EventEmitter {
         // Try to call run_callback
         try {
           Promise.resolve(this.run_callback()).catch(reject).then(() => {
-            // reject('yourmom');
+            reject('yourmom');
 
             // If all went well, let's do it again!
-            setImmediate(loopfn);
+            // setImmediate(loopfn);
           });
         } catch (e) {
           // Send up error
@@ -145,7 +145,6 @@ class LoopService extends EventEmitter {
         if (this._maybe_retry(e)) {
           setTimeout(
             () => {
-              console.log('_maybe_retry says retry!');
               this.start(run_once);
             },
             this.retry_time_between
