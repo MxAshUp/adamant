@@ -143,12 +143,7 @@ class LoopService extends EventEmitter {
         // this.emit('error', e);
 
         if (this._maybe_retry(e)) {
-          setTimeout(
-            () => {
-              this.start(run_once);
-            },
-            this.retry_time_between
-          );
+          setTimeout(() => this.start(run_once), this.retry_time_between);
         }
       })
       .then(() => {
