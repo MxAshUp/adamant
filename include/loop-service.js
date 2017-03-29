@@ -60,14 +60,6 @@ class LoopService extends EventEmitter {
 	 * @return {boolean} True if should retry, False if not
 	 */
   _maybe_retry(err) {
-    console.log('_maybe_retry');
-    console.log('err: ', err);
-    console.log('this.retry_attempts: ', this.retry_attempts);
-    console.log('this.retry_max_attempts: ', this.retry_max_attempts);
-    console.log('this.retry_time_between: ', this.retry_time_between);
-    console.log('this.retry_errors: ', this.retry_errors);
-    console.log('this.retry_errors_to_skip: ', this.retry_errors_to_skip);
-
     // increment retry attempts
     this.retry_attempts++;
 
