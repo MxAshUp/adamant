@@ -124,20 +124,29 @@ app.load_event_handler({
     // mutator_fn: data => `A beautiful string ${data.id}`,
     mutator_fn: data => {
       console.log('mutator func called');
+
       console.log('data pre modify: ', data);
 
       data = {
         measurement: 'toggl_entry_update',
         // timestamp: 1434055562000000000,
-        timestamp: Date.now(),
+        // timestamp: Date.now(),
         tags: {
-          host: 'server01',
-          region: 'us-west',
+          billable: data.billable,
+          duronly: data.duronly,
         },
         fields: {
-          value: 0.55,
+          wid: data.wid,
+          pid: data.pid,
+          uid: data.uid,
+          start: data.start,
+          stop: data.stop,
+          at: data.at,
+          duration: data.duration,
         },
       };
+
+      console.log('data post modify: ', data);
 
       return data;
     },
