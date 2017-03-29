@@ -122,10 +122,10 @@ class LoopService extends EventEmitter {
         // Try to call run_callback
         try {
           Promise.resolve(this.run_callback()).catch(reject).then(() => {
-            reject('yourmom');
+            // reject('yourmom');
 
             // If all went well, let's do it again!
-            // setImmediate(loopfn);
+            setImmediate(loopfn);
           });
         } catch (e) {
           // Send up error
