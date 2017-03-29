@@ -123,14 +123,16 @@ app.load_event_handler({
     call_event_name: 'metric.write',
     // mutator_fn: data => `A beautiful string ${data.id}`,
     mutator_fn: data => {
-      console.log('mutator func called');
+      // console.log('mutator func called');
 
-      console.log('data pre modify: ', data);
+      // console.log('data pre modify: ', data);
 
       data = {
         measurement: 'toggl_entry_update',
         // timestamp: 1434055562000000000,
         // timestamp: Date.now(),
+        // timestamp: +new Date(data.at),
+        // timestamp: Date.parse(data.at),
         tags: {
           billable: data.billable,
           duronly: data.duronly,
@@ -146,7 +148,7 @@ app.load_event_handler({
         },
       };
 
-      console.log('data post modify: ', data);
+      // console.log('data post modify: ', data);
 
       return data;
     },
