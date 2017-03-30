@@ -29,8 +29,8 @@ class HandlerWritePoint extends EventHandler {
   }
 
   dispatch(data, event_id) {
-    if (data.fields) {
-      data.fields.event_id = event_id;
+    if (data.tags) {
+      data.tags.event_id = event_id + '';
     }
 
     return new Promise((resolve, reject) => {
@@ -48,41 +48,23 @@ class HandlerWritePoint extends EventHandler {
   }
 
   revert(data, event_id) {
-    // @todo - remove data from tsdb
-
     // console.log('Revert Event ID: ' + event_id);
-
-    // data.fields.value = 0;
-    const record = Object.assign({}, data, {
-      fields: {
-        value: 0,
-      },
-    });
 
     return new Promise((resolve, reject) => {
       this.args.influxdb_client
-        .writePoints([record])
-        .then(() => {
-          // console.log(`Success zeroing record with event id: ${event_id}`);
+        .dropSeries({
+          measurement: data.measurement,
+          where: `"event_id" = '${event_id}'`,
+        })
+        .then(result => {
+          // success
+          // console.log(`Success removing record with event id: ${event_id}`);
           resolve(event_id);
         })
         .catch(err => {
-          console.error(`Error saving data to InfluxDB! ${err.stack}`);
+          console.error(`Error removing data from InfluxDB! ${err.stack}`);
           reject(new Error(`Error: ${err.stack}`));
         });
-
-      // influx
-      //   .dropSeries({
-      //     measurement: data.measurement,
-      //     // where: '"event_id" = 0',
-      //   })
-      //   .then(result => {
-      //     // success
-      //     console.log(`Success removing record with event id: ${event_id}`);
-      //   })
-      //   .catch(err => {
-      //     console.error(`Error removing data from InfluxDB! ${err.stack}`);
-      //   });
     });
   }
 }
