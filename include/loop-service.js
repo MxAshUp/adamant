@@ -15,6 +15,7 @@ class LoopService extends EventEmitter {
     this.run_flag = false;
     this.run_status = false;
     this.run_callback = run_callback;
+    this.run_min_time_between = 5000;
     this.run_count = 0;
     this.stop_on_run = 0;
 
@@ -125,7 +126,12 @@ class LoopService extends EventEmitter {
             // reject('yourmom');
 
             // If all went well, let's do it again!
-            setImmediate(loopfn);
+            this.run_min_time_between_timeout_id = setTimeout(
+              () => {
+                setImmediate(loopfn);
+              },
+              this.run_min_time_between
+            );
           });
         } catch (e) {
           // Send up error
@@ -164,6 +170,7 @@ class LoopService extends EventEmitter {
 	 */
   stop() {
     this.run_flag = false;
+    clearTimeout(this.run_min_time_between_timeout_id);
   }
 }
 
