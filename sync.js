@@ -136,11 +136,11 @@ app.load_event_handler({
         tags: {
           billable: data.billable,
           duronly: data.duronly,
-        },
-        fields: {
           wid: data.wid,
           pid: data.pid,
           uid: data.uid,
+        },
+        fields: {
           start: data.start,
           stop: data.stop,
           at: data.at,
