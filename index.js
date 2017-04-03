@@ -15,6 +15,7 @@ app.load_collector({
   version: '1.0',
   config: {
     apiToken: '9a273d3973ddace390a130711f3e02e3',
+    days_back_to_sync: 30,
   },
 });
 
@@ -113,6 +114,42 @@ app.load_event_handler({
   },
 });
 
+// This handler will listen for a time entry create event, and enqueue a new event
+app.load_event_handler({
+  plugin_name: 'Debug Tools',
+  handler_name: 'HandlerAdapter',
+  version: '1.0',
+  config: {
+    listen_event_name: 'toggl.time_entry.create',
+    call_event_name: 'metric.write',
+    // mutator_fn: data => `A beautiful string ${data.id}`,
+    mutator_fn: data => {
+      const timestamp = Date.parse(data.start) * 1000000;
+
+      data = {
+        measurement: 'toggl_time_entry',
+        // timestamp: 1434055562000000000,
+        timestamp,
+        tags: {
+          billable: data.billable,
+          duronly: data.duronly,
+          wid: data.wid,
+          pid: data.pid,
+          uid: data.uid,
+        },
+        fields: {
+          start: data.start,
+          stop: data.stop,
+          at: data.at,
+          duration: data.duration,
+        },
+      };
+
+      return data;
+    },
+  },
+});
+
 // This handler will listen for a time entry update event, and enqueue a new event
 app.load_event_handler({
   plugin_name: 'Debug Tools',
@@ -123,10 +160,10 @@ app.load_event_handler({
     call_event_name: 'metric.write',
     // mutator_fn: data => `A beautiful string ${data.id}`,
     mutator_fn: data => {
-      const timestamp = Date.parse(data.at) * 1000000;
+      const timestamp = Date.parse(data.start) * 1000000;
 
       data = {
-        measurement: 'toggl_time_entry_update',
+        measurement: 'toggl_time_entry',
         // timestamp: 1434055562000000000,
         timestamp,
         tags: {
