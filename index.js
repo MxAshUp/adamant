@@ -122,7 +122,6 @@ app.load_event_handler({
   config: {
     listen_event_name: 'toggl.time_entry.create',
     call_event_name: 'metric.write',
-    // mutator_fn: data => `A beautiful string ${data.id}`,
     mutator_fn: data => {
       const timestamp = Date.parse(data.start) * 1000000;
 
