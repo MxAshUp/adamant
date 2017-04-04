@@ -57,7 +57,6 @@ class HandlerWritePoint extends EventHandler {
           where: `"event_id" = '${event_id}'`,
         })
         .then(result => {
-          // success
           // console.log(`Success removing record with event id: ${event_id}`);
           resolve(event_id);
         })
