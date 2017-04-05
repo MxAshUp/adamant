@@ -4,6 +4,6 @@ module.exports = {
   },
   influxdb: {
     host: 'influxdb',
-    database: 'mydb',
+    database: 'metricplatform',
   },
 };
