@@ -2,6 +2,12 @@ const _ = require('lodash'),
   EventHandleError = require('../include/errors').EventHandleError,
 	EventEmitter = require('events');
 
+/**
+ * Handles enqueing of events, loading of event handlers, and dispatching events to handlers
+ *
+ * @class EventDispatcher
+ * @extends {EventEmitter}
+ */
 class EventDispatcher extends EventEmitter {
 
   constructor() {
@@ -22,6 +28,9 @@ class EventDispatcher extends EventEmitter {
   load_event_handler(handler) {
     // Assign an instance id
     handler.instance_id = this.handler_count++;
+
+    // Handle enqueue event
+    handler.on('enqueue_event', this.enqueue_event.bind(this));
 
     // Add handler to array of EventHandlers
     this.event_handlers.push(handler);
@@ -85,10 +94,10 @@ class EventDispatcher extends EventEmitter {
     return Promise.all(
       _.map(
         _.filter(this.event_handlers, search),
-        handler => Promise.resolve().then(handler.dispatch.bind(null, event_obj.data)).then(() => {
-          // TODO: emit event success
+        handler => Promise.resolve().then(handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)).then(() => {
+          this.emit('dispatched', event_obj, handler);
         }).catch((e) => {
-          this.emit('Error', new EventHandleError(e, event_obj, handler));
+          this.emit('error', new EventHandleError(e, event_obj, handler));
         })
       )
     );
@@ -116,7 +125,11 @@ class EventDispatcher extends EventEmitter {
     return Promise.all(
       _.map(
         _.filter(this.event_handlers, search),
-        handler => Promise.resolve(handler.revert.apply(null, [event_obj.data]))
+        handler => Promise.resolve().then(handler.revert.bind(handler, event_obj.data)).then(() => {
+          this.emit('reverted', event_obj, handler);
+        }).catch((e) => {
+          this.emit('error', new EventHandleError(e, event_obj, handler));
+        })
       )
     );
   }
@@ -148,6 +161,22 @@ class EventDispatcher extends EventEmitter {
    */
   shift_event() {
     return this.event_queue.shift();
+  }
+
+  /**
+   * Shifts and dispatches all enqueued events
+   *
+   *
+   * @memberOf EventDispatcher
+   */
+  run() {
+    let promises = [];
+
+    while(this.event_queue_count > 0) {
+      promises.push(this.dispatch_event(this.shift_event()));
+    }
+
+    return Promise.all(promises);
   }
 
   /**

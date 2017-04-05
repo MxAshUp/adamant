@@ -26,48 +26,80 @@ describe('Event System - ', () => {
   const test_2_revert_cb = sinon.spy();
   const test_3_dispatch_cb = sinon.spy();
   const test_3_revert_cb = sinon.spy();
-  const test_1_config = {
-    default_args: {},
-    event_name: 'test.event_1',
-    supports_revert: true,
-    version: '0.1',
-    plugin_name: '_test',
-    dispatch: test_1_dispatch_cb,
-    revert: test_1_revert_cb
-  };
-  const test_2_config = {
-    default_args: {},
-    event_name: 'test.event_2',
-    supports_revert: true,
-    version: '0.1',
-    plugin_name: '_test',
-    dispatch: test_2_dispatch_cb,
-    revert: test_2_revert_cb
-  };
-  const test_3_config = {
-    default_args: {},
-    event_name: 'test.event_2',
-    supports_revert: true,
-    version: '0.1.5',
-    plugin_name: '_test',
-    dispatch: test_3_dispatch_cb,
-    revert: test_3_revert_cb
-  };
-  const test_handler_1 = new EventHandler(test_1_config);
-  const test_handler_2 = new EventHandler(test_2_config);
-  const test_handler_3 = new EventHandler(test_3_config);
-  const test_handler_4 = new EventHandler(test_3_config);
+
+  class test_1_handler_class extends EventHandler {
+    constructor(args) {
+      super();
+      this.default_args = {};
+
+      // Merges args with default args
+      Object.assign(this.args, this.default_args, args);
+
+      this.event_name = 'test.event_1';
+      this.supports_revert = true;
+      this.version = '0.2';
+      this.plugin_name = '_test';
+    }
+    dispatch() {
+      test_1_dispatch_cb.apply(this,arguments);
+    }
+    revert() {
+      test_1_revert_cb.apply(this,arguments);
+    }
+  }
+
+  class test_2_handler_class extends EventHandler {
+    constructor(args) {
+      super();
+      this.default_args = {};
+
+      // Merges args with default args
+      Object.assign(this.args, this.default_args, args);
+
+      this.event_name = 'test.event_2';
+      this.supports_revert = true;
+      this.version = '0.2';
+      this.plugin_name = '_test';
+    }
+    dispatch() {
+      test_2_dispatch_cb.apply(this,arguments);
+    }
+    revert() {
+      test_2_revert_cb.apply(this,arguments);
+    }
+  }
+
+  class test_3_handler_class extends EventHandler {
+    constructor(args) {
+      super();
+      this.default_args = {};
+
+      // Merges args with default args
+      Object.assign(this.args, this.default_args, args);
+
+      this.event_name = 'test.event_2';
+      this.supports_revert = true;
+      this.version = '0.2';
+      this.plugin_name = '_test';
+    }
+    dispatch() {
+      test_3_dispatch_cb.apply(this,arguments);
+    }
+    revert() {
+      test_3_revert_cb.apply(this,arguments);
+    }
+  }
+
+  const test_handler_1 = new test_1_handler_class();
+  const test_handler_2 = new test_2_handler_class();
+  const test_handler_3 = new test_3_handler_class();
+  const test_handler_4 = new test_3_handler_class();
 
   describe('Event Handler', () => {
 
     it('Should create two Event Handler instances', () => {
       expect(test_handler_1).to.be.instanceof(EventHandler);
       expect(test_handler_2).to.be.instanceof(EventHandler);
-    });
-
-    it('Should have correct properties', () => {
-      expect(test_handler_1).to.containSubset(test_1_config);
-      expect(test_handler_2).to.containSubset(test_2_config);
     });
 
     it('Should call dispatch with data', () => {
@@ -86,16 +118,9 @@ describe('Event System - ', () => {
 
     });
 
-    it('Should throw error if supports_revert is false and revert() is called', () => {
-      const test_handler_1 = new EventHandler({
-        default_args: {},
-        event_name: 'test.event_2',
-        supports_revert: false,
-        version: '0.1.5',
-        plugin_name: '_test',
-        dispatch: null
-      });
-      expect(test_handler_1.revert.bind(null)).to.throw('Handler does not support revert.');
+    it('Should throw error if supporttest_1_dispatch_cbs_revert is false and revert() is called', () => {
+      const test_handler_1 = new EventHandler();
+      expect(test_handler_1.revert.bind(test_handler_1)).to.throw('Handler does not support revert.');
     });
 
   });
@@ -181,6 +206,8 @@ describe('Event System - ', () => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(test_1_dispatch_cb, 1);
         sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
+        // Make sure this args is same as handler
+        sinon.assert.calledOn(test_1_dispatch_cb, test_handler_1);
       }).then(done).catch(done);
 
       // Make sure promise was fulfilled
@@ -192,13 +219,33 @@ describe('Event System - ', () => {
 
       const test_event_data = Math.random();
       const spy_handler = sinon.spy();
+      const test_event = new Event('test.event_1',test_event_data);
 
-      dispatcher.on('Dispatched', spy_handler);
+      dispatcher.on('dispatched', spy_handler);
 
-      let ret = dispatcher.dispatch_event(new Event('test.event_1',test_event_data)).then(() => {
+      let ret = dispatcher.dispatch_event(test_event).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(spy_handler, 1);
-        sinon.assert.calledWith(spy_handler, ''); //TODO, idk, what should it be called with?
+        sinon.assert.calledWith(spy_handler, test_event, test_handler_1);
+      }).then(done).catch(done);
+
+      // Make sure promise was fulfilled
+      assert.isFulfilled(ret);
+
+    });
+
+    it('Should revert event and emit event', (done) => {
+
+      const test_event_data = Math.random();
+      const spy_handler = sinon.spy();
+      const test_event = new Event('test.event_1',test_event_data);
+
+      dispatcher.on('reverted', spy_handler);
+
+      let ret = dispatcher.revert_event(test_event).then(() => {
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.callCount(spy_handler, 1);
+        sinon.assert.calledWith(spy_handler, test_event, test_handler_1);
       }).then(done).catch(done);
 
       // Make sure promise was fulfilled
@@ -248,6 +295,8 @@ describe('Event System - ', () => {
         sinon.assert.callCount(test_2_revert_cb, 1);
         // Event handler dispatch should have been called with correct args
         sinon.assert.calledWith(test_2_revert_cb, test_event_data);
+        // Make sure this args is same as handler
+        sinon.assert.calledOn(test_2_revert_cb, test_handler_2);
 
       }).then(done).catch(done);
 
@@ -277,7 +326,7 @@ describe('Event System - ', () => {
       const spy_thrower = sinon.stub().throws();
       const spy_catcher = sinon.spy();
       test_handler_1.dispatch = spy_thrower;
-      dispatcher.on('Error', spy_catcher);
+      dispatcher.on('error', spy_catcher);
       const temp_test_event = new Event('test.event_1', test_event_data);
       let ret = dispatcher.dispatch_event(temp_test_event).then(() => {
         sinon.assert.callCount(spy_thrower, 1);
@@ -290,6 +339,51 @@ describe('Event System - ', () => {
       }).then(done).catch(done);
     });
 
+    it('Should catch and emit error from event handler revert', (done) => {
+      const test_event_data = Math.random();
+      const spy_thrower = sinon.stub().throws();
+      const spy_catcher = sinon.spy();
+      test_handler_1.revert = spy_thrower;
+      dispatcher.on('error', spy_catcher);
+      const temp_test_event = new Event('test.event_1', test_event_data);
+      let ret = dispatcher.revert_event(temp_test_event).then(() => {
+        sinon.assert.callCount(spy_thrower, 1);
+        sinon.assert.calledWith(spy_thrower, test_event_data);
+        sinon.assert.callCount(spy_catcher, 1);
+        let error_thrown = spy_catcher.lastCall.args[0];
+        expect(error_thrown).to.be.instanceof(EventHandleError);
+        expect(error_thrown.event).to.deep.equal(temp_test_event);
+        expect(error_thrown.handler).to.deep.equal(test_handler_1);
+      }).then(done).catch(done);
+    });
+
+    it('Should shift and dispatch all events in queue', (done) => {
+      // This test isn't valid if we don't have anything enqueued
+      expect(dispatcher.event_queue_count).to.not.equal(0);
+      test_handler_1.dispatch = test_1_dispatch_cb;
+      test_handler_2.dispatch = test_2_dispatch_cb;
+      dispatcher.run().then(() => {
+        expect(dispatcher.event_queue_count).to.equal(0);
+        sinon.assert.callCount(test_1_dispatch_cb, 1);
+        sinon.assert.calledWith(test_1_dispatch_cb, test_2_event.data);
+        sinon.assert.callCount(test_2_dispatch_cb, 1);
+        sinon.assert.calledWith(test_2_dispatch_cb, test_3_event.data);
+      }).then(done).catch(done);
+    });
+
+    it('Should enqueue an event while being dispatched', () => {
+      const test_event_data = Math.random();
+      test_event_a = new Event('test.event_2', test_event_data);
+
+      test_handler_1.dispatch = function() {
+        this.emit('enqueue_event', test_event_a);
+      };
+
+      test_handler_1.dispatch.apply(test_handler_1);
+
+      expect(dispatcher.shift_event()).to.deep.equal(test_event_a);
+
+    });
 
   });
 

@@ -1,25 +1,22 @@
 const fs = require('fs'),
   path = require('path'),
   Plugin = require('./plugin'),
-  semver = require('semver'),
   _ = require('lodash'),
   Collector = require('./collector'),
   LoopService = require('./loop-service'),
-  mongoose = require('./mongoose-utilities').mongoose,
-  EventEmitter = require('events');
+  mongoose = require('./mongoose-utilities').mongoose;
 
 
-class PluginLoader extends EventEmitter {
+class PluginLoader {
 
   /**
    * Creates a new PluginLoader object.
-   * A PluginLoader loads plugin files into memeory and provides a way to bind with plugin events.
+   * A PluginLoader loads plugin files into memory, and provide factory for creating instances of plugin components.
    *
    *
    * @memberOf PluginLoader
    */
   constructor() {
-    super();
     this.plugins = [];
   }
 
@@ -36,12 +33,12 @@ class PluginLoader extends EventEmitter {
     let plugin_args = require(`../${path}`);
 
     //Could not load it, or it's not a valid plugin_args
-    if(typeof plugin_args !== 'function') {
+    if(typeof plugin_args !== 'object') {
       throw `Error loading plugin: ${path}`;
     }
 
     //Initialize plugin_args
-    plugin_args = plugin_args(_config);
+    //plugin_args = plugin_args(_config);
 
     //Initialize plugin
     const plugin = new Plugin(plugin_args);
@@ -51,6 +48,8 @@ class PluginLoader extends EventEmitter {
 
     //If all went well loading it...
     plugin.enabled = true;
+
+    plugin.on_load();
 
     //Add plugin to registered array
     this.plugins.push(plugin);
@@ -62,51 +61,35 @@ class PluginLoader extends EventEmitter {
    * @param {any} collector_config - Configuration used for initializing collector instance
    * @returns {LoopService} to interface with collector (start, stopm etc...)
    */
-  create_collector_instance(collector_config) {
-
-    //Find plugin
-    const plugin = _.find(this.plugins, {name: collector_config.plugin_name, enabled: true});
-    if(!plugin) throw new Error(`Plugin not loaded: ${collector_config.plugin_name}`);
-
-    //Find data collector in plugin
-    let collector = _.find(plugin.collectors, {model_name: collector_config.model_name});
-    if(!collector) throw new Error(`Collection not found: ${collector_config.model_name}`);
-
-    //Check version
-    if(collector.version && collector.version !== collector_config.version) {
-      /**
-       * @todo Do better version check, and also maybe run update on current config
-       */
-      throw new Error('Collection version not the same.');
-    }
-
-    //Create data colector instance
-    try {
-      collector = new Collector(collector, collector_config.config);
-    } catch (e) {
-      throw new Error(`Error creating data collector instance: ${e}`);
-    }
-
-    //Add event handling
-    _.each(['create','update','remove'], (event) => {
-      collector.on(event, (data) => this.handle_event_emit(collector.model_name, event, data));
-    });
-
-    return collector;
+  create_collector(collector_config) {
+    return this.get_plugin_by_name(collector_config.plugin_name)
+      .create_component('collectors', collector_config.collector_name, collector_config.config, collector_config.version);
   }
 
   /**
-   * A generic event handler for dispatching collector events.
+   * Creates an event handler instance. First looks up plugin, then event handler class by name
    *
-   * @param {String} model_name - Name of mongoose model associated with event
-   * @param {String} event - Name/scope of event to trigger
-   * @param {any} data - Data to pass to event handlers
+   * @param {object} handler_config
+   * @returns {EventHandler}
+   *
+   * @memberOf PluginLoader
    */
-  handle_event_emit(model_name, event, data) {
-
-    this.emit(event, model_name, data);
-    this.emit(`${model_name}_${event}`, data);
+  create_event_handler(handler_config) {
+    return this.get_plugin_by_name(handler_config.plugin_name)
+      .create_component('event_handlers', handler_config.handler_name, handler_config.config, handler_config.version);
   }
+
+  get_plugin_by_name(plugin_name, exclude_disabled = true) {
+    // Find plugin
+    const find = {name: plugin_name};
+    if(exclude_disabled) {
+      find.enabled = true;
+    }
+    const plugin = _.find(this.plugins, find);
+    if(!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
+    return plugin;
+  }
+
 }
 
 module.exports = PluginLoader;

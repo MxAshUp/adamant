@@ -1,7 +1,8 @@
 const mongoose = require('./mongoose-utilities'),
+	EventEmitter = require('events'),
 _ = require('lodash');
 
-class EventHandler {
+class EventHandler extends EventEmitter {
 
   /**
   * Creates an instance of EventHandler.
@@ -9,29 +10,22 @@ class EventHandler {
   *
   * @memberOf EventHandler
   */
-  constructor(config, args) {
+  constructor() {
+    super();
 
     //Default object properties
     const defaults = {
       default_args: {},
+      args: {},
       event_name: '',
-      supports_revert: true,
+      supports_revert: false,
       version: '',
       plugin_name: '',
       instance_id: ''
     };
 
     // Merge config and assign properties to this
-    Object.assign(this, defaults, config);
-
-    //If revert not supported, throw error if called
-    if(!this.supports_revert) {
-      this.revert = () => {throw Error('Handler does not support revert.');};
-    }
-
-    // Merges args with default args
-    this.args = this.default_args;
-    Object.assign(this.args, args);
+    Object.assign(this, defaults);
 
   }
 
@@ -54,7 +48,10 @@ class EventHandler {
   * @memberOf EventHandler
   */
   revert(data) {
-
+    //If revert not supported, throw error if called
+    if(!this.supports_revert) {
+      throw Error('Handler does not support revert.');
+    }
   }
 
 }
