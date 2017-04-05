@@ -196,10 +196,24 @@ class Collector extends EventEmitter {
 	 * @memberOf Collector
 	 */
 	_insert_data(data_row) {
-		return this.model.count(data_row)
+		return this.model.find({"id": data_row.id}, {_id: 0, __v: 0})
 		.then((res) => {
-			if(res > 0) {
-				// Move along, nothing to update
+			if(res.length == 1) { // we got a result
+
+				if(res[0] == data_row) {
+				} else {
+					for(var k in res[0]) {
+						if(res[0][k] == data_row[k]) {
+							//console.log('EQUALS', k);
+							console.log('EQUAL');
+							delete data_row[k];
+						} else {
+							//console.log('NOT EQUAL', k, res[0][k], data_row[k]);
+							console.log('NOT EQUAL');
+						}
+					}
+				}
+
 				return Promise.resolve();
 			} else {
 				// Update time!
@@ -216,7 +230,7 @@ class Collector extends EventEmitter {
 			}
 		})
 		.catch((err) => {
-			return Promise.reject(new CollectorDatabaseError(err));
+			return Promise.reject(err);
 		})
 		.then((is_inserted_row) => {
 			if(typeof is_inserted_row === 'undefined') return;
