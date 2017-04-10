@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "mocha test/*-test.js"
+    "test": "nyc --reporter=html mocha test/*-test.js"
   },
   "author": "",
   "license": "ISC",
@@ -29,8 +29,11 @@
     "chai-subset": "^1.4.0",
     "mocha": "^3.2.0",
     "mocha-mongoose": "^1.2.0",
+    "mongoose-mock": "^0.4.0",
+    "nyc": "^10.2.0",
     "rewire": "^2.5.2",
-    "sinon": "^1.17.7"
+    "sinon": "^1.17.7",
+    "sinon-as-promised": "^4.0.3"
   },
   "jshintConfig": {
     "esversion": 6,

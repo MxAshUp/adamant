@@ -1,5 +1,5 @@
-const vsprintf = require("sprintf-js").vsprintf,
-	mongoose = require('./mongoose-utilities'),
+var vsprintf = require("sprintf-js").vsprintf,
+	mongoose_utils = require('./mongoose-utilities'),
 	EventEmitter = require('events'),
 	_ = require('lodash'),
 	CollectorInitializeError = require('./errors').CollectorInitializeError,
@@ -41,6 +41,7 @@ class Collector extends EventEmitter {
 
   /**
    * Assemble the data needed to establish an API connection
+	 * Should be O(1)
    * @param  {object} args
    * @return {Promise}
 	 *
@@ -51,6 +52,7 @@ class Collector extends EventEmitter {
 
   /**
    * Check an API for data that we might need to insert, update, or delete from the db
+	 * Should be O(n)
    * @param  {object} args
    * @return {Promise}
 	 *
@@ -133,7 +135,9 @@ class Collector extends EventEmitter {
 			})
 			// Remove docs that may need to be removed
 			.then(() => {
-				return Promise.all(_.map(this.garbage.apply(this, [this.prepared_data,this.args]),this._remove_data));
+				return Promise.resolve(this.garbage(this.prepared_data,this.args)).then(to_remove => {
+					return Promise.all(_.map(to_remove,this._remove_data.bind(this)));
+				});
 			})
 			// collect is success, cleanup and return data
 			.then((data) => {
@@ -155,32 +159,32 @@ class Collector extends EventEmitter {
 	 * @memberOf Collector
 	 */
 	_insert_data(data_row) {
-		return this.model.count(data_row)
-		.then((res) => {
-			if(res > 0) {
-				// Move along, nothing to update
-				return Promise.resolve();
-			} else {
-				// Update time!
-				const find = {};
-				find[this.model_id_key] = data_row[this.model_id_key];
+		// Update time!
+		const find = {};
+		find[this.model_id_key] = data_row[this.model_id_key];
+		return this.model.find(find)
+		.then((old_doc) => {
+			return this.model.findOneAndUpdate(find, data_row, {
+				upsert:true,
+				setDefaultsOnInsert:true,
+				returnNewDocument:true
+			}).catch((err) => {
+				return Promise.reject(new CollectorDatabaseError(err));
+			}).then((new_doc) => {
+				// New document
+				if(typeof old_doc === 'undefined') { // Doc is new if not found
+					this.emit('create', new_doc);
+					return Promise.resolve();
+				}
 
-				return this.model.findOneAndUpdate(find, data_row, {
-					upsert:true,
-					setDefaultsOnInsert:true,
-				}).then((old_doc) => {
-					const is_new = old_doc === null;
-					return Promise.resolve(is_new);
-				});
-			}
-		})
-		.catch((err) => {
-			return Promise.reject(new CollectorDatabaseError(err));
-		})
-		.then((is_inserted_row) => {
-			if(typeof is_inserted_row === 'undefined') return; // Nothing happened
-			const event = is_inserted_row === true ? 'create' : 'update';
-			this.emit(event, data_row);
+				// Changed document
+				if(!_.isEqual(new_doc,old_doc)) { // TODO: replace with deep compare
+					this.emit('update', new_doc);
+				}
+
+				return Promise.resolve(new_doc);
+
+			})
 		});
 	}
 
@@ -213,7 +217,7 @@ class Collector extends EventEmitter {
 		return this.model.findOneAndRemove(lookup).then((res) => {
 			// res is defined if something was found and deleted
 			if(typeof res !== 'undefined') {
-				this.emit('remove', res); // Execute create event function
+				this.emit('remove', res); // Execute remove event function
 			}
 			return Promise.resolve(typeof res !== 'undefined');
 		});
@@ -231,8 +235,8 @@ class Collector extends EventEmitter {
 			throw Error('Model already setup.');
 		}
 		this.model_name = model_name;
-		this.model = mongoose.getModel(this.model_name);
-    this.model_id_key = mongoose.getModelKey(this.model_name);
+		this.model = mongoose_utils.getModel(this.model_name);
+    this.model_id_key = mongoose_utils.getModelKey(this.model_name);
 	}
 }
 
