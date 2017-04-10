@@ -10,14 +10,14 @@ describe('Utility Functions', function() {
 
 		//Setup mock data
 		var mock_plugins = [
+			{name: 'myplugin1', path: 'plugins/myplugin1'},
+			{name: 'Another dir next', path: 'plugins/Another dir next'},
+			{name: 'great C', path: 'plugins/great C'},
+		];
+		var mock_plugins_dirs = [
 			'myplugin1',
 			'Another dir next',
 			'great C'
-		];
-		var mock_plugins_dirs = [
-			'plugins/myplugin1',
-			'plugins/Another dir next',
-			'plugins/great C'
 		];
 		//This guy should not be seen as a plugin dir
 		var mock_files = [
@@ -30,14 +30,14 @@ describe('Utility Functions', function() {
 				if(path !== 'plugins') {
 					throw 'Wrong plugin path';
 				}
-				return mock_plugins.concat(mock_files);
+				return mock_plugins_dirs.concat(mock_files);
 			},
 			statSync: function(path) {
 				return {
 					isDirectory: function() {
-						return mock_plugins.indexOf(path.replace(/^[^\/]*\//,'')) !== -1;
+						return mock_plugins_dirs.indexOf(path.replace(/^[^\/]*\//,'')) !== -1;
 					}
-				}
+				};
 			}
 		});
 
@@ -48,7 +48,7 @@ describe('Utility Functions', function() {
 		});
 
 		it('Should return correct directories', function () {
-	  		expect(plugins_dirs).to.have.members(mock_plugins_dirs);
+	  		expect(plugins_dirs).to.deep.equal(mock_plugins);
 		});
 
 		it('Should return only 3 plugin directories', function () {
