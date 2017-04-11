@@ -50,6 +50,32 @@ describe('Collector Class', () => {
     expect(instance._setup_model.bind(instance)).to.throw();
   });
 
+  describe('Default behavior of override functions', () => {
+    let instance = new TestCollectorClass();
+    it('Initialize should return nothing', () => {
+      expect(instance.initialize()).to.be.undefined;
+    });
+    it('Prepare should return nothing', () => {
+      expect(instance.prepare()).to.be.undefined;
+    });
+    it('Garbage should garbage nothing', () => {
+      expect(instance.initialize()).to.be.undefined;
+    });
+    it('Collect should be a generator that yields each item in prepared_data', () => {
+      const arr = [
+        Math.random(),
+        Math.random(),
+        Math.random()
+      ];
+      let count = 0;
+      const iter = instance.collect(arr);
+      expect(iter.next().value).to.equal(arr[0]);
+      expect(iter.next().value).to.equal(arr[1]);
+      expect(iter.next().value).to.equal(arr[2]);
+      console.log(iter.next());
+    });
+  });
+
   describe('run', () => {
 
     before(() => {
