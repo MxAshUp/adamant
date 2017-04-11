@@ -72,8 +72,8 @@ class Collector extends EventEmitter {
 	 * @memberOf Collector
 	 */
 	*collect(prepared_data, _args) {
-		for(let item in prepared_data) {
-			yield item;
+		for(let i in prepared_data) {
+			yield prepared_data[i];
 		}
 	}
 
