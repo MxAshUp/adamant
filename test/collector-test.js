@@ -72,7 +72,6 @@ describe('Collector Class', () => {
       expect(iter.next().value).to.equal(arr[0]);
       expect(iter.next().value).to.equal(arr[1]);
       expect(iter.next().value).to.equal(arr[2]);
-      console.log(iter.next());
     });
   });
 
