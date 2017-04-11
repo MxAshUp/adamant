@@ -59,7 +59,7 @@ describe('Collector Class', () => {
       expect(instance.prepare()).to.be.undefined;
     });
     it('Garbage should garbage nothing', () => {
-      expect(instance.initialize()).to.be.undefined;
+      expect(instance.garbage()).to.be.undefined;
     });
     it('Collect should be a generator that yields each item in prepared_data', () => {
       const arr = [
