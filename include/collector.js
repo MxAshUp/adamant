@@ -162,29 +162,28 @@ class Collector extends EventEmitter {
 		// Update time!
 		const find = {};
 		find[this.model_id_key] = data_row[this.model_id_key];
-		return this.model.find(find)
+		return this.model.findOne(find)
 		.then((old_doc) => {
 			return this.model.findOneAndUpdate(find, data_row, {
 				upsert:true,
 				setDefaultsOnInsert:true,
-				returnNewDocument:true
 			}).catch((err) => {
 				return Promise.reject(new CollectorDatabaseError(err));
 			}).then((new_doc) => {
 				// New document
-				if(typeof old_doc === 'undefined') { // Doc is new if not found
-					this.emit('create', new_doc);
+				if(_.isNull(old_doc)) {
+					this.emit('create', data_row);
 					return Promise.resolve();
 				}
 
 				// Changed document
-				if(!_.isEqual(new_doc,old_doc)) { // TODO: replace with deep compare
-					this.emit('update', new_doc);
+				if(!_.isNull(old_doc) && !_.isEqual(new_doc,old_doc)) {
+					this.emit('update', data_row);
 				}
 
 				return Promise.resolve(new_doc);
 
-			})
+			});
 		});
 	}
 
@@ -216,10 +215,10 @@ class Collector extends EventEmitter {
 		// Find doc by lookup and remove it
 		return this.model.findOneAndRemove(lookup).then((res) => {
 			// res is defined if something was found and deleted
-			if(typeof res !== 'undefined') {
+			if(!_.isNull(res)) {
 				this.emit('remove', res); // Execute remove event function
 			}
-			return Promise.resolve(typeof res !== 'undefined');
+			return Promise.resolve(!_.isNull(res));
 		});
 	}
 
