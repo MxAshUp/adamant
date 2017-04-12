@@ -37,6 +37,7 @@ describe('Loop Service', () => {
   afterEach(() => {
     sync_fn_spy.reset();
     async_fn_spy.reset();
+    loopy_mc_loopface.retry_max_attempts = 0;
     loopy_mc_loopface.stop_on_run = 0;
     loopy_mc_loopface.run_count = 0;
     loopy_mc_loopface.run_flag = false;
@@ -143,6 +144,22 @@ describe('Loop Service', () => {
       .start()
       .then(() => {
         sinon.assert.callCount(event_spy, 1);
+      })
+      .then(done)
+      .catch(done);
+  });
+
+  it('Should retry 3 times', done => {
+    loopy_mc_loopface.retry_max_attempts = 3;
+    loopy_mc_loopface.run_callback = sinon.stub().throws();
+
+    loopy_mc_loopface
+      .start()
+      .then(() => {
+        // this shouldn't happen
+      })
+      .catch(err => {
+        sinon.assert.callCount(loopy_mc_loopface.run_callback, 3);
       })
       .then(done)
       .catch(done);
