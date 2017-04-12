@@ -201,4 +201,21 @@ describe('Loop Service', () => {
       .then(done)
       .catch(done);
   });
+
+  it('Should reset retry_attempts after retries are exhausted', done => {
+    loopy_mc_loopface.run_callback = sinon.stub().throws();
+    loopy_mc_loopface.retry_max_attempts = 3;
+
+    loopy_mc_loopface
+      .start()
+      .then(() => {
+        // this shouldn't happen
+      })
+      .catch(err => {
+        sinon.assert.callCount(loopy_mc_loopface.run_callback, 3);
+        expect(loopy_mc_loopface.retry_attempts).to.equal(0);
+      })
+      .then(done)
+      .catch(done);
+  });
 });
