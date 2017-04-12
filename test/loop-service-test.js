@@ -76,7 +76,7 @@ describe('Loop Service', () => {
       .catch(done);
   });
 
-  it('Should interrupt after 3 times', done => {
+  it('Should interrupt after 290ms (3 times)', done => {
     loopy_mc_loopface.run_callback = async_fn_spy_wrapper_100;
 
     loopy_mc_loopface
