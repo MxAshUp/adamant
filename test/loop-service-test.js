@@ -37,6 +37,8 @@ describe('Loop Service', () => {
   afterEach(() => {
     sync_fn_spy.reset();
     async_fn_spy.reset();
+    loopy_mc_loopface.retry_errors = [];
+    loopy_mc_loopface.retry_max_attempts = 0;
     loopy_mc_loopface.stop_on_run = 0;
     loopy_mc_loopface.run_count = 0;
     loopy_mc_loopface.run_flag = false;
@@ -76,7 +78,7 @@ describe('Loop Service', () => {
       .catch(done);
   });
 
-  it('Should interrupt after 3 times', done => {
+  it('Should interrupt after 290ms (3 times)', done => {
     loopy_mc_loopface.run_callback = async_fn_spy_wrapper_100;
 
     loopy_mc_loopface
@@ -143,6 +145,58 @@ describe('Loop Service', () => {
       .start()
       .then(() => {
         sinon.assert.callCount(event_spy, 1);
+      })
+      .then(done)
+      .catch(done);
+  });
+
+  it('Should retry 3 times', done => {
+    loopy_mc_loopface.run_callback = sinon.stub().throws();
+    loopy_mc_loopface.retry_max_attempts = 3;
+
+    loopy_mc_loopface
+      .start()
+      .then(() => {
+        // this shouldn't happen
+      })
+      .catch(err => {
+        sinon.assert.callCount(loopy_mc_loopface.run_callback, 3);
+      })
+      .then(done)
+      .catch(done);
+  });
+
+  it('Should retry on any error if retry_errors array is empty', done => {
+    const random_error_name = Math.random().toString(36).substring(7);
+    loopy_mc_loopface.run_callback = sinon.stub().throws(random_error_name);
+    loopy_mc_loopface.retry_max_attempts = 2;
+    loopy_mc_loopface.retry_errors = [];
+
+    loopy_mc_loopface
+      .start()
+      .then(() => {
+        // this shouldn't happen
+      })
+      .catch(err => {
+        sinon.assert.callCount(loopy_mc_loopface.run_callback, 2);
+      })
+      .then(done)
+      .catch(done);
+  });
+
+  it('Should not retry on any error if retry_errors array has items', done => {
+    const random_error_name = Math.random().toString(36).substring(7);
+    loopy_mc_loopface.run_callback = sinon.stub().throws(random_error_name);
+    loopy_mc_loopface.retry_max_attempts = 2;
+    loopy_mc_loopface.retry_errors = ['foo', 'bar'];
+
+    loopy_mc_loopface
+      .start()
+      .then(() => {
+        // this shouldn't happen
+      })
+      .catch(err => {
+        sinon.assert.callCount(loopy_mc_loopface.run_callback, 1);
       })
       .then(done)
       .catch(done);
