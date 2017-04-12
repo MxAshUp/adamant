@@ -37,6 +37,7 @@ describe('Loop Service', () => {
   afterEach(() => {
     sync_fn_spy.reset();
     async_fn_spy.reset();
+    loopy_mc_loopface.retry_errors = [];
     loopy_mc_loopface.retry_max_attempts = 0;
     loopy_mc_loopface.stop_on_run = 0;
     loopy_mc_loopface.run_count = 0;
@@ -160,6 +161,24 @@ describe('Loop Service', () => {
       })
       .catch(err => {
         sinon.assert.callCount(loopy_mc_loopface.run_callback, 3);
+      })
+      .then(done)
+      .catch(done);
+  });
+
+  it('Should retry on any error if retry_errors array is empty', done => {
+    loopy_mc_loopface.retry_errors = [];
+    loopy_mc_loopface.retry_max_attempts = 2;
+    const random_error_name = Math.random().toString(36).substring(7);
+    loopy_mc_loopface.run_callback = sinon.stub().throws(random_error_name);
+
+    loopy_mc_loopface
+      .start()
+      .then(() => {
+        // this shouldn't happen
+      })
+      .catch(err => {
+        sinon.assert.callCount(loopy_mc_loopface.run_callback, 2);
       })
       .then(done)
       .catch(done);
