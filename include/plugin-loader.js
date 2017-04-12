@@ -1,10 +1,5 @@
-const fs = require('fs'),
-  path = require('path'),
-  Plugin = require('./plugin'),
-  _ = require('lodash'),
-  Collector = require('./collector'),
-  LoopService = require('./loop-service'),
-  mongoose = require('./mongoose-utilities').mongoose;
+var Plugin = require('./plugin'),
+  _ = require('lodash');
 
 
 class PluginLoader {
@@ -33,33 +28,28 @@ class PluginLoader {
     let plugin_args = require(`../${path}`);
 
     //Could not load it, or it's not a valid plugin_args
-    if(typeof plugin_args !== 'object') {
-      throw `Error loading plugin: ${path}`;
-    }
-
-    //Initialize plugin_args
-    //plugin_args = plugin_args(_config);
+    if(typeof plugin_args !== 'object') throw `Error loading plugin: ${path}`;
 
     //Initialize plugin
     const plugin = new Plugin(plugin_args);
 
-    //If plugin wasn't given a name, name it after the directory
-    plugin.name = plugin.name ? plugin.name : plugin_dirs[i].name;
-
     //If all went well loading it...
     plugin.enabled = true;
 
-    plugin.on_load();
+    plugin.on_load(_config);
+    plugin.load_models();
 
-    //Add plugin to registered array
+    //Add plugin to array
     this.plugins.push(plugin);
+
+    return plugin;
   }
 
   /**
    * After plugins are loaded into memeory, a collector service can be initialized.
    *
    * @param {any} collector_config - Configuration used for initializing collector instance
-   * @returns {LoopService} to interface with collector (start, stopm etc...)
+   * @returns {Collector}
    */
   create_collector(collector_config) {
     return this.get_plugin_by_name(collector_config.plugin_name)
