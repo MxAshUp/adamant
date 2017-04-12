@@ -128,7 +128,10 @@ class LoopService extends EventEmitter {
         try {
           Promise.resolve(this.run_callback()).catch(reject).then(() => {
             // If all went well, let's do it again!
-            this.run_min_time_between_timeout_id = setTimeout(loopfn, this.run_min_time_between);
+            this.run_min_time_between_timeout_id = setTimeout(
+              loopfn,
+              this.run_min_time_between
+            );
           });
         } catch (e) {
           // Send up error
