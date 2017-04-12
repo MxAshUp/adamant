@@ -80,7 +80,7 @@ describe('Collector Class', () => {
     before(() => {
       testModel.findOneAndUpdate.reset();
       testModel.findOneAndRemove.reset();
-      testModel.find.reset();
+      testModel.findOne.reset();
     });
 
     describe('with nothing to do', () => {
@@ -183,10 +183,10 @@ describe('Collector Class', () => {
       test_collector_instance.collect = sinon.stub().returns(new_data);
       test_collector_instance.garbage = sinon.stub().resolves();
 
-      testModel.find.returns(Promise.resolve(null));
-      testModel.find.withArgs({id: new_data[0].id}).returns(Promise.resolve(old_db_data[0]));
-      testModel.find.withArgs({id: new_data[1].id}).returns(Promise.resolve(undefined));
-      testModel.find.withArgs({id: new_data[2].id}).returns(Promise.resolve(old_db_data[1]));
+      testModel.findOne.returns(Promise.resolve(null));
+      testModel.findOne.withArgs({id: new_data[0].id}).returns(Promise.resolve(old_db_data[0]));
+      testModel.findOne.withArgs({id: new_data[1].id}).returns(Promise.resolve(null));
+      testModel.findOne.withArgs({id: new_data[2].id}).returns(Promise.resolve(old_db_data[1]));
       testModel.findOneAndUpdate.withArgs({id: new_data[0].id}).returns(Promise.resolve(new_data[0]));
       testModel.findOneAndUpdate.withArgs({id: new_data[1].id}).returns(Promise.resolve(new_data[1]));
       testModel.findOneAndUpdate.withArgs({id: new_data[2].id}).returns(Promise.resolve(new_data[2]));
@@ -254,7 +254,7 @@ describe('Collector Class', () => {
 
       testModel.findOneAndRemove.withArgs({id: remove_data[0].id}).returns(Promise.resolve(remove_data[0]));
       testModel.findOneAndRemove.withArgs({id: remove_data[1].id}).returns(Promise.resolve(remove_data[1]));
-      testModel.findOneAndRemove.withArgs({id: 'notfound'}).returns(Promise.resolve(undefined));
+      testModel.findOneAndRemove.withArgs({id: 'notfound'}).returns(Promise.resolve(null));
 
       let error_spy = sinon.spy();
 
@@ -390,10 +390,10 @@ describe('Collector Class', () => {
       ]);
       test_collector_instance.garbage = sinon.stub().resolves();
 
-      testModel.find.returns(Promise.resolve(null));
-      testModel.find.withArgs({id: new_data[0].id}).returns(Promise.resolve(old_db_data[0]));
-      testModel.find.withArgs({id: new_data[1].id}).returns(Promise.resolve(undefined));
-      testModel.find.withArgs({id: new_data[2].id}).returns(Promise.resolve(old_db_data[1]));
+      testModel.findOne.returns(Promise.resolve(null));
+      testModel.findOne.withArgs({id: new_data[0].id}).returns(Promise.resolve(old_db_data[0]));
+      testModel.findOne.withArgs({id: new_data[1].id}).returns(Promise.resolve(null));
+      testModel.findOne.withArgs({id: new_data[2].id}).returns(Promise.resolve(old_db_data[1]));
       testModel.findOneAndUpdate.withArgs({id: new_data[0].id}).returns(Promise.resolve(new_data[0]));
       testModel.findOneAndUpdate.withArgs({id: new_data[2].id}).returns(Promise.resolve(new_data[2]));
 
@@ -511,9 +511,9 @@ describe('Collector Class', () => {
       ]);
       test_collector_instance.garbage = sinon.stub().resolves();
 
-      testModel.find.returns(Promise.resolve(null));
-      testModel.find.withArgs({id: new_data[0].id}).returns(Promise.resolve(undefined));
-      testModel.find.withArgs({id: new_data[1].id}).returns(Promise.resolve(old_db_data[0]));
+      testModel.findOne.returns(Promise.resolve(null));
+      testModel.findOne.withArgs({id: new_data[0].id}).returns(Promise.resolve(null));
+      testModel.findOne.withArgs({id: new_data[1].id}).returns(Promise.resolve(old_db_data[0]));
       testModel.findOneAndUpdate.withArgs({id: new_data[0].id}).returns(Promise.reject());
       testModel.findOneAndUpdate.withArgs({id: new_data[1].id}).returns(Promise.resolve(new_data[1]));
 
