@@ -1,5 +1,5 @@
 //tests for collector
-/*
+
 process.env.NODE_ENV = 'test';
 
 var assert = require("assert"),
@@ -25,4 +25,3 @@ describe("Mongoose", function() {
 	});
 
 });
-*/
