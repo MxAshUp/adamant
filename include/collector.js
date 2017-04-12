@@ -167,18 +167,19 @@ class Collector extends EventEmitter {
 			return this.model.findOneAndUpdate(find, data_row, {
 				upsert:true,
 				setDefaultsOnInsert:true,
+				new:true
 			}).catch((err) => {
 				return Promise.reject(new CollectorDatabaseError(err));
 			}).then((new_doc) => {
 				// New document
 				if(_.isNull(old_doc)) {
-					this.emit('create', data_row);
+					this.emit('create', new_doc);
 					return Promise.resolve();
 				}
 
 				// Changed document
 				if(!_.isNull(old_doc) && !_.isEqual(new_doc,old_doc)) {
-					this.emit('update', data_row);
+					this.emit('update', new_doc);
 				}
 
 				return Promise.resolve(new_doc);

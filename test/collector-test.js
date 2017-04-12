@@ -77,7 +77,7 @@ describe('Collector Class', () => {
 
   describe('run', () => {
 
-    before(() => {
+    after(() => {
       testModel.findOneAndUpdate.reset();
       testModel.findOneAndRemove.reset();
       testModel.findOne.reset();
@@ -232,6 +232,25 @@ describe('Collector Class', () => {
           sinon.assert.calledWith(update_handler,new_data[2]);
         }).then(done).catch(done);
       });
+
+      it('Should call findOneAndUpdate with upsert:true', (done) => {
+        ret_promise.then(() => {
+          expect(testModel.findOneAndUpdate.lastCall.args[2].upsert).to.equal(true);
+        }).then(done).catch(done);
+      });
+
+      it('Should call findOneAndUpdate with setDefaultsOnInsert:true', (done) => {
+        ret_promise.then(() => {
+          expect(testModel.findOneAndUpdate.lastCall.args[2].setDefaultsOnInsert).to.equal(true);
+        }).then(done).catch(done);
+      });
+
+      it('Should call findOneAndUpdate with new:true', (done) => {
+        ret_promise.then(() => {
+          expect(testModel.findOneAndUpdate.lastCall.args[2].new).to.equal(true);
+        }).then(done).catch(done);
+      });
+
     });
 
     describe('Removing documents', () => {
