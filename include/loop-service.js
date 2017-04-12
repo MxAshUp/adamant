@@ -70,8 +70,8 @@ class LoopService extends EventEmitter {
       return false;
     }
 
-    // error not in errors to catch
-    if (this.retry_errors.indexOf(err) === -1) {
+    // if retry_errors has item(s) AND error not in errors to catch
+    if (this.retry_errors.length && this.retry_errors.indexOf(err) === -1) {
       // console.log('error not in errors to catch!');
       return false;
     }
