@@ -1,9 +1,9 @@
 module.exports = {
   mongodb: {
-    uri: 'mongodb://db/test',
+    uri: 'mongodb://mongo/metricplatform',
   },
   influxdb: {
     host: 'influxdb',
-    database: 'mydb',
+    database: 'metricplatform',
   },
 };

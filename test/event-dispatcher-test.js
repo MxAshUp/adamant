@@ -123,6 +123,19 @@ describe('Event System - ', () => {
       expect(test_handler_1.revert.bind(test_handler_1)).to.throw('Handler does not support revert.');
     });
 
+
+    describe('Default behaviors of overridable methods', () => {
+      let instance = new EventHandler();
+      it('Dispatch() should return nothing', () => {
+        expect(instance.dispatch()).to.be.undefined;
+      });
+      it('Revert() should return nothing if support_revert = true', () => {
+        instance.supports_revert = true;
+        expect(instance.revert()).to.be.undefined;
+        expect(instance.revert.bind(instance)).to.not.throw();
+      });
+    });
+
   });
 
   describe('Event Dispatcher', () => {
@@ -167,6 +180,10 @@ describe('Event System - ', () => {
       expect(dispatcher.remove_event_handler(event_handler_id_4)).to.deep.equal(test_handler_4);
       // Make sure it's no longer in dispatcher
       expect(dispatcher.get_event_handler(event_handler_id_4)).to.be.undefined;
+    });
+
+    it('Should return false if no event handler found to remove', () => {
+      expect(dispatcher.remove_event_handler('NONEXISTING_ID')).to.equal(false);
     });
 
     it('All event handlers should have unique ID', () => {

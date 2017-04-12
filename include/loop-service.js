@@ -15,14 +15,14 @@ class LoopService extends EventEmitter {
     this.run_flag = false;
     this.run_status = false;
     this.run_callback = run_callback;
-    this.run_min_time_between = 5000;
+    this.run_min_time_between = 0;
     this.run_count = 0;
     this.stop_on_run = 0;
 
     this.retry_attempts = 0;
-    this.retry_max_attempts = 2;
-    this.retry_time_between = 3000;
-    this.retry_errors = ['yourmom'];
+    this.retry_max_attempts = 0;
+    this.retry_time_between = 0;
+    this.retry_errors = [];
     this.retry_errors_to_skip = [];
   }
 
@@ -65,13 +65,14 @@ class LoopService extends EventEmitter {
     this.retry_attempts++;
 
     // max retry attempts reached
-    if (this.retry_attempts > this.retry_max_attempts) {
+    if (this.retry_attempts >= this.retry_max_attempts) {
       // console.log('max retry attempts reached!');
+      this.retry_attempts = 0; // reset
       return false;
     }
 
-    // error not in errors to catch
-    if (this.retry_errors.indexOf(err) === -1) {
+    // if retry_errors has item(s) AND error not in errors to catch
+    if (this.retry_errors.length && this.retry_errors.indexOf(err) === -1) {
       // console.log('error not in errors to catch!');
       return false;
     }
@@ -81,6 +82,9 @@ class LoopService extends EventEmitter {
       // console.log('error is in errors to skip!');
       return false;
     }
+
+    // Trigger retry event
+    this.emit('retry');
 
     return true;
   }
@@ -123,15 +127,8 @@ class LoopService extends EventEmitter {
         // Try to call run_callback
         try {
           Promise.resolve(this.run_callback()).catch(reject).then(() => {
-            // reject('yourmom');
-
             // If all went well, let's do it again!
-            this.run_min_time_between_timeout_id = setTimeout(
-              () => {
-                setImmediate(loopfn);
-              },
-              this.run_min_time_between
-            );
+            this.run_min_time_between_timeout_id = setTimeout(loopfn, this.run_min_time_between);
           });
         } catch (e) {
           // Send up error
