@@ -67,6 +67,7 @@ class LoopService extends EventEmitter {
     // max retry attempts reached
     if (this.retry_attempts >= this.retry_max_attempts) {
       // console.log('max retry attempts reached!');
+      this.retry_attempts = 0; // reset
       return false;
     }
 
