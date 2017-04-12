@@ -37,19 +37,13 @@ class PluginLoader {
       throw `Error loading plugin: ${path}`;
     }
 
-    //Initialize plugin_args
-    //plugin_args = plugin_args(_config);
-
     //Initialize plugin
     const plugin = new Plugin(plugin_args);
-
-    //If plugin wasn't given a name, name it after the directory
-    plugin.name = plugin.name ? plugin.name : plugin_dirs[i].name;
 
     //If all went well loading it...
     plugin.enabled = true;
 
-    plugin.on_load();
+    plugin.load_models();
 
     //Add plugin to registered array
     this.plugins.push(plugin);

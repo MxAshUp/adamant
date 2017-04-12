@@ -1,4 +1,4 @@
-const mongoose = require('./mongoose-utilities'),
+var mongoose_utils = require('./mongoose-utilities'),
 	_ = require('lodash');
 
 class Plugin {
@@ -12,6 +12,8 @@ class Plugin {
 	 */
 	constructor(config) {
 
+		config = _.isUndefined(config) ? {} : config;
+
 		//Default object properties
     const defaults = {
 			collectors: [],
@@ -20,6 +22,8 @@ class Plugin {
 			enabled: false,
 			name: ''
     };
+
+		if(!config.hasOwnProperty('name')) throw new Error(`A valid name is required for Plugin object.`);
 
 		// Merge config and assign properties to this
     Object.assign(this, defaults, config);
@@ -63,17 +67,17 @@ class Plugin {
 	// Load models
 	load_models() {
 		for(let model of this.models) {
-			mongoose.loadModel(model);
+			mongoose_utils.loadModel(model);
 		}
 	}
 
-	// Settable properties
+	// default load/unload methods to be overridden
 	on_load() {
-		this.load_models();
+
 	}
 
-	on_unload(_args) {
-		// Maybe we need somethign to run when plugin is unloaded
+	on_unload() {
+
 	}
 
 }
