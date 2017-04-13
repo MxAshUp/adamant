@@ -19,10 +19,11 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "nyc --reporter=html --all mocha **/*-test.js"
+    "test": "nyc --reporter=html --all mocha **/*-test.js plugins/*/test/*-test.js"
   },
   "nyc": {
-    "include": ["include/*.js"]
+    "include": ["include/*.js","plugins/*"],
+    "exclude": ["**/test/*.js", "include/config.js"]
   },
   "author": "",
   "license": "ISC",
