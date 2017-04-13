@@ -6,6 +6,7 @@
   "dependencies": {
     "chalk": "^1.1.3",
     "cheerio": "^0.20.0",
+    "glob": "^7.1.1",
     "influx": "^5.0.0-alpha.4",
     "lodash": "^4.16.4",
     "minimist": "^1.2.0",
@@ -22,8 +23,15 @@
     "test": "nyc --reporter=html --all mocha **/*-test.js plugins/*/test/*-test.js"
   },
   "nyc": {
-    "include": ["include/*.js","plugins/*"],
-    "exclude": ["**/test/*.js", "**/*-test.js", "include/config.js"]
+    "include": [
+      "include/*.js",
+      "plugins/*"
+    ],
+    "exclude": [
+      "**/test/*.js",
+      "**/*-test.js",
+      "include/config.js"
+    ]
   },
   "author": "",
   "license": "ISC",
