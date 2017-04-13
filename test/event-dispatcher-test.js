@@ -10,12 +10,19 @@ const
   _ = require('lodash'),
   // Modules to test
   EventHandleError = require('../include/errors').EventHandleError,
-  EventHandler = require('../include/event-handler'),
-  EventDispatcher = require('../include/event-dispatcher'),
-  Event = require('../include/event');
+  EventHandler = rewire('../include/event-handler'),
+  EventDispatcher = rewire('../include/event-dispatcher'),
+  Event = rewire('../include/event');
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
+
+
+console_log_spy = sinon.spy();
+EventHandler.__set__("console", {log: console_log_spy});
+EventDispatcher.__set__("console", {log: console_log_spy});
+Event.__set__("console", {log: console_log_spy});
+
 
 describe('Event System - ', () => {
 
@@ -404,4 +411,7 @@ describe('Event System - ', () => {
 
   });
 
+  it('Should never call console.log', () => {
+    sinon.assert.neverCalledWith(console_log_spy);
+  });
 });

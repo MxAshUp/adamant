@@ -7,6 +7,10 @@ const rewire = require('rewire'),
   Plugin = require('../include/plugin'),
   PluginLoader = rewire('../include/plugin-loader');
 
+
+console_log_spy = sinon.spy();
+PluginLoader.__set__("console", {log: console_log_spy});
+
 describe('Plugin Loader', function() {
 
   let pl;
@@ -125,5 +129,9 @@ describe('Plugin Loader', function() {
       expect(ret).to.equal(success_return);
       sinon.assert.calledWith(plugin_b.create_component, 'event_handlers', handler_config.handler_name, handler_config.config, handler_config.version);
     });
+  });
+
+  it('Should never call console.log', () => {
+    sinon.assert.neverCalledWith(console_log_spy);
   });
 });

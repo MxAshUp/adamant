@@ -1,11 +1,18 @@
-const LoopService = require('../include/loop-service'),
-  sinon = require('sinon'),
+const sinon = require('sinon'),
   chai = require('chai'),
   chaiAsPromised = require('chai-as-promised'),
   expect = chai.expect,
-  assert = chai.assert;
+  assert = chai.assert,
+  rewire = require('rewire'),
+  // Modules to test
+  LoopService = rewire('../include/loop-service');
 
 chai.use(chaiAsPromised);
+
+
+console_log_spy = sinon.spy();
+LoopService.__set__("console", {log: console_log_spy});
+
 
 describe('Loop Service', () => {
   const sync_fn_spy = new sinon.spy();
@@ -217,5 +224,9 @@ describe('Loop Service', () => {
       })
       .then(done)
       .catch(done);
+  });
+
+  it('Should never call console.log', () => {
+    sinon.assert.neverCalledWith(console_log_spy);
   });
 });

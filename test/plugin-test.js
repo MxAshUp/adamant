@@ -7,6 +7,9 @@ const rewire = require('rewire'),
   plugin = rewire('../include/plugin');
 
 
+console_log_spy = sinon.spy();
+plugin.__set__("console", {log: console_log_spy});
+
 
 describe('Abstract Plugin', () => {
   it('Should construct without throwing error', () => {
@@ -171,5 +174,9 @@ describe('Abstract Plugin', () => {
     it('on_unload should return nothing', () => {
       expect(pl.on_unload()).to.be.undefined;
     });
+  });
+
+  it('Should never call console.log', () => {
+    sinon.assert.neverCalledWith(console_log_spy);
   });
 });

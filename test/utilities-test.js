@@ -1,7 +1,11 @@
-var expect = require('chai').expect;
+var expect = require('chai').expect,
+	rewire = require("rewire"),
+	sinon = require('sinon'),
+	// Modules to test
+	utilities = rewire('../include/utilities');
 
-var rewire = require("rewire");
-var utilities = rewire('../include/utilities');
+console_log_spy = sinon.spy();
+utilities.__set__("console", {log: console_log_spy});
 
 
 
@@ -55,4 +59,8 @@ describe('Utility Functions', function() {
 	  		expect(plugins_dirs.length).to.equal(3);
 		});
 	});
+
+  it('Should never call console.log', () => {
+    sinon.assert.neverCalledWith(console_log_spy);
+  });
 });

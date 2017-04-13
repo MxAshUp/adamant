@@ -21,6 +21,8 @@ Collector.__set__("mongoose_utils", {
   }
 });
 
+console_log_spy = sinon.spy();
+Collector.__set__("console", {log: console_log_spy});
 
 var schema = mongooseMock.Schema({id: String});
 var testModel = mongooseMock.model('test.test_model', schema);
@@ -588,4 +590,9 @@ describe('Collector Class', () => {
     });
   });
 
+  it('Should never call console.log', () => {
+    sinon.assert.neverCalledWith(console_log_spy);
+  });
+
 });
+
