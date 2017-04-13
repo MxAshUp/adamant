@@ -23,7 +23,7 @@
   },
   "nyc": {
     "include": ["include/*.js","plugins/*"],
-    "exclude": ["**/test/*.js", "include/config.js"]
+    "exclude": ["**/test/*.js", "**/*-test.js", "include/config.js"]
   },
   "author": "",
   "license": "ISC",
