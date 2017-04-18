@@ -14,6 +14,7 @@ const
 chai.use(chaiAsPromised);
 chai.should();
 
+// Set app_require function, used by timeEntryCollector
 let rewires = {};
 global.app_require = function(name) {
     let ret = rewire('../../../include/' + name);
@@ -36,20 +37,25 @@ rewires.collector.__set__("mongoose_utils", {
 var schema = mongooseMock.Schema(toggl_time_entry_model.schema);
 var testModel = mongooseMock.model(toggl_time_entry_model.name, schema);
 
+// When we call moment() we want it to always return a single time
 const moment = (arg) => {
   if(_.isUndefined(arg))
     return _moment('2014-11-17T20:47:00Z');
   return _moment(arg);
 };
 
+// We don't want our test modules to have left over console.log calls
 let console_log_spy = sinon.spy();
-//TimeEntryCollector.__set__("console", {log: console_log_spy});
+TimeEntryCollector.__set__("console", {log: console_log_spy});
+
+// Create stub for toggl api
 let get_time_entries_stub = sinon.stub();
 let toggl_client_stub = sinon.stub().returns({
     getTimeEntries: get_time_entries_stub
 });
-TimeEntryCollector.__set__("TogglClient", toggl_client_stub);
 
+// Rewire TimeEntryCollector
+TimeEntryCollector.__set__("TogglClient", toggl_client_stub);
 TimeEntryCollector.__set__("moment", moment);
 
 
@@ -105,13 +111,13 @@ describe('TimeEntryCollector Class', () => {
 
     it('Should default args to 1 day', () => {
 
-      // const start_report = moment().subtract(30,'days').format();
-      // const end_report = moment().format();
-      // const args = {api_token: 'SOME_API_TOKEN', days_back_to_sync: 30};
-      // const cl = new TimeEntryCollector(args);
-      // return cl.initialize(args).then(cl.prepare.bind(cl,args)).then((data) => {
-      //   sinon.assert.calledWith(get_time_entries_stub, start_report, end_report);
-      // });
+      const start_report = moment().subtract(1,'days').format();
+      const end_report = moment().format();
+      const args = {api_token: 'SOME_API_TOKEN'};
+      const cl = new TimeEntryCollector(args);
+      return cl.initialize(args).then(() => {
+        expect(cl.args.days_back_to_sync).to.equal(1);
+      });
 
     });
 
