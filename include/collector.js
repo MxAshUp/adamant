@@ -172,7 +172,9 @@ class Collector extends EventEmitter {
 			}).catch((err) => {
 				return Promise.reject(new CollectorDatabaseError(err));
 			}).then((new_doc) => {
-				old_doc = old_doc[0]; // now it's not an array anymore
+				if(Array.isArray(old_doc)) {
+					old_doc = old_doc[0]; // now it's not an array anymore
+				}
 
 				// New document
 				if(_.isNull(old_doc)) {
