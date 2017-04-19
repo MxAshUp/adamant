@@ -162,15 +162,18 @@ class Collector extends EventEmitter {
 		// Update time!
 		const find = {};
 		find[this.model_id_key] = data_row[this.model_id_key];
-		return this.model.findOne(find)
+		return this.model.find(find, '', {lean: true})
 		.then((old_doc) => {
 			return this.model.findOneAndUpdate(find, data_row, {
-				upsert:true,
-				setDefaultsOnInsert:true,
-				new:true
+				upsert: true,
+				setDefaultsOnInsert: true,
+				new: true,
+				lean: true // 
 			}).catch((err) => {
 				return Promise.reject(new CollectorDatabaseError(err));
 			}).then((new_doc) => {
+				old_doc = old_doc[0]; // now it's not an array anymore
+
 				// New document
 				if(_.isNull(old_doc)) {
 					this.emit('create', new_doc);
@@ -183,7 +186,6 @@ class Collector extends EventEmitter {
 				}
 
 				return Promise.resolve(new_doc);
-
 			});
 		});
 	}
