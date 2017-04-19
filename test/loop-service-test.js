@@ -83,18 +83,17 @@ describe('Loop Service', () => {
       });
   });
 
-  it('Should interrupt after 290ms (3 times)', done => {
+  it('Should interrupt after 290ms (3 times)', () => {
     loopy_mc_loopface.run_callback = async_fn_spy_wrapper_100;
 
-    loopy_mc_loopface
+    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 290); // Enough time for almost 4 runs
+
+    return loopy_mc_loopface
       .start()
       .then(() => {
         sinon.assert.callCount(async_fn_spy, 3);
-      })
-      .then(done)
-      .catch(done);
+      });
 
-    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 290); // Enough time for almost 4 runs
   });
 
   it('Should by async even if run fn is not', (done) => {
@@ -122,19 +121,18 @@ describe('Loop Service', () => {
       });
   });
 
-  it('Should emit stopped event', (done) => {
+  it('Should emit stopped event', () => {
     const event_spy = new sinon.spy();
     loopy_mc_loopface.on('stopped', event_spy);
 
-    loopy_mc_loopface
+    setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
+
+    return loopy_mc_loopface
       .start()
       .then(() => {
         sinon.assert.callCount(event_spy, 1);
-      })
-      .then(done)
-      .catch(done);
+      });
 
-    setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
   });
 
   it('Should emit error event', () => {
