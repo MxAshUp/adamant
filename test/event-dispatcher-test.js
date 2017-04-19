@@ -224,22 +224,19 @@ describe('Event System - ', () => {
       expect(dispatcher.event_queue_count).to.equal(2);
     });
 
-    it('Should dispatch event with one handler', (done) => {
+    it('Should dispatch event with one handler', () => {
       const test_event_data = Math.random();
-      let ret = dispatcher.dispatch_event(new Event('test.event_1',test_event_data)).then(() => {
+      return dispatcher.dispatch_event(new Event('test.event_1',test_event_data)).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(test_1_dispatch_cb, 1);
         sinon.assert.calledWith(test_1_dispatch_cb, test_event_data);
         // Make sure this args is same as handler
         sinon.assert.calledOn(test_1_dispatch_cb, test_handler_1);
-      }).then(done).catch(done);
-
-      // Make sure promise was fulfilled
-      assert.isFulfilled(ret);
+      });
 
     });
 
-    it('Should dispatch event and emit event', (done) => {
+    it('Should dispatch event and emit event', () => {
 
       const test_event_data = Math.random();
       const spy_handler = sinon.spy();
@@ -247,18 +244,14 @@ describe('Event System - ', () => {
 
       dispatcher.on('dispatched', spy_handler);
 
-      let ret = dispatcher.dispatch_event(test_event).then(() => {
+      return dispatcher.dispatch_event(test_event).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(spy_handler, 1);
         sinon.assert.calledWith(spy_handler, test_event, test_handler_1);
-      }).then(done).catch(done);
-
-      // Make sure promise was fulfilled
-      assert.isFulfilled(ret);
-
+      });
     });
 
-    it('Should revert event and emit event', (done) => {
+    it('Should revert event and emit event', () => {
 
       const test_event_data = Math.random();
       const spy_handler = sinon.spy();
@@ -266,51 +259,38 @@ describe('Event System - ', () => {
 
       dispatcher.on('reverted', spy_handler);
 
-      let ret = dispatcher.revert_event(test_event).then(() => {
+      return dispatcher.revert_event(test_event).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(spy_handler, 1);
         sinon.assert.calledWith(spy_handler, test_event, test_handler_1);
-      }).then(done).catch(done);
-
-      // Make sure promise was fulfilled
-      assert.isFulfilled(ret);
+      });
 
     });
 
-    it('Should dispatch event with two handlers', (done) => {
+    it('Should dispatch event with two handlers', () => {
       const test_event_data = Math.random();
-      let ret = dispatcher.dispatch_event(new Event('test.event_2', test_event_data)).then(() => {
+      return dispatcher.dispatch_event(new Event('test.event_2', test_event_data)).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(test_2_dispatch_cb, 1);
         sinon.assert.callCount(test_3_dispatch_cb, 1);
         sinon.assert.calledWith(test_2_dispatch_cb, test_event_data);
         sinon.assert.calledWith(test_3_dispatch_cb, test_event_data);
-
-      }).then(done).catch(done);
-
-      // Make sure promise was filfilled
-      assert.isFulfilled(ret);
-
+      });
     });
 
-    it('Should dispatch event only for specific handler', (done) => {
+    it('Should dispatch event only for specific handler', () => {
       const test_event_data = Math.random();
-      let ret = dispatcher.dispatch_event(new Event('test.event_2', test_event_data), event_handler_id_3).then(() => {
+      return dispatcher.dispatch_event(new Event('test.event_2', test_event_data), event_handler_id_3).then(() => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(test_2_dispatch_cb, 0);
         sinon.assert.callCount(test_3_dispatch_cb, 1);
         sinon.assert.calledWith(test_3_dispatch_cb, test_event_data);
-
-      }).then(done).catch(done);
-
-      // Make sure promise was filfilled
-      assert.isFulfilled(ret);
-
+      });
     });
 
-    it('Should revert event', (done) => {
+    it('Should revert event', () => {
       const test_event_data = Math.random();
-      let ret = dispatcher.revert_event(new Event('test.event_2', test_event_data)).then(() => {
+      return dispatcher.revert_event(new Event('test.event_2', test_event_data)).then(() => {
         // Only 1 event handler should have been dispatched
         sinon.assert.callCount(test_3_revert_cb, 1);
         // Event handler dispatch should have been called with correct args
@@ -321,38 +301,28 @@ describe('Event System - ', () => {
         sinon.assert.calledWith(test_2_revert_cb, test_event_data);
         // Make sure this args is same as handler
         sinon.assert.calledOn(test_2_revert_cb, test_handler_2);
-
-      }).then(done).catch(done);
-
-      // Make sure promise was fulfilled
-      assert.isFulfilled(ret);
-
+      });
     });
 
-    it('Should revert event on specific handler', (done) => {
+    it('Should revert event on specific handler', () => {
       const test_event_data = Math.random();
-      let ret = dispatcher.revert_event(new Event('test.event_2', test_event_data), event_handler_id_3).then(() => {
+      return dispatcher.revert_event(new Event('test.event_2', test_event_data), event_handler_id_3).then(() => {
         // Only 1 event handler should have been dispatched
         sinon.assert.callCount(test_3_revert_cb, 1);
         sinon.assert.callCount(test_2_revert_cb, 0);
         // Event handler dispatch should have been called with correct args
         sinon.assert.calledWith(test_3_revert_cb, test_event_data);
-
-      }).then(done).catch(done);
-
-      // Make sure promise was fulfilled
-      assert.isFulfilled(ret);
-
+      });
     });
 
-    it('Should catch and emit error from event handler dispatch', (done) => {
+    it('Should catch and emit error from event handler dispatch', () => {
       const test_event_data = Math.random();
       const spy_thrower = sinon.stub().throws();
       const spy_catcher = sinon.spy();
       test_handler_1.dispatch = spy_thrower;
       dispatcher.on('error', spy_catcher);
       const temp_test_event = new Event('test.event_1', test_event_data);
-      let ret = dispatcher.dispatch_event(temp_test_event).then(() => {
+      return dispatcher.dispatch_event(temp_test_event).then(() => {
         sinon.assert.callCount(spy_thrower, 1);
         sinon.assert.calledWith(spy_thrower, test_event_data);
         sinon.assert.callCount(spy_catcher, 1);
@@ -360,17 +330,17 @@ describe('Event System - ', () => {
         expect(error_thrown).to.be.instanceof(EventHandleError);
         expect(error_thrown.event).to.deep.equal(temp_test_event);
         expect(error_thrown.handler).to.deep.equal(test_handler_1);
-      }).then(done).catch(done);
+      });
     });
 
-    it('Should catch and emit error from event handler revert', (done) => {
+    it('Should catch and emit error from event handler revert', () => {
       const test_event_data = Math.random();
       const spy_thrower = sinon.stub().throws();
       const spy_catcher = sinon.spy();
       test_handler_1.revert = spy_thrower;
       dispatcher.on('error', spy_catcher);
       const temp_test_event = new Event('test.event_1', test_event_data);
-      let ret = dispatcher.revert_event(temp_test_event).then(() => {
+      return dispatcher.revert_event(temp_test_event).then(() => {
         sinon.assert.callCount(spy_thrower, 1);
         sinon.assert.calledWith(spy_thrower, test_event_data);
         sinon.assert.callCount(spy_catcher, 1);
@@ -378,10 +348,10 @@ describe('Event System - ', () => {
         expect(error_thrown).to.be.instanceof(EventHandleError);
         expect(error_thrown.event).to.deep.equal(temp_test_event);
         expect(error_thrown.handler).to.deep.equal(test_handler_1);
-      }).then(done).catch(done);
+      });
     });
 
-    it('Should shift and dispatch all events in queue', (done) => {
+    it('Should shift and dispatch all events in queue', () => {
       // This test isn't valid if we don't have anything enqueued
       expect(dispatcher.event_queue_count).to.not.equal(0);
       test_handler_1.dispatch = test_1_dispatch_cb;
@@ -392,7 +362,7 @@ describe('Event System - ', () => {
         sinon.assert.calledWith(test_1_dispatch_cb, test_2_event.data);
         sinon.assert.callCount(test_2_dispatch_cb, 1);
         sinon.assert.calledWith(test_2_dispatch_cb, test_3_event.data);
-      }).then(done).catch(done);
+      });
     });
 
     it('Should enqueue an event while being dispatched', () => {
