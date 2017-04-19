@@ -98,15 +98,15 @@ class LoopService extends EventEmitter {
 	 * @return {Promise} Resolves or rejects when LoopService stops
 	 */
   start(run_once = false) {
-    //Don't start if already running
+    // Don't start if already running
     if (this.run_flag) {
-      return Promise.reject('cannot be started after already running');
+      return Promise.reject('cannot be started if already running');
     }
 
-    //Set flag
+    // Set flag
     this.run_flag = true;
 
-    //Set stop if we are only running once
+    // Set stop if we are only running once
     if (run_once) {
       this.stop_on_run = this.run_count + 1;
     }
@@ -152,7 +152,7 @@ class LoopService extends EventEmitter {
           this.emit('error', e);
         } catch (er) {
           // console.log('************ Error emitting error event. So meta ha!');
-          console.log(er);
+          // console.log(er);
         }
 
         if (this._maybe_retry(e)) {
@@ -175,7 +175,7 @@ class LoopService extends EventEmitter {
         this.stop_on_run = 0;
         this.run_flag = false;
 
-        // console.log('************ promise is resolving!');
+        // console.log('************ promise resolved!');
 
         //Emit stopped event
         this.emit('stopped'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
