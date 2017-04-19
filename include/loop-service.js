@@ -83,9 +83,6 @@ class LoopService extends EventEmitter {
       return false;
     }
 
-    // Trigger retry event
-    this.emit('retry');
-
     return true;
   }
 
@@ -128,7 +125,10 @@ class LoopService extends EventEmitter {
         try {
           Promise.resolve(this.run_callback()).catch(reject).then(() => {
             // If all went well, let's do it again!
-            this.run_min_time_between_timeout_id = setTimeout(loopfn, this.run_min_time_between);
+            this.run_min_time_between_timeout_id = setTimeout(
+              loopfn,
+              this.run_min_time_between
+            );
           });
         } catch (e) {
           // Send up error
@@ -146,6 +146,9 @@ class LoopService extends EventEmitter {
         this.emit('error', e);
 
         if (this._maybe_retry(e)) {
+          // Trigger retry event
+          this.emit('retry');
+
           setTimeout(() => this.start(run_once), this.retry_time_between);
         }
       })

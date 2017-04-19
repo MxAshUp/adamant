@@ -1,5 +1,5 @@
 //requires
-const TogglClient = require('toggl-api'),
+var TogglClient = require('toggl-api'),
 	moment = require('moment'),
   Collector = app_require('collector'),
 	_ = require('lodash');
@@ -17,7 +17,7 @@ class CollectorTimeEntries extends Collector
     // Default collector args
     this.default_args = {
       days_back_to_sync: 1,
-      apiToken:''
+      api_token:''
     };
 
     // Merges args with default args
@@ -27,7 +27,7 @@ class CollectorTimeEntries extends Collector
 
   initialize(args) {
     try {
-      this.toggl = new TogglClient({apiToken: args.apiToken});
+      this.toggl = new TogglClient({apiToken: args.api_token});
       return Promise.resolve();
     } catch(e) {
       return Promise.reject(e);
@@ -55,14 +55,7 @@ class CollectorTimeEntries extends Collector
     });
   }
 
-  *collect(data, args) {
-    for(let i = 0; i < data.length; i++) {
-      yield Promise.resolve(data[i]);
-    }
-  }
-
   garbage(data, args) {
-
     const start_report = moment().subtract(args.days_back_to_sync,'days');
     const end_report = moment();
 

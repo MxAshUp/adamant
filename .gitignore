@@ -4,3 +4,4 @@ yarn.lock
 .vscode/
 coverage/
 .nyc_output/
+npm-debug.log
