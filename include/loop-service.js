@@ -65,8 +65,13 @@ class LoopService extends EventEmitter {
     this.retry_attempts++;
 
     // max retry attempts reached
-    if (this.retry_attempts >= this.retry_max_attempts) {
-      // console.log('max retry attempts reached!');
+    if (this.retry_attempts > this.retry_max_attempts) {
+      // console.log(
+      //   'max retry attempts reached!',
+      //   this.retry_attempts,
+      //   ' ',
+      //   this.retry_max_attempts
+      // );
       this.retry_attempts = 0; // reset
       return false;
     }
@@ -95,7 +100,7 @@ class LoopService extends EventEmitter {
   start(run_once = false) {
     //Don't start if already running
     if (this.run_flag) {
-      return;
+      return Promise.reject('cannot be started after already running');
     }
 
     //Set flag
@@ -114,7 +119,6 @@ class LoopService extends EventEmitter {
       let loopfn = function() {
         // Check if need to keep running
         if (!this._should_run) {
-          resolve();
           return;
         }
 
@@ -142,20 +146,36 @@ class LoopService extends EventEmitter {
       setImmediate(loopfn);
     })
       .catch(e => {
-        // Turn errors into emitted event
-        this.emit('error', e);
+        try {
+          // console.log('************ About to emit error');
+          // Turn errors into emitted event
+          this.emit('error', e);
+        } catch (er) {
+          // console.log('************ Error emitting error event. So meta ha!');
+          console.log(er);
+        }
 
         if (this._maybe_retry(e)) {
           // Trigger retry event
-          this.emit('retry');
-
-          setTimeout(() => this.start(run_once), this.retry_time_between);
+          this.emit('retry', this.retry_attempts);
+          // console.log('************ About to retry!');
+          this.run_flag = false;
+          return new Promise((resolve_b, reject_a) => {
+            setTimeout(
+              () => {
+                this.start(run_once).then(resolve_b).catch(reject_a);
+              },
+              this.retry_time_between
+            );
+          });
         }
       })
       .then(() => {
         this.run_status = false;
         this.stop_on_run = 0;
         this.run_flag = false;
+
+        // console.log('************ promise is resolving!');
 
         //Emit stopped event
         this.emit('stopped'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
