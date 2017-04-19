@@ -21,36 +21,44 @@ module.exports = class AsanaApi {
 
 
   get(url, params, callback) {
-    request.get({
-      url: this._formatUrl(url, params),
-      headers: this.headers
-    }, function(err, res, body) {
-      var abody = JSON.parse(body);
-      callback(err, abody.data);
-    });
+    return new Promise((resolve, reject) =>
+      request.get({
+        url: this._formatUrl(url, params),
+        headers: this.headers
+      }, function(err, res, body) {
+        var abody = JSON.parse(body);
+
+        if(err || !('data' in abody)) {
+          reject(new Error('API Error'));
+        } else {
+          resolve(abody.data);
+        }
+      })
+    );
   }
 
 
-  put(url, params, callback) {
-    request.put({
-      url: this._formatUrl(url, params),
-      headers: this.headers
-    }, function(err, res, body) {
-      var abody = JSON.parse(body);
-      callback(err, abody.data);
-    });
-  }
+  // promisify these like above
+  // put(url, params, callback) {
+  //   request.put({
+  //     url: this._formatUrl(url, params),
+  //     headers: this.headers
+  //   }, function(err, res, body) {
+  //     var abody = JSON.parse(body);
+  //     callback(err, abody.data);
+  //   });
+  // }
 
 
-  post(url, params, callback) {
-    request.post({
-      url: this._formatUrl(url, params),
-      headers: this.headers
-    }, function(err, res, body) {
-      var abody = JSON.parse(body);
-      callback(err, abody.data);
-    });
-  }
+  // post(url, params, callback) {
+  //   request.post({
+  //     url: this._formatUrl(url, params),
+  //     headers: this.headers
+  //   }, function(err, res, body) {
+  //     var abody = JSON.parse(body);
+  //     callback(err, abody.data);
+  //   });
+  // }
 
 
   // Helper: Format a URL string for a request

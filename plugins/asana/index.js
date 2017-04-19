@@ -1,12 +1,8 @@
 /**
  * @todo load plugin stuff here
  */
-module.exports = function(_config) {
-
-  /*Plugin initializing done here...*/
-
-  return {
-    name: 'Asana',
-    collectors: require('./collectors.js')(_config)
-  };
+module.exports = {
+	name: 'Asana',
+	collectors: [require('./collectors/asana_project')],
+	models: [require('./models/asana_project')]
 };
