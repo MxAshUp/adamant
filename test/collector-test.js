@@ -100,31 +100,31 @@ describe('Collector Class', () => {
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
 
-      it('Should call initialize()', (done) => {
-        ret_promise.then(() => {
+      it('Should call initialize()', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.initialize);
-        }).then(done).catch(done);
+        });
       });
-      it('Should call prepare()', (done) => {
-        ret_promise.then(() => {
+      it('Should call prepare()', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.prepare);
-        }).then(done).catch(done);
+        });
       });
-      it('Should call collect()', (done) => {
-        ret_promise.then(() => {
+      it('Should call collect()', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.collect);
-        }).then(done).catch(done);
+        });
       });
-      it('Should call garbage()', (done) => {
-        ret_promise.then(() => {
+      it('Should call garbage()', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not emit insert or update events', (done) => {
-        ret_promise.then(() => {
+      it('Should not emit insert or update events', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(update_handler);
           sinon.assert.notCalled(create_handler);
-        }).then(done).catch(done);
+        });
       });
     });
 
@@ -142,25 +142,25 @@ describe('Collector Class', () => {
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
 
-      it('Should run initialize only once', (done) => {
-        ret_promise.then(() => {
+      it('Should run initialize only once', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.initialize);
-        }).then(done).catch(done);
+        });
       });
-      it('Should run prepare twice', (done) => {
-        ret_promise.then(() => {
+      it('Should run prepare twice', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledTwice(test_collector_instance.prepare);
-        }).then(done).catch(done);
+        });
       });
-      it('Should run collect twice', (done) => {
-        ret_promise.then(() => {
+      it('Should run collect twice', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledTwice(test_collector_instance.collect);
-        }).then(done).catch(done);
+        });
       });
-      it('Should run garbage twice', (done) => {
-        ret_promise.then(() => {
+      it('Should run garbage twice', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledTwice(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
     });
 
@@ -203,54 +203,54 @@ describe('Collector Class', () => {
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
-      it('Should not throw errors', (done) => {
-        ret_promise.then(() => {
+      it('Should not throw errors', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(error_spy);
-        }).then(done).catch(done);
+        });
       });
 
-      it('Should call collect', (done) => {
-        ret_promise.then(() => {
+      it('Should call collect', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.collect);
-        }).then(done).catch(done);
+        });
       });
 
-      it('Should not do anything with item 1, no data has changed', (done) => {
-        ret_promise.then(() => {
+      it('Should not do anything with item 1, no data has changed', () => {
+        return ret_promise.then(() => {
           sinon.assert.neverCalledWith(update_handler,new_data[0]);
           sinon.assert.neverCalledWith(create_handler,new_data[0]);
-        }).then(done).catch(done);
+        });
       });
 
-      it('Should insert data with item 2, data is new', (done) => {
-        ret_promise.then(() => {
+      it('Should insert data with item 2, data is new', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledWith(create_handler,new_data[1]);
           sinon.assert.neverCalledWith(update_handler,new_data[1]);
-        }).then(done).catch(done);
+        });
       });
 
-      it('Should update data with item 3', (done) => {
-        ret_promise.then(() => {
+      it('Should update data with item 3', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledWith(update_handler,new_data[2]);
-        }).then(done).catch(done);
+        });
       });
 
-      it('Should call findOneAndUpdate with upsert:true', (done) => {
-        ret_promise.then(() => {
+      it('Should call findOneAndUpdate with upsert:true', () => {
+        return ret_promise.then(() => {
           expect(testModel.findOneAndUpdate.lastCall.args[2].upsert).to.equal(true);
-        }).then(done).catch(done);
+        });
       });
 
-      it('Should call findOneAndUpdate with setDefaultsOnInsert:true', (done) => {
-        ret_promise.then(() => {
+      it('Should call findOneAndUpdate with setDefaultsOnInsert:true', () => {
+        return ret_promise.then(() => {
           expect(testModel.findOneAndUpdate.lastCall.args[2].setDefaultsOnInsert).to.equal(true);
-        }).then(done).catch(done);
+        });
       });
 
-      it('Should call findOneAndUpdate with new:true', (done) => {
-        ret_promise.then(() => {
+      it('Should call findOneAndUpdate with new:true', () => {
+        return ret_promise.then(() => {
           expect(testModel.findOneAndUpdate.lastCall.args[2].new).to.equal(true);
-        }).then(done).catch(done);
+        });
       });
 
     });
@@ -291,15 +291,15 @@ describe('Collector Class', () => {
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
-      it('Should call garbage', (done) => {
-        ret_promise.then(() => {
+      it('Should call garbage', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
-      it('Should emit only 2 remove events', (done) => {
-        ret_promise.then(() => {
+      it('Should emit only 2 remove events', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledTwice(remove_handler);
-        }).then(done).catch(done);
+        });
       });
     });
 
@@ -321,28 +321,28 @@ describe('Collector Class', () => {
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
-      it('Should call initialize()', (done) => {
-        ret_promise.then(() => {
+      it('Should call initialize()', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.initialize);
           sinon.assert.threw(test_collector_instance.initialize);
-        }).then(done).catch(done);
+        });
       });
-      it('Should reject with CollectorInitializeError', (done) => {
-        ret_promise.then(() => {
+      it('Should reject with CollectorInitializeError', () => {
+        return ret_promise.then(() => {
           assert.instanceOf(error_spy.lastCall.args[0],errors.CollectorInitializeError);
-        }).then(done).catch(done);
+        });
       });
-      it('Should set initialize_flag to false', (done) => {
-        ret_promise.then(() => {
+      it('Should set initialize_flag to false', () => {
+        return ret_promise.then(() => {
           expect(test_collector_instance.initialize_flag).to.be.equal(false);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not call prepare, collect, or garbage', (done) => {
-        ret_promise.then(() => {
+      it('Should not call prepare, collect, or garbage', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(test_collector_instance.prepare);
           sinon.assert.notCalled(test_collector_instance.collect);
           sinon.assert.notCalled(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
     });
     describe('with error thrown in prepare()', () => {
@@ -363,27 +363,27 @@ describe('Collector Class', () => {
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
-      it('Should call prepare', (done) => {
-        ret_promise.then(() => {
+      it('Should call prepare', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.prepare);
           sinon.assert.threw(test_collector_instance.prepare);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not call collect or garbage', (done) => {
-        ret_promise.then(() => {
+      it('Should not call collect or garbage', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(test_collector_instance.collect);
           sinon.assert.notCalled(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
-      it('Should reject with error', (done) => {
-        ret_promise.then(() => {
+      it('Should reject with error', () => {
+        return ret_promise.then(() => {
           assert.instanceOf(error_spy.lastCall.args[0],Error);
-        }).then(done).catch(done);
+        });
       });
-      it('Should set initialize_flag to false', (done) => {
-        ret_promise.then(() => {
+      it('Should set initialize_flag to false', () => {
+        return ret_promise.then(() => {
           expect(test_collector_instance.initialize_flag).to.be.equal(false);
-        }).then(done).catch(done);
+        });
       });
     });
     describe('with reject thrown in collect', () => {
@@ -430,30 +430,30 @@ describe('Collector Class', () => {
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
-      it('Should call collect', (done) => {
-        ret_promise.then(() => {
+      it('Should call collect', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.collect);
-        }).then(done).catch(done);
+        });
       });
-      it('Should call update just once', (done) => {
-        ret_promise.then(() => {
+      it('Should call update just once', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(update_handler);
-        }).then(done).catch(done);
+        });
       });
-      it('Should emit error event', (done) => {
-        ret_promise.then(() => {
+      it('Should emit error event', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(error_handle);
-        }).then(done).catch(done);
+        });
       });
-      it('Should call garbage', (done) => {
-        ret_promise.then(() => {
+      it('Should call garbage', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not set initialize_flag to false', (done) => {
-        ret_promise.then(() => {
+      it('Should not set initialize_flag to false', () => {
+        return ret_promise.then(() => {
           expect(test_collector_instance.initialize_flag).to.be.equal(true);
-        }).then(done).catch(done);
+        });
       });
     });
     describe('with error thrown in collect', () => {
@@ -477,37 +477,37 @@ describe('Collector Class', () => {
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
-      it('Should call collect and throw error', (done) => {
-        ret_promise.then(() => {
+      it('Should call collect and throw error', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.collect);
           sinon.assert.threw(test_collector_instance.collect);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not call garbage', (done) => {
-        ret_promise.then(() => {
+      it('Should not call garbage', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not emit insert or update event', (done) => {
-        ret_promise.then(() => {
+      it('Should not emit insert or update event', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(update_handler);
           sinon.assert.notCalled(create_handler);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not emit error event (error event is a per-document basis)', (done) => {
-        ret_promise.then(() => {
+      it('Should not emit error event (error event is a per-document basis)', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(error_handle);
-        }).then(done).catch(done);
+        });
       });
-      it('Should set initialize_flag to false', (done) => {
-        ret_promise.then(() => {
+      it('Should set initialize_flag to false', () => {
+        return ret_promise.then(() => {
           expect(test_collector_instance.initialize_flag).to.be.equal(false);
-        }).then(done).catch(done);
+        });
       });
-      it('Should reject run with Error', (done) => {
-        ret_promise.then(() => {
+      it('Should reject run with Error', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(error_spy);
-        }).then(done).catch(done);
+        });
       });
     });
     describe('With db error', () => {
@@ -550,41 +550,41 @@ describe('Collector Class', () => {
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
-      it('Should call collect', (done) => {
-        ret_promise.then(() => {
+      it('Should call collect', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.collect);
-        }).then(done).catch(done);
+        });
       });
-      it('Should emit update just once', (done) => {
-        ret_promise.then(() => {
+      it('Should emit update just once', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(update_handler);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not emit create', (done) => {
-        ret_promise.then(() => {
+      it('Should not emit create', () => {
+        return ret_promise.then(() => {
           sinon.assert.notCalled(create_handler);
-        }).then(done).catch(done);
+        });
       });
-      it('Should emit update', (done) => {
-        ret_promise.then(() => {
+      it('Should emit update', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(update_handler);
-        }).then(done).catch(done);
+        });
       });
-      it('Should emit error event with CollectorDatabaseError', (done) => {
-        ret_promise.then(() => {
+      it('Should emit error event with CollectorDatabaseError', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(error_handle);
           assert.instanceOf(error_handle.lastCall.args[0],errors.CollectorDatabaseError);
-        }).then(done).catch(done);
+        });
       });
-      it('Should call garbage', (done) => {
-        ret_promise.then(() => {
+      it('Should call garbage', () => {
+        return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.garbage);
-        }).then(done).catch(done);
+        });
       });
-      it('Should not set initialize_flag to false', (done) => {
-        ret_promise.then(() => {
+      it('Should not set initialize_flag to false', () => {
+        return ret_promise.then(() => {
           expect(test_collector_instance.initialize_flag).to.be.equal(true);
-        }).then(done).catch(done);
+        });
       });
 
     });
