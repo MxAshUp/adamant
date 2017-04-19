@@ -83,9 +83,6 @@ class LoopService extends EventEmitter {
       return false;
     }
 
-    // Trigger retry event
-    this.emit('retry');
-
     return true;
   }
 
@@ -149,6 +146,9 @@ class LoopService extends EventEmitter {
         this.emit('error', e);
 
         if (this._maybe_retry(e)) {
+          // Trigger retry event
+          this.emit('retry');
+
           setTimeout(() => this.start(run_once), this.retry_time_between);
         }
       })
