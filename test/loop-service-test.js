@@ -75,14 +75,12 @@ describe('Loop Service', () => {
     expect(loopy_mc_loopface._should_run).to.equal(false);
   });
 
-  it('Should run function once', done => {
-    loopy_mc_loopface
+  it('Should run function once', () => {
+    return loopy_mc_loopface
       .start(true)
       .then(() => {
         sinon.assert.callCount(async_fn_spy, 1);
-      })
-      .then(done)
-      .catch(done);
+      });
   });
 
   it('Should interrupt after 290ms (3 times)', done => {
@@ -99,7 +97,7 @@ describe('Loop Service', () => {
     setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 290); // Enough time for almost 4 runs
   });
 
-  it('Should by async even if run fn is not', done => {
+  it('Should by async even if run fn is not', (done) => {
     loopy_mc_loopface.run_callback = sync_fn_spy;
 
     loopy_mc_loopface
@@ -113,20 +111,18 @@ describe('Loop Service', () => {
     setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
   });
 
-  it('Should emit started event', done => {
+  it('Should emit started event', () => {
     const event_spy = new sinon.spy();
     loopy_mc_loopface.on('started', event_spy);
 
-    loopy_mc_loopface
+    return loopy_mc_loopface
       .start(true)
       .then(() => {
         sinon.assert.callCount(event_spy, 1);
-      })
-      .then(done)
-      .catch(done);
+      });
   });
 
-  it('Should emit stopped event', done => {
+  it('Should emit stopped event', (done) => {
     const event_spy = new sinon.spy();
     loopy_mc_loopface.on('stopped', event_spy);
 
@@ -141,79 +137,71 @@ describe('Loop Service', () => {
     setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
   });
 
-  it('Should emit error event', done => {
+  it('Should emit error event', () => {
     const event_spy = new sinon.spy();
     const spy_thrower = sinon.stub().throws();
     loopy_mc_loopface.run_callback = spy_thrower;
 
     loopy_mc_loopface.on('error', event_spy);
 
-    loopy_mc_loopface
+    return loopy_mc_loopface
       .start()
       .then(() => {
         sinon.assert.callCount(event_spy, 1);
-      })
-      .then(done)
-      .catch(done);
+      });
   });
 
-  it('Should retry 3 times', done => {
+  it('Should retry 3 times', () => {
     loopy_mc_loopface.run_callback = sinon.stub().throws();
     loopy_mc_loopface.retry_max_attempts = 3;
 
-    loopy_mc_loopface
+    return loopy_mc_loopface
       .start()
       .then(() => {
         // this shouldn't happen
       })
       .catch(err => {
         sinon.assert.callCount(loopy_mc_loopface.run_callback, 3);
-      })
-      .then(done)
-      .catch(done);
+      });
   });
 
-  it('Should retry on any error if retry_errors array is empty', done => {
+  it('Should retry on any error if retry_errors array is empty', () => {
     const random_error_name = Math.random().toString(36).substring(7);
     loopy_mc_loopface.run_callback = sinon.stub().throws(random_error_name);
     loopy_mc_loopface.retry_max_attempts = 2;
     loopy_mc_loopface.retry_errors = [];
 
-    loopy_mc_loopface
+    return loopy_mc_loopface
       .start()
       .then(() => {
         // this shouldn't happen
       })
       .catch(err => {
         sinon.assert.callCount(loopy_mc_loopface.run_callback, 2);
-      })
-      .then(done)
-      .catch(done);
+      });
   });
 
-  it('Should not retry on any error if retry_errors array has items', done => {
+  it('Should not retry on any error if retry_errors array has items', () => {
     const random_error_name = Math.random().toString(36).substring(7);
     loopy_mc_loopface.run_callback = sinon.stub().throws(random_error_name);
     loopy_mc_loopface.retry_max_attempts = 2;
     loopy_mc_loopface.retry_errors = ['foo', 'bar'];
 
-    loopy_mc_loopface
+    return loopy_mc_loopface
       .start()
       .then(() => {
         // this shouldn't happen
       })
       .catch(err => {
         sinon.assert.callCount(loopy_mc_loopface.run_callback, 1);
-      })
-      .then(done)
-      .catch(done);
+      });
   });
 
-  it('Should reset retry_attempts after retries are exhausted', done => {
+  it('Should reset retry_attempts after retries are exhausted', () => {
     loopy_mc_loopface.run_callback = sinon.stub().throws();
     loopy_mc_loopface.retry_max_attempts = 3;
 
-    loopy_mc_loopface
+    return loopy_mc_loopface
       .start()
       .then(() => {
         // this shouldn't happen
@@ -221,9 +209,7 @@ describe('Loop Service', () => {
       .catch(err => {
         sinon.assert.callCount(loopy_mc_loopface.run_callback, 3);
         expect(loopy_mc_loopface.retry_attempts).to.equal(0);
-      })
-      .then(done)
-      .catch(done);
+      });
   });
 
   it('Should never call console.log', () => {
