@@ -24,6 +24,10 @@ class LoopService extends EventEmitter {
     this.retry_time_between = 0;
     this.retry_errors = [];
     this.retry_errors_to_skip = [];
+
+    this.loopfn_timeout_id = 0;
+    this.loopfn_resolve_cb = null;
+    this.loopfn_reject_cb = null;
   }
 
   /**
@@ -66,25 +70,17 @@ class LoopService extends EventEmitter {
 
     // max retry attempts reached
     if (this.retry_attempts > this.retry_max_attempts) {
-      // console.log(
-      //   'max retry attempts reached!',
-      //   this.retry_attempts,
-      //   ' ',
-      //   this.retry_max_attempts
-      // );
       this.retry_attempts = 0; // reset
       return false;
     }
 
     // if retry_errors has item(s) AND error not in errors to catch
     if (this.retry_errors.length && this.retry_errors.indexOf(err) === -1) {
-      // console.log('error not in errors to catch!');
       return false;
     }
 
     // error is in errors to skip
     if (this.retry_errors_to_skip.indexOf(err) > -1) {
-      // console.log('error is in errors to skip!');
       return false;
     }
 
@@ -115,72 +111,64 @@ class LoopService extends EventEmitter {
     this.emit('started');
 
     return new Promise((resolve, reject) => {
+
+      this.loopfn_resolve_cb = resolve;
+      this.loopfn_reject_cb = reject;
+
       // Loop function
-      let loopfn = function() {
-        // Check if need to keep running
+      let loopfn = (() => {
         if (!this._should_run) {
-          return;
-        }
+          // Should run is false if we've reach out run limit, or we're instructed to stop
+          this.loopfn_resolve_cb();
+        } else {
+          // Keep running...
 
-        // Increment run count
-        this.run_count++;
-
-        // Try to call run_callback
-        try {
-          Promise.resolve(this.run_callback()).catch(reject).then(() => {
+          Promise.resolve().then(this.run_callback.bind(this)) // <--- this is where run_callback is executed
+          .then(() => {
             // If all went well, let's do it again!
-            this.run_min_time_between_timeout_id = setTimeout(
+            this.run_count++; // <--- note this only increments on success
+
+            // Set timeout for next loopfn run
+            this.loopfn_timeout_id = setTimeout(
               loopfn,
               this.run_min_time_between
             );
-          });
-        } catch (e) {
-          // Send up error
-          reject(e);
+          }).catch((e) => {
+            // Catch errors from run_callback
+            this.emit('error', e); // <--- note if there are no listeners for this event, start() will be rejected with e
+
+            // Maybe we'll retry loopfn
+            if (!this._maybe_retry(e)) {
+              // No retries, okay, resolve start()
+              this.loopfn_resolve_cb();
+
+            } else {
+              // Emit event for retrying
+              this.emit('retry', this.retry_attempts);
+
+              // Set timeout for next loopfn run
+              this.loopfn_timeout_id = setTimeout(
+                loopfn,
+                this.retry_time_between
+              );
+            }
+          }).catch(this.loopfn_reject_cb); // <-- This only happens for unhandled exceptions
         }
-        // That's it!
-        return;
-      }.bind(this); // Make sure to bind function to this
+      }).bind(this);
 
       // Start the loop
       setImmediate(loopfn);
     })
-      .catch(e => {
-        try {
-          // console.log('************ About to emit error');
-          // Turn errors into emitted event
-          this.emit('error', e);
-        } catch (er) {
-          // console.log('************ Error emitting error event. So meta ha!');
-          console.log(er);
-        }
+    .then(() => {
+      this.run_status = false;
+      this.stop_on_run = 0;
+      this.run_flag = false;
 
-        if (this._maybe_retry(e)) {
-          // Trigger retry event
-          this.emit('retry', this.retry_attempts);
-          // console.log('************ About to retry!');
-          this.run_flag = false;
-          return new Promise((resolve_b, reject_a) => {
-            setTimeout(
-              () => {
-                this.start(run_once).then(resolve_b).catch(reject_a);
-              },
-              this.retry_time_between
-            );
-          });
-        }
-      })
-      .then(() => {
-        this.run_status = false;
-        this.stop_on_run = 0;
-        this.run_flag = false;
-
-        // console.log('************ promise is resolving!');
-
-        //Emit stopped event
-        this.emit('stopped'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
-      });
+      //Emit stopped event
+      this.emit('stopped'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
+    });
   }
+
 
   /**
 	 * Initiates the LoopService to stop running.
@@ -190,7 +178,10 @@ class LoopService extends EventEmitter {
 	 */
   stop() {
     this.run_flag = false;
-    clearTimeout(this.run_min_time_between_timeout_id);
+
+    // Loopfn might be running, we need to resolve and clear potential timeout
+    clearTimeout(this.loopfn_timeout_id);
+    this.loopfn_resolve_cb();
   }
 }
 

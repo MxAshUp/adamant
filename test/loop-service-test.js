@@ -83,10 +83,10 @@ describe('Loop Service', () => {
       });
   });
 
-  it('Should interrupt after 290ms (3 times)', () => {
+  it('Should interrupt after 310ms (3 times)', () => {
     loopy_mc_loopface.run_callback = async_fn_spy_wrapper_100;
 
-    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 290); // Enough time for almost 4 runs
+    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 310); // Enough time for almost 4 runs
 
     return loopy_mc_loopface
       .start()
@@ -94,6 +94,35 @@ describe('Loop Service', () => {
         sinon.assert.callCount(async_fn_spy, 3);
       });
 
+  });
+
+  it('Should emit started event', () => {
+    const event_spy = new sinon.spy();
+    loopy_mc_loopface.on('started', event_spy);
+
+    return loopy_mc_loopface
+      .start(true)
+      .then(() => {
+        sinon.assert.callCount(event_spy, 1);
+      });
+  });
+
+
+  it('Should interrupt in the middle of a long time_between_runs', () => {
+    loopy_mc_loopface.run_callback = sync_fn_spy;
+    loopy_mc_loopface.run_min_time_between = 10000; // Wait 10 seconds before 2nd run;
+    after(() => {
+      loopy_mc_loopface.run_min_time_between = 0; // Reset min time after test is done
+    });
+
+    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 50);
+    let start_time = new Date();
+    return loopy_mc_loopface
+      .start()
+      .then(() => {
+        sinon.assert.callCount(sync_fn_spy, 1);
+        expect((new Date()) - start_time).to.be.below(100);
+      });
   });
 
   it('Should by async even if run fn is not', (done) => {
@@ -108,17 +137,6 @@ describe('Loop Service', () => {
       .catch(done);
 
     setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
-  });
-
-  it('Should emit started event', () => {
-    const event_spy = new sinon.spy();
-    loopy_mc_loopface.on('started', event_spy);
-
-    return loopy_mc_loopface
-      .start(true)
-      .then(() => {
-        sinon.assert.callCount(event_spy, 1);
-      });
   });
 
   it('Should emit stopped event', () => {
