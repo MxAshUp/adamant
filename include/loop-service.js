@@ -94,15 +94,15 @@ class LoopService extends EventEmitter {
 	 * @return {Promise} Resolves or rejects when LoopService stops
 	 */
   start(run_once = false) {
-    //Don't start if already running
+    // Don't start if already running
     if (this.run_flag) {
-      return Promise.reject('cannot be started after already running');
+      return Promise.reject('cannot be started if already running');
     }
 
-    //Set flag
+    // Set flag
     this.run_flag = true;
 
-    //Set stop if we are only running once
+    // Set stop if we are only running once
     if (run_once) {
       this.stop_on_run = this.run_count + 1;
     }
