@@ -6,7 +6,6 @@ const
   expect = chai.expect,
   assert = chai.assert,
   sinon = require('sinon'),
-  sa_promised = require('sinon-as-promised'),
   _ = require('lodash'),
   _moment = require('moment'),
   mongooseMock = require('mongoose-mock');
@@ -157,16 +156,16 @@ describe('TimeEntryCollector Class', () => {
     const days_back = 30;
     const start_report = moment().subtract(days_back,'days');
     const end_report = moment();
+      testModel.find = sinon.stub();
     beforeEach(() => {
       testModel.find.reset();
+      testModel.find.resolves([
+        {id: '1'},
+        {id: '2'},
+        {id: '3'},
+        {id: '4'}
+      ]);
     });
-    testModel.find = sinon.stub();
-    testModel.find.resolves([
-      {id: '1'},
-      {id: '2'},
-      {id: '3'},
-      {id: '4'}
-    ]);
 
     const new_data_array = [
       {id: '1'},

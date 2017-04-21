@@ -5,7 +5,6 @@ const
   assert = chai.assert,
   rewire = require('rewire'),
   sinon = require('sinon'),
-  sa_sinon = require('sinon-as-promised'),
   _ = require('lodash'),
   errors = require('../include/errors'),
   mongooseMock = require('mongoose-mock'),
