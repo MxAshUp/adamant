@@ -1,5 +1,4 @@
-var vsprintf = require("sprintf-js").vsprintf,
-	mongoose_utils = require('./mongoose-utilities'),
+var mongoose_utils = require('./mongoose-utilities'),
 	EventEmitter = require('events'),
 	_ = require('lodash'),
 	CollectorInitializeError = require('./errors').CollectorInitializeError,
