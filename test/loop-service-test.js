@@ -49,6 +49,15 @@ describe('Loop Service', () => {
     });
   });
 
+  it('Should run function with proper this context', () => {
+    let cb = async_fn_spy_wrapper();
+    let loopy_mc_loopface = new LoopService(cb.bind(cb));
+    return loopy_mc_loopface.start(true).then(() => {
+      sinon.assert.calledOn(cb, cb);
+      sinon.assert.callCount(cb, 1);
+    });
+  });
+
   it('Should interrupt after 290ms (3 times)', () => {
     let cb = async_fn_spy_wrapper(100);
     let loopy_mc_loopface = new LoopService(cb);
