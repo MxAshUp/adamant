@@ -17,7 +17,7 @@ const
 mongoose_utils.__set__("mongoose", mongooseMock);
 
 console_log_spy = sinon.spy();
-//mongoose_utils.__set__("console", {log: console_log_spy});
+mongoose_utils.__set__("console", {log: console_log_spy});
 
 const test_model =
 {
