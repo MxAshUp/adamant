@@ -13,6 +13,8 @@ app.load_collector({
   plugin_name: 'Toggl',
   collector_name: 'CollectorTimeEntries',
   version: '1.0',
+  service_retry_max_attempts: 5,
+  service_retry_time_between: 3000,
   config: {
     api_token: '9a273d3973ddace390a130711f3e02e3',
     days_back_to_sync: 30,

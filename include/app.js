@@ -61,6 +61,13 @@ class App {
   load_collector(config) {
     const collector = this.plugin_loader.create_collector(config);
     const service = new LoopService(collector.run.bind(collector));
+
+    if(config.service_retry_max_attempts)
+      service.retry_max_attempts = config.service_retry_max_attempts;
+
+    if(config.service_retry_time_between)
+      service.retry_time_between = config.service_retry_time_between;
+
     service.name = `${collector.model_name} collector`;
     this.bind_service_events(service);
     this.bind_model_events(collector);
