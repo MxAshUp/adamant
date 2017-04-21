@@ -13,19 +13,28 @@ const
   Collector = rewire('../include/collector');
 
 
+
+let get_model_by_name_stub = sinon.stub();
+
 // Rewire database stuff
 Collector.__set__("mongoose_utils", {
-  getModel: mongooseMock.model,
-  getModelKey: function(model_name) {
-    return 'id';
-  }
+  mongoose: mongooseMock,
+  getModelByName: get_model_by_name_stub,
+  getModel: mongooseMock.model
 });
+
 
 console_log_spy = sinon.spy();
 Collector.__set__("console", {log: console_log_spy});
 
 var schema = mongooseMock.Schema({id: String});
 var testModel = mongooseMock.model('test.test_model', schema);
+
+get_model_by_name_stub.withArgs('test.test_model').returns({
+  name: 'test.test_model',
+  schema: schema,
+  primary_key: 'id'
+});
 
 describe('Collector Class', () => {
 

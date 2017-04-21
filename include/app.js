@@ -26,7 +26,7 @@ class App {
   }
 
   init() {
-    return mongoose_util.connect(_config.mongodb.uri);
+    return mongoose_util.mongoose.connect(_config.mongodb.uri);
   }
 
   /**

@@ -236,8 +236,8 @@ class Collector extends EventEmitter {
 			throw Error('Model already setup.');
 		}
 		this.model_name = model_name;
-		this.model = mongoose_utils.getModel(this.model_name);
-    this.model_id_key = mongoose_utils.getModelKey(this.model_name);
+		this.model = mongoose_utils.mongoose.model(this.model_name);
+    this.model_id_key = mongoose_utils.getModelByName(this.model_name).primary_key;
 	}
 }
 

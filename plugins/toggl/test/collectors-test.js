@@ -26,13 +26,16 @@ global.app_require = function(name) {
 let TimeEntryCollector = rewire('../collectors/time-entry');
 let toggl_time_entry_model = require('../models/time-entry');
 
+let get_model_by_name_stub = sinon.stub();
+
 // Rewire database stuff
 rewires.collector.__set__("mongoose_utils", {
   getModel: mongooseMock.model,
-  getModelKey: function(model_name) {
-    return 'id';
-  }
+  mongoose: mongooseMock,
+  getModelByName: get_model_by_name_stub
 });
+
+get_model_by_name_stub.withArgs(toggl_time_entry_model.name).returns(toggl_time_entry_model);
 
 var schema = mongooseMock.Schema(toggl_time_entry_model.schema);
 var testModel = mongooseMock.model(toggl_time_entry_model.name, schema);
