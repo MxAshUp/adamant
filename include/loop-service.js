@@ -12,7 +12,6 @@ class LoopService extends EventEmitter {
     super();
 
     //Set initial variables
-    this.run_flag = false;
     this.run_status = false;
     this.run_callback = run_callback;
     this.run_min_time_between = 0;
@@ -50,11 +49,6 @@ class LoopService extends EventEmitter {
       return false;
     }
 
-    //Should not run if run_flag isn't set
-    if (!this.run_flag) {
-      return false;
-    }
-
     //Proceed
     return true;
   }
@@ -75,12 +69,12 @@ class LoopService extends EventEmitter {
     }
 
     // if retry_errors has item(s) AND error not in errors to catch
-    if (this.retry_errors.length && this.retry_errors.indexOf(err) === -1) {
+    if (this.retry_errors.length && err.constructor && err.constructor.name && this.retry_errors.indexOf(err.constructor.name) === -1) {
       return false;
     }
 
     // error is in errors to skip
-    if (this.retry_errors_to_skip.indexOf(err) > -1) {
+    if (err.constructor && err.constructor.name && this.retry_errors_to_skip.indexOf(err.constructor.name) > -1) {
       return false;
     }
 
@@ -95,12 +89,12 @@ class LoopService extends EventEmitter {
 	 */
   start(run_once = false) {
     // Don't start if already running
-    if (this.run_flag) {
-      return Promise.reject('cannot be started if already running');
+    if (this.is_running) {
+      return Promise.reject('Loop service is already running.');
     }
 
     // Set flag
-    this.run_flag = true;
+    this.run_status = true;
 
     // Set stop if we are only running once
     if (run_once) {
@@ -123,7 +117,7 @@ class LoopService extends EventEmitter {
         } else {
           // Keep running...
 
-          Promise.resolve().then(this.run_callback.bind(this)) // <--- this is where run_callback is executed
+          Promise.resolve().then(this.run_callback) // <--- this is where run_callback is executed
           .then(() => {
             // If all went well, let's do it again!
             this.run_count++; // <--- note this only increments on success
@@ -162,7 +156,6 @@ class LoopService extends EventEmitter {
     .then(() => {
       this.run_status = false;
       this.stop_on_run = 0;
-      this.run_flag = false;
 
       //Emit stopped event
       this.emit('stopped'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
@@ -177,8 +170,6 @@ class LoopService extends EventEmitter {
 	 * @return {Promise} Resolves or rejects when LoopService complete the stop
 	 */
   stop() {
-    this.run_flag = false;
-
     // Loopfn might be running, we need to resolve and clear potential timeout
     clearTimeout(this.loopfn_timeout_id);
     this.loopfn_resolve_cb();
