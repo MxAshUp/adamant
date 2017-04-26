@@ -106,19 +106,19 @@ app.load_event_handler({
 
       data = {
         measurement: 'toggl_time_entry',
-        // timestamp: 1434055562000000000,
-        timestamp,
+        timestamp: timestamp,
         tags: {
           billable: data.billable,
           duronly: data.duronly,
-          wid: data.wid,
-          pid: data.pid,
-          uid: data.uid,
+          wid: `${data.wid}`,
+          pid: `${data.pid}`,
+          uid: `${data.uid}`,
+          event: 'create',
         },
         fields: {
-          start: data.start,
-          stop: data.stop,
-          at: data.at,
+          start: `${data.start}`,
+          stop: `${data.stop}`,
+          at: `${data.at}`,
           duration: data.duration,
         },
       };
@@ -136,25 +136,24 @@ app.load_event_handler({
   config: {
     listen_event_name: 'toggl.time_entry.update',
     call_event_name: 'metric.write',
-    // mutator_fn: data => `A beautiful string ${data.id}`,
     mutator_fn: data => {
-      const timestamp = Date.parse(data.start) * 1000000;
+      const timestamp = Date.parse(data.at) * 1000000;
 
       data = {
         measurement: 'toggl_time_entry',
-        // timestamp: 1434055562000000000,
-        timestamp,
+        timestamp: timestamp,
         tags: {
           billable: data.billable,
           duronly: data.duronly,
-          wid: data.wid,
-          pid: data.pid,
-          uid: data.uid,
+          wid: `${data.wid}`,
+          pid: `${data.pid}`,
+          uid: `${data.uid}`,
+          event: 'update',
         },
         fields: {
-          start: data.start,
-          stop: data.stop,
-          at: data.at,
+          start: `${data.start}`,
+          stop: `${data.stop}`,
+          at: `${data.at}`,
           duration: data.duration,
         },
       };
