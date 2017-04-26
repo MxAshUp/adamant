@@ -239,7 +239,7 @@ describe('Collector Class', () => {
 
       it('Should update data with item 3', () => {
         return ret_promise.then(() => {
-          sinon.assert.calledWith(update_handler,new_data[2]);
+          sinon.assert.calledWith(update_handler,new_data[2],old_db_data[1]);
         });
       });
 

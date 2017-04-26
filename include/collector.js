@@ -180,7 +180,7 @@ class Collector extends EventEmitter {
 
 				// Changed document
 				if(!_.isNull(old_doc) && !_.isEqual(new_doc,old_doc)) {
-					this.emit('update', new_doc);
+					this.emit('update', new_doc, old_doc);
 				}
 
 				return Promise.resolve(new_doc);
