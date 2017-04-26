@@ -37,12 +37,7 @@ class HandlerWritePoint extends EventHandler {
       this.args.influxdb_client
         .writePoints([data])
         .then(() => {
-          // console.log(`Success adding record with event id: ${event_id}`);
           resolve(data);
-        })
-        .catch(err => {
-          console.error(`Error saving data to InfluxDB! ${err.stack}`);
-          reject(new Error(`Error: ${err.stack}`));
         });
     });
   }
@@ -57,12 +52,7 @@ class HandlerWritePoint extends EventHandler {
           where: `"event_id" = '${event_id}'`,
         })
         .then(result => {
-          // console.log(`Success removing record with event id: ${event_id}`);
           resolve(event_id);
-        })
-        .catch(err => {
-          console.error(`Error removing data from InfluxDB! ${err.stack}`);
-          reject(new Error(`Error: ${err.stack}`));
         });
     });
   }
