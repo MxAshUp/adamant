@@ -7,4 +7,5 @@ module.exports = {
     require('./event-handlers/console'),
     require('./event-handlers/adapter'),
   ],
+  load_routes: require('./routes'),
 };
