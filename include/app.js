@@ -29,6 +29,9 @@ class App {
     this.event_dispatcher.on('error', console.log);
     this.bind_service_events(this.event_dispatcher_service);
     this.express = express();
+    this.express.get('/', (req, res) => {
+      res.send('Metric platform!');
+    });
   }
 
   init() {
