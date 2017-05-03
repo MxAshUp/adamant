@@ -1,34 +1,31 @@
-var mongoose_utils = require('./mongoose-utilities'),
-	_ = require('lodash');
+var mongoose_utils = require('./mongoose-utilities'), _ = require('lodash');
 
 class Plugin {
-
-	/**
+  /**
 	 * Creates an instance of Plugin.
 	 *
 	 * @param {object} args
 	 *
 	 * @memberOf Plugin
 	 */
-	constructor(config) {
+  constructor(config) {
+    config = _.isUndefined(config) ? {} : config;
 
-		config = _.isUndefined(config) ? {} : config;
-
-		//Default object properties
+    //Default object properties
     const defaults = {
-			collectors: [],
-			event_handlers: [],
-			models: [],
-			enabled: false,
-			name: ''
+      collectors: [],
+      event_handlers: [],
+      models: [],
+      enabled: false,
+      name: '',
     };
 
-		if(!config.hasOwnProperty('name')) throw new Error(`A valid name is required for Plugin object.`);
+    if (!config.hasOwnProperty('name'))
+      throw new Error(`A valid name is required for Plugin object.`);
 
-		// Merge config and assign properties to this
+    // Merge config and assign properties to this
     Object.assign(this, defaults, config);
-
-	}
+  }
 
   /**
 	 * Abstract way to create a component from a plugin
@@ -40,21 +37,22 @@ class Plugin {
 	 *
 	 * @memberOf Plugin
 	 */
-	create_component(type, class_name, args, version = '') {
+  create_component(type, class_name, args, version = '') {
     let component, component_class;
 
-		// Check if type exists in plugin
-		if(typeof this[type] !== "object") throw new Error(`${this.name} does not have component of type: ${type}.`);
+    // Check if type exists in plugin
+    if (typeof this[type] !== 'object')
+      throw new Error(`${this.name} does not have component of type: ${type}.`);
 
     // Find component in plugin
-    component_class = _.find(this[type], {name: class_name});
-    if(!component_class) throw new Error(`Component not found: ${class_name}`);
+    component_class = _.find(this[type], { name: class_name });
+    if (!component_class) throw new Error(`Component not found: ${class_name}`);
 
     // Create component instance
     component = new component_class(args);
 
     // Check version
-    if(version && component.version && component.version !== version) {
+    if (version && component.version && component.version !== version) {
       /**
        * @todo Replace with semver
        */
@@ -62,24 +60,19 @@ class Plugin {
     }
 
     return component;
-	}
+  }
 
-	// Load models
-	load_models() {
-		for(let model of this.models) {
-			mongoose_utils.loadModel(model);
-		}
-	}
+  // Load models
+  load_models() {
+    for (let model of this.models) {
+      mongoose_utils.loadModel(model);
+    }
+  }
 
-	// default load/unload methods to be overridden
-	on_load() {
+  // default load/unload methods to be overridden
+  on_load() {}
 
-	}
-
-	on_unload() {
-
-	}
-
+  on_unload() {}
 }
 
 module.exports = Plugin;
