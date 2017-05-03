@@ -58,6 +58,14 @@ class App {
     });
   }
 
+  load_plugin_routes() {
+    // Look at each plugin
+    _.each(this.plugin_loader.plugins, plugin => {
+      // Load plugin routes (if any)
+      plugin.load_routes(this.express);
+    });
+  }
+
   /**
    * Loads a collector from config, creates a service
    *
