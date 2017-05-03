@@ -31,16 +31,20 @@ class App {
     this.event_dispatcher.on('error', console.log);
     this.bind_service_events(this.event_dispatcher_service);
     this.express = express();
-    this.express.get('/', (req, res) => {
-      res.send('Metric platform!');
-    });
-    this.express.get('/login', (req, res) => {
-      res.send('Login!');
-    });
+    this.load_routes(this.express);
   }
 
   init() {
     return mongoose_util.mongoose.connect(_config.mongodb.uri);
+  }
+
+  load_routes(express) {
+    express.get('/', (req, res) => {
+      res.send('Metric platform!');
+    });
+    express.get('/login', (req, res) => {
+      res.send('Login!');
+    });
   }
 
   /**
