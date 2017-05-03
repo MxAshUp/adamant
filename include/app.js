@@ -16,6 +16,9 @@ class App {
       return require(__dirname + '/' + name);
     };
 
+    // Global accessor for app
+    global.APP = this;
+
     this.plugin_loader = new PluginLoader();
     this.collect_services = [];
     this.event_dispatcher = new EventDispatcher();
