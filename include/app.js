@@ -34,6 +34,9 @@ class App {
     this.express.get('/', (req, res) => {
       res.send('Metric platform!');
     });
+    this.express.get('/login', (req, res) => {
+      res.send('Login!');
+    });
   }
 
   init() {
