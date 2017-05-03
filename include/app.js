@@ -152,7 +152,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
-    this.express.listen(5000, '0.0.0.0');
+    this.express.listen(5000);
   }
 }
 
