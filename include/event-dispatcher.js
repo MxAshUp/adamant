@@ -16,6 +16,7 @@ class EventDispatcher extends EventEmitter {
     this.event_queue = [];
     this.handler_count = 0;
     this.event_count = 0;
+    this.error_on_unhandled_events = false;
   }
 
   /**
@@ -90,17 +91,23 @@ class EventDispatcher extends EventEmitter {
       search.instance_id = handler_id;
     }
 
-    // Create promise return
-    return Promise.all(
-      _.map(
-        _.filter(this.event_handlers, search),
-        handler => Promise.resolve().then(handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)).then(() => {
-          this.emit('dispatched', event_obj, handler);
-        }).catch((e) => {
-          this.emit('error', new EventHandleError(e, event_obj, handler));
-        })
-      )
+    // Create array of return promises
+    let ret_promises = _.map(
+      _.filter(this.event_handlers, search),
+      handler => Promise.resolve().then(handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)).then(() => {
+        this.emit('dispatched', event_obj, handler);
+      }).catch((e) => {
+        this.emit('error', new EventHandleError(e, event_obj, handler));
+      })
     );
+
+    if(!ret_promises.length && this.error_on_unhandled_events) {
+      // No handlers for dispatched event
+      this.emit('error', new Error(`No handlers found for event ${event_obj.event_name}.`));
+    }
+
+    // Create promise return
+    return Promise.all(ret_promises);
   }
 
   /**

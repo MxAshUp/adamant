@@ -125,7 +125,7 @@ describe('Event System - ', () => {
 
     });
 
-    it('Should throw error if supporttest_1_dispatch_cbs_revert is false and revert() is called', () => {
+    it('Should throw error if support_revert is false and revert() is called', () => {
       const test_handler_1 = new EventHandler();
       expect(test_handler_1.revert.bind(test_handler_1)).to.throw('Handler does not support revert.');
     });
@@ -248,6 +248,28 @@ describe('Event System - ', () => {
         // Event handler dispatch should have been called with correct args
         sinon.assert.callCount(spy_handler, 1);
         sinon.assert.calledWith(spy_handler, test_event, test_handler_1);
+      });
+    });
+
+    it('Should dispatch event and emit error since no handlers existed', () => {
+
+      const spy_handler = sinon.spy();
+      const test_event = new Event('test.NON_EXISTENT_HANDLER',Math.random());
+
+      dispatcher.error_on_unhandled_events = true;
+
+      after(() => {
+        dispatcher.error_on_unhandled_events = false;
+      });
+
+      dispatcher.on('error', spy_handler);
+
+      return dispatcher.dispatch_event(test_event).then(() => {
+        // Event handler dispatch should have been called with correct args
+        sinon.assert.callCount(spy_handler, 1);
+        let error_thrown = spy_handler.lastCall.args[0];
+        expect(error_thrown.message).to.equal(`No handlers found for event test.NON_EXISTENT_HANDLER.`);
+        expect(error_thrown).to.be.instanceof(Error);
       });
     });
 
