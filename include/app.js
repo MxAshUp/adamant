@@ -28,7 +28,7 @@ class App {
     this.event_dispatcher_service.name = 'Event dispatcher';
     this.event_dispatcher.on('error', console.log);
     this.bind_service_events(this.event_dispatcher_service);
-    this.webapp = express();
+    this.express = express();
   }
 
   init() {
@@ -141,7 +141,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
-    this.webapp.listen(5000, '0.0.0.0');
+    this.express.listen(5000, '0.0.0.0');
   }
 }
 
