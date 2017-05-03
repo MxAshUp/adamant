@@ -6,7 +6,8 @@ const PluginLoader = require('./plugin-loader'),
   EventDispatcher = require('./event-dispatcher'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
-  chalk = require('chalk');
+  chalk = require('chalk'),
+  express = require('express');
 
 /**
  * A singleton class
@@ -29,6 +30,7 @@ class App {
     this.event_dispatcher_service.name = 'Event dispatcher';
     this.event_dispatcher.on('error', console.log);
     this.bind_service_events(this.event_dispatcher_service);
+    this.express = express();
   }
 
   init() {
@@ -55,6 +57,14 @@ class App {
         let handler = new EventHandler(event_handler);
         this.event_dispatcher.load_event_handler(handler);
       });
+    });
+  }
+
+  load_plugin_routes() {
+    // Look at each plugin
+    _.each(this.plugin_loader.plugins, plugin => {
+      // Load plugin routes (if any)
+      plugin.load_routes(this.express);
     });
   }
 
@@ -141,6 +151,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
+    this.express.listen(5000, '0.0.0.0');
   }
 }
 
