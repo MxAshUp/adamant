@@ -162,7 +162,10 @@ app.load_event_handler({
 });
 
 // Get things going!
-app.init().catch((err) => {
-  console.log(err);
-  process.exit();
-}).then(app.run.bind(app));
+app
+  .init()
+  .catch(err => {
+    console.log(err);
+    process.exit();
+  })
+  .then(app.run.bind(app));
