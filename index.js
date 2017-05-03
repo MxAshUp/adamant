@@ -1,9 +1,7 @@
-const App = require('./include/app'),
+const app = require('./include/app'),
   utilities = require('./include/utilities'),
   _config = require('./include/config.js'),
   Influx = require('influx');
-
-const app = new App();
 
 // Load plugins
 app.load_plugins(utilities.getPluginsDirectories());

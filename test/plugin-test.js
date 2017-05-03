@@ -174,6 +174,9 @@ describe('Abstract Plugin', () => {
     it('on_unload should return nothing', () => {
       expect(pl.on_unload()).to.be.undefined;
     });
+    it('load_routes should return nothing', () => {
+      expect(pl.load_routes()).to.be.undefined;
+    });
   });
 
   it('Should never call console.log', () => {
