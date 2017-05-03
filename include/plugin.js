@@ -69,7 +69,9 @@ class Plugin {
     }
   }
 
-  // default load/unload methods to be overridden
+  // default methods to be overridden
+  load_routes() {}
+
   on_load() {}
 
   on_unload() {}
