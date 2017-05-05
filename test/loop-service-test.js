@@ -228,6 +228,23 @@ describe('Loop Service', () => {
       });
   });
 
+  it('Should reset retry_attempts after success', () => {
+    let throwthowpass_stub = sinon.stub().resolves();
+    throwthowpass_stub.onFirstCall().throws();
+    throwthowpass_stub.onSecondCall().throws();
+    let loopy_mc_loopface = new LoopService(throwthowpass_stub);
+    let error_spy = sinon.spy();
+    loopy_mc_loopface.on('error', error_spy);
+    loopy_mc_loopface.retry_max_attempts = 3;
+    loopy_mc_loopface.stop_on_run = 3;
+    return loopy_mc_loopface
+      .start()
+      .then(() => {
+        sinon.assert.callCount(error_spy, 2);
+        expect(loopy_mc_loopface.retry_attempts).to.equal(0);
+      });
+  });
+
   it('Should never call console.log', () => {
     sinon.assert.neverCalledWith(console_log_spy);
   });

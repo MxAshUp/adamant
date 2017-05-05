@@ -121,6 +121,7 @@ class LoopService extends EventEmitter {
           .then(() => {
             // If all went well, let's do it again!
             this.run_count++; // <--- note this only increments on success
+            this.retry_attempts = 0; // reset retries
 
             // Set timeout for next loopfn run
             this.loopfn_timeout_id = setTimeout(
