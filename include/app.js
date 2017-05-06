@@ -7,7 +7,19 @@ const PluginLoader = require('./plugin-loader'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
   chalk = require('chalk'),
-  express = require('express');
+  express = require('express')();
+
+const server = require('http').createServer(express);
+const io = require('socket.io')(server);
+io.on('connection', function(client) {
+  client.on('event', function(data) {
+    console.log('Socket.io client event!', data);
+  });
+  client.on('disconnect', function() {
+    console.log('Socket.io client disconnect!');
+  });
+});
+// server.listen(3000);
 
 /**
  * A singleton class
@@ -30,8 +42,9 @@ class App {
     this.event_dispatcher_service.name = 'Event dispatcher';
     this.event_dispatcher.on('error', console.log);
     this.bind_service_events(this.event_dispatcher_service);
-    this.express = express();
+    this.express = express;
     this.load_routes(this.express);
+    this.server = server;
   }
 
   init() {
@@ -161,7 +174,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
-    this.express.listen(5000);
+    this.server.listen(5000);
   }
 }
 
