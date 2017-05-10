@@ -7,7 +7,9 @@ const PluginLoader = require('./plugin-loader'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
   chalk = require('chalk'),
-  express = require('express');
+  express = require('express')(),
+  server = require('http').createServer(express),
+  io = require('socket.io')(server);
 
 /**
  * A singleton class
@@ -30,17 +32,35 @@ class App {
     this.event_dispatcher_service.name = 'Event dispatcher';
     this.event_dispatcher.on('error', console.log);
     this.bind_service_events(this.event_dispatcher_service);
-    this.express = express();
-    this.express.get('/', (req, res) => {
-      res.send('Metric platform!');
-    });
-    this.express.get('/login', (req, res) => {
-      res.send('Login!');
-    });
+    this.express = express;
+    this.server = server;
+    this.io = io;
+    this.load_routes(this.express);
+    this.bind_socketio_events(this.io);
   }
 
   init() {
     return mongoose_util.mongoose.connect(_config.mongodb.uri);
+  }
+
+  load_routes(express) {
+    express.get('/', (req, res) => {
+      res.send('Metric platform!');
+    });
+    express.get('/login', (req, res) => {
+      res.send('Login!');
+    });
+  }
+
+  bind_socketio_events(io) {
+    io.on('connection', client => {
+      client.on('event', data => {
+        console.log('Socket.io client event!', data);
+      });
+      client.on('disconnect', () => {
+        console.log('Socket.io client disconnect!');
+      });
+    });
   }
 
   /**
@@ -157,7 +177,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
-    this.express.listen(5000);
+    this.server.listen(5000);
   }
 }
 
