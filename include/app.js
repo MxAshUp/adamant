@@ -7,10 +7,11 @@ const PluginLoader = require('./plugin-loader'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
   chalk = require('chalk'),
-  express = require('express')();
+  express = require('express')(),
+  server = require('http').createServer(express),
+  io = require('socket.io')(server);
 
-const server = require('http').createServer(express);
-const io = require('socket.io')(server);
+// socket.io events
 io.on('connection', function(client) {
   client.on('event', function(data) {
     console.log('Socket.io client event!', data);
@@ -19,7 +20,6 @@ io.on('connection', function(client) {
     console.log('Socket.io client disconnect!');
   });
 });
-// server.listen(3000);
 
 /**
  * A singleton class
