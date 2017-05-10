@@ -11,16 +11,6 @@ const PluginLoader = require('./plugin-loader'),
   server = require('http').createServer(express),
   io = require('socket.io')(server);
 
-// socket.io events
-io.on('connection', function(client) {
-  client.on('event', function(data) {
-    console.log('Socket.io client event!', data);
-  });
-  client.on('disconnect', function() {
-    console.log('Socket.io client disconnect!');
-  });
-});
-
 /**
  * A singleton class
  *
@@ -43,8 +33,10 @@ class App {
     this.event_dispatcher.on('error', console.log);
     this.bind_service_events(this.event_dispatcher_service);
     this.express = express;
-    this.load_routes(this.express);
     this.server = server;
+    this.io = io;
+    this.load_routes(this.express);
+    this.bind_socketio_events(this.io);
   }
 
   init() {
@@ -57,6 +49,17 @@ class App {
     });
     express.get('/login', (req, res) => {
       res.send('Login!');
+    });
+  }
+
+  bind_socketio_events(io) {
+    io.on('connection', client => {
+      client.on('event', data => {
+        console.log('Socket.io client event!', data);
+      });
+      client.on('disconnect', () => {
+        console.log('Socket.io client disconnect!');
+      });
     });
   }
 
