@@ -53,11 +53,11 @@ class App {
   }
 
   bind_socketio_events(io) {
-    io.on('connection', client => {
-      client.on('event', data => {
+    io.on('connection', socket => {
+      socket.on('event', data => {
         console.log('Socket.io client event!', data);
       });
-      client.on('disconnect', () => {
+      socket.on('disconnect', () => {
         console.log('Socket.io client disconnect!');
       });
     });
