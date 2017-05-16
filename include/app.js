@@ -94,6 +94,14 @@ class App {
     });
   }
 
+  map_plugin_events() {
+    // Look at each plugin
+    _.each(this.plugin_loader.plugins, plugin => {
+      // Load plugin routes (if any)
+      plugin.map_events(this);
+    });
+  }
+
   /**
    * Loads a collector from config, creates a service
    *
