@@ -6,6 +6,7 @@ const app = require('./include/app'),
 // Load plugins
 app.load_plugins(utilities.getPluginsDirectories());
 app.load_plugin_routes();
+app.map_plugin_events();
 
 // Load toggl collector
 app.load_collector({

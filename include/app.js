@@ -53,11 +53,11 @@ class App {
   }
 
   bind_socketio_events(io) {
-    io.on('connection', client => {
-      client.on('event', data => {
+    io.on('connection', socket => {
+      socket.on('event', data => {
         console.log('Socket.io client event!', data);
       });
-      client.on('disconnect', () => {
+      socket.on('disconnect', () => {
         console.log('Socket.io client disconnect!');
       });
     });
@@ -91,6 +91,14 @@ class App {
     _.each(this.plugin_loader.plugins, plugin => {
       // Load plugin routes (if any)
       plugin.load_routes(this.express);
+    });
+  }
+
+  map_plugin_events() {
+    // Look at each plugin
+    _.each(this.plugin_loader.plugins, plugin => {
+      // Load plugin routes (if any)
+      plugin.map_events(this);
     });
   }
 

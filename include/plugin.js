@@ -72,6 +72,8 @@ class Plugin {
   // default methods to be overridden
   load_routes() {}
 
+  map_events() {}
+
   on_load() {}
 
   on_unload() {}
