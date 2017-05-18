@@ -185,7 +185,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
-    this.server.listen(5000);
+    this.server.listen(_config.web.port);
   }
 }
 

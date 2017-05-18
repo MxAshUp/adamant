@@ -6,4 +6,7 @@ module.exports = {
     host: 'influxdb',
     database: 'metricplatform',
   },
+	web: {
+		port: 5000
+	}
 };

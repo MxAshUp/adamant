@@ -45,7 +45,8 @@
     "mongoose-mock": "^0.4.0",
     "nyc": "^10.2.0",
     "rewire": "^2.5.2",
-    "sinon": "^2.1.0"
+    "sinon": "^2.1.0",
+    "socket-io-mock": "^1.0.1"
   },
   "jshintConfig": {
     "esversion": 6,
