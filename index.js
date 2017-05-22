@@ -1,7 +1,6 @@
 module.exports = {
   // Instances
   errors: require('./libs/errors'),
-  utilities: require('./libs/utilities'),
   // Classes
   App: require('./libs/app'),
   Collector: require('./libs/collector'),
