@@ -23,12 +23,12 @@ class PluginLoader {
    * @param {Object} config - Configuration to pass to plugin on load
    *
    */
-  load_plugin(path, _config) {
+  load_plugin(module_name, _config) {
     //Load in the plugin
-    let plugin_args = require(`../${path}`);
+    let plugin_args = require(module_name);
 
     //Could not load it, or it's not a valid plugin_args
-    if(typeof plugin_args !== 'object') throw `Error loading plugin: ${path}`;
+    if(typeof plugin_args !== 'object') throw `Error loading plugin: ${module_name}`;
 
     //Initialize plugin
     const plugin = new Plugin(plugin_args);

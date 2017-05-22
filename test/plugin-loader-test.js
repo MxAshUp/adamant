@@ -20,7 +20,7 @@ describe('Plugin Loader', function() {
   });
 
   const mock_plugins = {
-    '../plugin_a': {
+    'plugin_a': {
       name: 'Plugin A',
       collectors: [],
       models: [],
@@ -29,7 +29,7 @@ describe('Plugin Loader', function() {
       on_unload: sinon.spy(),
       load_models: sinon.spy()
     },
-    '../plugin_b': {
+    'plugin_b': {
       name: 'Plugin B',
       collectors: [],
       models: [],
@@ -38,7 +38,7 @@ describe('Plugin Loader', function() {
       on_unload: sinon.spy(),
       load_models: sinon.spy()
     },
-    '../plugin_c': 'BAD_PLUGIN'
+    'plugin_c': 'BAD_PLUGIN'
   };
 
   let plugin_a, plugin_b;
