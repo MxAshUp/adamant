@@ -1,5 +1,5 @@
 const _ = require('lodash'),
-  EventHandleError = require('../include/errors').EventHandleError,
+  EventHandleError = require('../libs/errors').EventHandleError,
 	EventEmitter = require('events');
 
 /**

@@ -18,11 +18,6 @@ const PluginLoader = require('./plugin-loader'),
  */
 class App {
   constructor() {
-    // Set global base dir for easy require
-    global.app_require = function(name) {
-      return require(__dirname + '/' + name);
-    };
-
     this.plugin_loader = new PluginLoader();
     this.collect_services = [];
     this.event_dispatcher = new EventDispatcher();
