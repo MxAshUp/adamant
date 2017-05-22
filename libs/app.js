@@ -1,5 +1,4 @@
 const PluginLoader = require('./plugin-loader'),
-  _config = require('./config.js'),
   mongoose_util = require('./mongoose-utilities'),
   _ = require('lodash'),
   LoopService = require('./loop-service'),
@@ -17,7 +16,8 @@ const PluginLoader = require('./plugin-loader'),
  * @class App
  */
 class App {
-  constructor() {
+  constructor(config) {
+    this._config = config;
     this.plugin_loader = new PluginLoader();
     this.collect_services = [];
     this.event_dispatcher = new EventDispatcher();
@@ -35,7 +35,7 @@ class App {
   }
 
   init() {
-    return mongoose_util.mongoose.connect(_config.mongodb.uri);
+    return mongoose_util.mongoose.connect(this._config.mongodb.uri);
   }
 
   load_routes(express) {
@@ -66,7 +66,7 @@ class App {
    */
   load_plugins(plugin_dirs) {
     _.forEach(plugin_dirs, plugin_path => {
-      this.plugin_loader.load_plugin(plugin_path.path, _config);
+      this.plugin_loader.load_plugin(plugin_path.path, this._config);
     });
   }
 
@@ -180,7 +180,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
-    this.server.listen(_config.web.port);
+    this.server.listen(this._config.web.port);
   }
 }
 
