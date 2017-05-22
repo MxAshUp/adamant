@@ -13,7 +13,8 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "nyc --reporter=html --all mocha **/*-test.js"
+    "test": "nyc --reporter=html --all mocha **/*-test.js",
+    "test-docker": "docker run --rm -t -v $PWD:/usr/src/app node /bin/bash -c \"npm set registry https://i.proqsolutions.com/npm && cd /usr/src/app && npm install && npm install -g mocha nyc && nyc --reporter=html --all mocha test/*-test.js\""
   },
   "nyc": {
     "include": [
@@ -32,7 +33,8 @@
     "chai-subset": "^1.4.0",
     "nyc": "^10.2.0",
     "rewire": "^2.5.2",
-    "sinon": "^2.1.0"
+    "sinon": "^2.1.0",
+    "mongoose-mock": "^0.4.0"
   },
   "jshintConfig": {
     "esversion": 6,
