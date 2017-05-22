@@ -6,10 +6,10 @@ const
   rewire = require('rewire'),
   sinon = require('sinon'),
   _ = require('lodash'),
-  errors = require('../include/errors'),
+  errors = require('../libs/errors'),
   mongooseMock = require('mongoose-mock'),
   // Modules to test
-  mongoose_utils = rewire('../include/mongoose-utilities');
+  mongoose_utils = rewire('../libs/mongoose-utilities');
 
 
 // Rewire database stuff

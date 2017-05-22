@@ -9,10 +9,10 @@ const
   sinon = require('sinon'),
   _ = require('lodash'),
   // Modules to test
-  EventHandleError = require('../include/errors').EventHandleError,
-  EventHandler = rewire('../include/event-handler'),
-  EventDispatcher = rewire('../include/event-dispatcher'),
-  Event = rewire('../include/event');
+  EventHandleError = require('../libs/errors').EventHandleError,
+  EventHandler = rewire('../libs/event-handler'),
+  EventDispatcher = rewire('../libs/event-dispatcher'),
+  Event = rewire('../libs/event');
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);

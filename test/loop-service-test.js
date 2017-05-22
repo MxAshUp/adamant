@@ -4,7 +4,7 @@ const sinon = require('sinon'),
   assert = chai.assert,
   rewire = require('rewire'),
   // Modules to test
-  LoopService = rewire('../include/loop-service');
+  LoopService = rewire('../libs/loop-service');
 
 
 console_log_spy = sinon.stub().callsFake(console.log);

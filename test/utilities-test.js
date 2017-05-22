@@ -2,7 +2,7 @@ var expect = require('chai').expect,
 	rewire = require("rewire"),
 	sinon = require('sinon'),
 	// Modules to test
-	utilities = rewire('../include/utilities');
+	utilities = rewire('../libs/utilities');
 
 console_log_spy = sinon.spy();
 utilities.__set__("console", {log: console_log_spy});

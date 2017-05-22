@@ -4,8 +4,8 @@ const rewire = require('rewire'),
   expect = chai.expect,
   assert = chai.assert,
   // components to test
-  Plugin = require('../include/plugin'),
-  PluginLoader = rewire('../include/plugin-loader');
+  Plugin = require('../libs/plugin'),
+  PluginLoader = rewire('../libs/plugin-loader');
 
 
 console_log_spy = sinon.spy();
