@@ -1,9 +1,9 @@
 module.exports = {
   // Instances
-  app: require('./libs/app'),
   errors: require('./libs/errors'),
   utilities: require('./libs/utilities'),
   // Classes
+  App: require('./libs/app'),
   Collector: require('./libs/collector'),
   EventDispatcher: require('./libs/event-dispatcher'),
   EventHandler: require('./libs/event-handler'),

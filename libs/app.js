@@ -184,4 +184,4 @@ class App {
   }
 }
 
-module.exports = new App();
+module.exports = App;
