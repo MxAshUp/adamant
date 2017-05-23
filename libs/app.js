@@ -66,7 +66,7 @@ class App {
    */
   load_plugins(plugin_dirs) {
     _.forEach(plugin_dirs, plugin_path => {
-      this.plugin_loader.load_plugin(plugin_path.path, this._config);
+      this.plugin_loader.load_plugin(plugin_path, this._config);
     });
   }
 
