@@ -26,7 +26,15 @@ function getModelByName(model_name) {
 }
 
 function loadModel(model) {
-	let ret_model = mongoose.model(model.name, mongoose.Schema(model.schema));
+
+	let schema = mongoose.Schema(model.schema);
+
+	// Allow schema_callback to provide plugin options
+	if(typeof model.schema_callback === 'function') {
+		model.schema_callback(schema);
+	}
+
+	let ret_model = mongoose.model(model.name, schema);
 	models.push(model);
 	return ret_model;
 }

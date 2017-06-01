@@ -18,7 +18,7 @@ mongoose_utils.__set__("mongoose", mongooseMock);
 console_log_spy = sinon.spy();
 mongoose_utils.__set__("console", {log: console_log_spy});
 
-const test_model =
+let test_model =
 {
   name: 'test.testmodel',
   primary_key: 'name',
@@ -41,7 +41,8 @@ const test_model =
     ofObjectId: [mongooseMock.Schema.Types.ObjectId],
     nested: {
       stuff: { type: String, lowercase: true, trim: true }
-    }
+    },
+    schema_callback: ''
   }
 };
 
@@ -58,8 +59,29 @@ describe('Mongoose utilities', () => {
   });
 
 	describe('loadModel', () => {
+
+    const mock_schema = Math.random();
+
+    beforeEach(() => {
+      sinon.stub(mongooseMock, 'Schema');
+      mongooseMock.Schema.returns(mock_schema);
+    });
+
+    afterEach(() => {
+      mongooseMock.Schema.restore();
+    });
+
     it('Should return mongoose model object', () => {
       model = mongoose_utils.loadModel(test_model);
+    });
+    it('Should run schema_callback with schema parameter', () => {
+
+      test_model.schema_callback = sinon.stub();
+      mongoose_utils.loadModel(test_model);
+      sinon.assert.calledWith(test_model.schema_callback, mock_schema);
+
+      test_model.schema_callback = '';
+
     });
   });
 
