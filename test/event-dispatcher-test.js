@@ -44,7 +44,6 @@ describe('Event System - ', () => {
 
       this.event_name = 'test.event_1';
       this.supports_revert = true;
-      this.version = '0.2';
       this.plugin_name = '_test';
     }
     dispatch() {
@@ -65,7 +64,6 @@ describe('Event System - ', () => {
 
       this.event_name = 'test.event_2';
       this.supports_revert = true;
-      this.version = '0.2';
       this.plugin_name = '_test';
     }
     dispatch() {
@@ -86,7 +84,6 @@ describe('Event System - ', () => {
 
       this.event_name = 'test.event_2';
       this.supports_revert = true;
-      this.version = '0.2';
       this.plugin_name = '_test';
     }
     dispatch() {

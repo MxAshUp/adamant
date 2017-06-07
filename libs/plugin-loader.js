@@ -1,5 +1,6 @@
 var Plugin = require('./plugin'),
-  _ = require('lodash');
+  _ = require('lodash'),
+  path = require('path');
 
 
 class PluginLoader {
@@ -28,7 +29,19 @@ class PluginLoader {
     let plugin_args = require(module_name);
 
     //Could not load it, or it's not a valid plugin_args
-    if(typeof plugin_args !== 'object') throw `Error loading plugin: ${module_name}`;
+    if(typeof plugin_args !== 'object') throw new Error(`Error loading plugin: ${module_name} - Invalid index.js contents.`);
+
+    // Get some module info
+    let plugin_info = PluginLoader.get_module_info(module_name);
+
+    // Plugin name is now the same as module
+    plugin_args.name = plugin_info.name;
+    plugin_args.version = plugin_info.version;
+
+    // These aren't required
+    plugin_args.description = plugin_info.description ? plugin_info.description : '';
+    plugin_args.author = plugin_info.author ? plugin_info.author : '';
+    plugin_args.license = plugin_info.license ? plugin_info.license : '';
 
     //Initialize plugin
     const plugin = new Plugin(plugin_args);
@@ -78,6 +91,27 @@ class PluginLoader {
     const plugin = _.find(this.plugins, find);
     if(!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
     return plugin;
+  }
+
+  /**
+   * Returns package.json contents for local module
+   *
+   * @static
+   * @param {String} module_name
+   * @returns {Object} - Contents of package file
+   *
+   * @memberOf PluginLoader
+   */
+  static get_module_info(module_name) {
+
+    let module_path = require.resolve(module_name);
+    module_path = path.dirname(module_path);
+
+    let pkg_path = path.join(module_path, 'package.json');
+
+    let pkg_contents = require(pkg_path);
+
+    return pkg_contents;
   }
 
 }

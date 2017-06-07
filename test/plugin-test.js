@@ -95,7 +95,6 @@ describe('Abstract Plugin', () => {
       constructor(args) {
         this.construct_spy = sinon.spy();
         this.construct_spy(args);
-        this.version = '1.0';
       }
     }
 
@@ -103,7 +102,6 @@ describe('Abstract Plugin', () => {
       constructor(args) {
         this.construct_spy = sinon.spy();
         this.construct_spy(args);
-        this.version = '1.0';
       }
     }
 
@@ -111,7 +109,6 @@ describe('Abstract Plugin', () => {
       constructor(args) {
         this.construct_spy = sinon.spy();
         this.construct_spy(args);
-        this.version = '1.0';
       }
     }
 
@@ -119,7 +116,6 @@ describe('Abstract Plugin', () => {
       constructor(args) {
         this.construct_spy = sinon.spy();
         this.construct_spy(args);
-        this.version = '1.0';
       }
     }
 
@@ -134,7 +130,8 @@ describe('Abstract Plugin', () => {
     let pl = new plugin({
       name: '_test_plugin',
       collectors: collectors,
-      event_handlers: event_handlers
+      event_handlers: event_handlers,
+      version: '0.1.0',
     });
 
     it('Should throw error creating unknown component type', () => {
@@ -154,7 +151,7 @@ describe('Abstract Plugin', () => {
 
     it('Should throw error if config version doesn\'t match component version', () => {
       const args = Math.random();
-      expect(() => pl.create_component('collectors', 'collector_b', args, 2.0)).to.throw(`Component version mismatch.`);
+      expect(() => pl.create_component('collectors', 'collector_b', args, '0.2.0')).to.throw(`Component version mismatch.`);
     });
 
     it('Should create event handler component', () => {

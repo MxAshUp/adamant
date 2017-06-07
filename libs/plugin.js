@@ -18,6 +18,10 @@ class Plugin {
       models: [],
       enabled: false,
       name: '',
+      version: '',
+      description: '',
+      author: '',
+      license: ''
     };
 
     if (!config.hasOwnProperty('name'))
@@ -52,7 +56,7 @@ class Plugin {
     component = new component_class(args);
 
     // Check version
-    if (version && component.version && component.version !== version) {
+    if (version && this.version && this.version !== version) {
       /**
        * @todo Replace with semver
        */
