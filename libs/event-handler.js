@@ -19,8 +19,6 @@ class EventHandler extends EventEmitter {
       args: {},
       event_name: '',
       supports_revert: false,
-      version: '',
-      plugin_name: '',
       instance_id: ''
     };
 

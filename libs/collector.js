@@ -22,9 +22,7 @@ class Collector extends EventEmitter {
 		//Default object properties
     const defaults = {
 			model_id_key: '',
-			model_name: '',
-			version: '',
-			plugin_name: ''
+			model_name: ''
     };
 
 		// Merge config and assign properties to this
