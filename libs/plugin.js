@@ -1,4 +1,6 @@
-var mongoose_utils = require('./mongoose-utilities'), _ = require('lodash');
+var mongoose_utils = require('./mongoose-utilities'),
+  _ = require('lodash'),
+  semver = require('semver');
 
 class Plugin {
   /**
@@ -41,7 +43,7 @@ class Plugin {
 	 *
 	 * @memberOf Plugin
 	 */
-  create_component(type, class_name, args, version = '') {
+  create_component(type, class_name, args, require_version = '') {
     let component, component_class;
 
     // Check if type exists in plugin
@@ -56,11 +58,8 @@ class Plugin {
     component = new component_class(args);
 
     // Check version
-    if (version && this.version && this.version !== version) {
-      /**
-       * @todo Replace with semver
-       */
-      throw new Error('Component version mismatch.');
+    if (require_version && !semver.satisfies(this.version, require_version)) {
+      throw new Error(`Version requirements not met. Plugin version: ${this.version} Semver requirement: ${require_version}.`);
     }
 
     return component;

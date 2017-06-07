@@ -149,9 +149,29 @@ describe('Abstract Plugin', () => {
       sinon.assert.calledWith(component.construct_spy, args);
     });
 
-    it('Should throw error if config version doesn\'t match component version', () => {
+    it('Should throw error if require_version doesn\'t satisfy plugin version', () => {
       const args = Math.random();
-      expect(() => pl.create_component('collectors', 'collector_b', args, '0.2.0')).to.throw(`Component version mismatch.`);
+      expect(() => pl.create_component('collectors', 'collector_b', args, '0.2.0')).to.throw(`Version requirements not met. Plugin version: ${pl.version} Semver requirement: 0.2.0.`);
+    });
+
+    it('Should throw error if require_version doesn\'t satisfy plugin version', () => {
+      const args = Math.random();
+      expect(() => pl.create_component('collectors', 'collector_b', args, '1.0.x')).to.throw(`Version requirements not met. Plugin version: ${pl.version} Semver requirement: 1.0.x.`);
+    });
+
+    it('Should throw error if require_version isn\t valid semver', () => {
+      const args = Math.random();
+      expect(() => pl.create_component('collectors', 'collector_b', args, '1')).to.throw(`Version requirements not met. Plugin version: ${pl.version} Semver requirement: 1.`);
+    });
+
+    it('Should not throw error if require_version satisfies plugin version', () => {
+      const args = Math.random();
+      pl.create_component('collectors', 'collector_b', args, '0.1.x');
+    });
+
+    it('Should not throw error if require_version satisfies not specified', () => {
+      const args = Math.random();
+      pl.create_component('collectors', 'collector_b', args, '>=0.0.1');
     });
 
     it('Should create event handler component', () => {
