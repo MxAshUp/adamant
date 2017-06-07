@@ -184,7 +184,8 @@ describe('Collector Class', () => {
       let new_data = [
         {id:'1', foo: 'bar'},
         {id:'2', foo: 'bar2'},
-        {id:'3', foo: 'updated'}
+        {id:'3', foo: 'updated'},
+        {foo: 'so bar'}
       ];
 
       let test_collector_instance = new TestCollectorClass();
@@ -205,9 +206,11 @@ describe('Collector Class', () => {
 
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
+      let error_handler = sinon.spy();
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('error', error_handler);
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
@@ -261,6 +264,12 @@ describe('Collector Class', () => {
         });
       });
 
+      it('Should throw error "Primary key not specified."', () => {
+        return ret_promise.then(() => {
+          expect(error_handler.lastCall.args[0]).to.be.instanceOf(Error);
+          expect(error_handler.lastCall.args[0].message).to.equal('Primary key not specified.');
+        });
+      });
     });
 
     describe('Removing documents', () => {

@@ -159,6 +159,11 @@ class Collector extends EventEmitter {
 	 */
 	_insert_data(data_row) {
 		// Update time!
+
+		if(!(this.model_id_key in data_row)) {
+			throw new Error('Primary key not specified.');
+		}
+
 		const find = {};
 		find[this.model_id_key] = data_row[this.model_id_key];
 		return this.model.findOne(find, '', {lean: true})
