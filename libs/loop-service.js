@@ -24,9 +24,9 @@ class LoopService extends EventEmitter {
     this.errors_only_retry_on = [];
     this.errors_dont_retry_on = [];
 
-    this.loopfn_timeout_id = 0;
-    this.loopfn_resolve_cb = null;
-    this.loopfn_reject_cb = null;
+    this.loop_function_timeout_id = 0;
+    this.loop_function_resolve_cb = null;
+    this.loop_function_reject_cb = null;
   }
 
   /**
@@ -110,14 +110,14 @@ class LoopService extends EventEmitter {
 
     return new Promise((resolve, reject) => {
 
-      this.loopfn_resolve_cb = resolve;
-      this.loopfn_reject_cb = reject;
+      this.loop_function_resolve_cb = resolve;
+      this.loop_function_reject_cb = reject;
 
       // Loop function
-      let loopfn = (() => {
+      let loop_function = (() => {
         if (!this._should_run) {
           // Should run is false if we've reach out run limit, or we're instructed to stop
-          this.loopfn_resolve_cb();
+          this.loop_function_resolve_cb();
         } else {
           // Keep running...
 
@@ -127,34 +127,41 @@ class LoopService extends EventEmitter {
             this.run_count++; // <--- note this only increments on success
             this.retry_attempts = 0; // reset retries
 
-            // Set timeout for next loopfn run
-            this.loopfn_timeout_id = setTimeout(
-              loopfn,
+            // Set timeout for next loop_function run
+            this.loop_function_timeout_id = setTimeout(
+              loop_function,
               this.run_min_time_between
             );
           }).catch((e) => {
             // Catch errors from run_callback
-            this.emit('error', e); // <--- note if there are no listeners for this event, start() will be rejected with e
 
-            // Maybe we'll retry loopfn
+            // Maybe we'll retry loop_function
             return this._maybe_retry(e)
               .then((attempt) => {
+                // We're good to retry!
+
+                // Emit error
+                this.emit('error', e);
+
                 // Retrying
                 this.emit('retry', attempt);
 
-                // Set timeout for next loopfn run
-                this.loopfn_timeout_id = setTimeout(
-                  loopfn,
+                // Set timeout for next loop_function run
+                this.loop_function_timeout_id = setTimeout(
+                  loop_function,
                   this.retry_time_between
                 );
-              }).catch(this.loopfn_resolve_cb);
+              }).catch((er) => {
+                this.emit('error', er);
+                this.loop_function_resolve_cb();
+              });
           })
-          .catch(this.loopfn_reject_cb); // <-- This only happens for unhandled exceptions
+          .catch(this.loop_function_reject_cb); // <-- This only happens for unhandled exceptions
         }
       }).bind(this);
 
       // Start the loop
-      setImmediate(loopfn);
+      setImmediate(loop_function);
     })
     .then(() => {
       this.run_status = false;
@@ -173,9 +180,9 @@ class LoopService extends EventEmitter {
 	 * @return {Promise} Resolves or rejects when LoopService complete the stop
 	 */
   stop() {
-    // Loopfn might be running, we need to resolve and clear potential timeout
-    clearTimeout(this.loopfn_timeout_id);
-    this.loopfn_resolve_cb();
+    // Loop_function might be running, we need to resolve and clear potential timeout
+    clearTimeout(this.loop_function_timeout_id);
+    this.loop_function_resolve_cb();
   }
 }
 
