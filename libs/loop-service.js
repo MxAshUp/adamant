@@ -43,14 +43,14 @@ class LoopService extends EventEmitter {
 	 *
 	 * @return {boolean} True if running, False if not
 	 */
-  get _should_run() {
-    //Should not run if stop_on_run count is reached
+  get _should_stop() {
+    // Should stop if stop_on_run count is reached
     if (this.stop_on_run && this.run_count >= this.stop_on_run) {
-      return false;
+      return true;
     }
 
-    //Proceed
-    return true;
+    // Don't stop
+    return false;
   }
 
   /**
@@ -115,8 +115,8 @@ class LoopService extends EventEmitter {
 
       // Loop function
       let loop_function = (() => {
-        if (!this._should_run) {
-          // Should run is false if we've reach out run limit, or we're instructed to stop
+        if (this._should_stop) {
+          // Should Stop is true if we've reach out run limit, or we're instructed to stop
           this.loop_function_resolve_cb();
         } else {
           // Keep running...

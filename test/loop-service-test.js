@@ -32,13 +32,13 @@ describe('Loop Service', () => {
     let loopy_mc_loopface = new LoopService(cb);
     loopy_mc_loopface.run_count = 5;
     loopy_mc_loopface.stop_on_run = 3;
-    expect(loopy_mc_loopface._should_run).to.equal(false);
+    expect(loopy_mc_loopface._should_stop).to.equal(true);
     loopy_mc_loopface.run_count = 3;
     loopy_mc_loopface.stop_on_run = 3;
-    expect(loopy_mc_loopface._should_run).to.equal(false);
+    expect(loopy_mc_loopface._should_stop).to.equal(true);
     loopy_mc_loopface.run_count = 2;
     loopy_mc_loopface.stop_on_run = 3;
-    expect(loopy_mc_loopface._should_run).to.equal(true);
+    expect(loopy_mc_loopface._should_stop).to.equal(false);
   });
 
   it('Should run function once', () => {
