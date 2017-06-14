@@ -21,8 +21,8 @@ class LoopService extends EventEmitter {
     this.retry_attempts = 0;
     this.retry_max_attempts = 0;
     this.retry_time_between = 0;
-    this.retry_errors = [];
-    this.retry_errors_to_skip = [];
+    this.errors_only_retry_on = [];
+    this.errors_dont_retry_on = [];
 
     this.loopfn_timeout_id = 0;
     this.loopfn_resolve_cb = null;
@@ -56,29 +56,33 @@ class LoopService extends EventEmitter {
   /**
 	 * Checks if LoopService object should retry
 	 *
-	 * @return {boolean} True if should retry, False if not
+	 * @return {Promise} resolves if can retry, rejects with error otherwise
 	 */
   _maybe_retry(err) {
-    // increment retry attempts
-    this.retry_attempts++;
 
-    // max retry attempts reached
-    if (this.retry_attempts > this.retry_max_attempts) {
-      this.retry_attempts = 0; // reset
-      return false;
+    // We're not allowed to retry
+    if(this.retry_max_attempts === 0) {
+      return Promise.reject(err);
     }
 
-    // if retry_errors has item(s) AND error not in errors to catch
-    if (this.retry_errors.length && err.constructor && err.constructor.name && this.retry_errors.indexOf(err.constructor.name) === -1) {
-      return false;
+    // max retry attempts reached
+    if (this.retry_attempts >= this.retry_max_attempts) {
+      this.retry_attempts = 0; // reset
+      return Promise.reject(new Error(`Max retry attempts (${this.retry_max_attempts}) reached.`));
+    }
+
+    // if errors_only_retry_on has item(s) AND error not in errors to catch, then bubble it up
+    if (this.errors_only_retry_on.length && err.constructor && err.constructor.name && this.errors_only_retry_on.indexOf(err.constructor.name) === -1) {
+      return Promise.reject(err);
     }
 
     // error is in errors to skip
-    if (err.constructor && err.constructor.name && this.retry_errors_to_skip.indexOf(err.constructor.name) > -1) {
-      return false;
+    if (this.errors_dont_retry_on.length && err.constructor && err.constructor.name && this.errors_dont_retry_on.indexOf(err.constructor.name) > -1) {
+      return Promise.reject(err);
     }
 
-    return true;
+    // increment retry attempts, return resolve
+    return Promise.resolve(this.retry_attempts++);
   }
 
   /**
@@ -133,21 +137,19 @@ class LoopService extends EventEmitter {
             this.emit('error', e); // <--- note if there are no listeners for this event, start() will be rejected with e
 
             // Maybe we'll retry loopfn
-            if (!this._maybe_retry(e)) {
-              // No retries, okay, resolve start()
-              this.loopfn_resolve_cb();
+            return this._maybe_retry(e)
+              .then((attempt) => {
+                // Retrying
+                this.emit('retry', attempt);
 
-            } else {
-              // Emit event for retrying
-              this.emit('retry', this.retry_attempts);
-
-              // Set timeout for next loopfn run
-              this.loopfn_timeout_id = setTimeout(
-                loopfn,
-                this.retry_time_between
-              );
-            }
-          }).catch(this.loopfn_reject_cb); // <-- This only happens for unhandled exceptions
+                // Set timeout for next loopfn run
+                this.loopfn_timeout_id = setTimeout(
+                  loopfn,
+                  this.retry_time_between
+                );
+              }).catch(this.loopfn_resolve_cb);
+          })
+          .catch(this.loopfn_reject_cb); // <-- This only happens for unhandled exceptions
         }
       }).bind(this);
 

@@ -188,11 +188,11 @@ describe('Loop Service', () => {
       });
   });
 
-  it('Should not retry because Error is not in retry_errors array', () => {
+  it('Should not retry because Error is not in errors_only_retry_on array', () => {
     let loopy_mc_loopface = new LoopService(sinon.stub().throws());
     loopy_mc_loopface.on('error', sinon.spy());
     loopy_mc_loopface.retry_max_attempts = 2;
-    loopy_mc_loopface.retry_errors = ['foo', 'bar'];
+    loopy_mc_loopface.errors_only_retry_on = ['foo', 'bar'];
 
     return loopy_mc_loopface
       .start()
@@ -201,12 +201,12 @@ describe('Loop Service', () => {
       });
   });
 
-  it('Should not retry because Error is in retry_errors_to_skip array', () => {
+  it('Should not retry because Error is in errors_dont_retry_on array', () => {
     class CustomError extends Error {};
     let loopy_mc_loopface = new LoopService(sinon.stub().throws(new CustomError()));
     loopy_mc_loopface.on('error', sinon.spy());
     loopy_mc_loopface.retry_max_attempts = 2;
-    loopy_mc_loopface.retry_errors_to_skip = ['foo', 'CustomError'];
+    loopy_mc_loopface.errors_dont_retry_on = ['foo', 'CustomError'];
 
     return loopy_mc_loopface
       .start()
