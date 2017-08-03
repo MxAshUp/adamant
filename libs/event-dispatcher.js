@@ -149,14 +149,25 @@ class EventDispatcher extends EventEmitter {
   * @memberOf EventDispatcher
   */
   enqueue_event(event_obj) {
-    // Create event id
-    event_obj.queue_id = this.event_count++;
+    const eventStart = Object.assign({}, event_obj, {
+      event_name: `${event_obj.event_name}.start`,
+      queue_id: this.event_count++,
+    });
 
-    // Add new event to queue
-    this.event_queue.push(event_obj);
+    const eventObj = Object.assign({}, event_obj, {
+      queue_id: this.event_count++,
+    });
+
+    const eventEnd = Object.assign({}, event_obj, {
+      event_name: `${event_obj.event_name}.end`,
+      queue_id: this.event_count++,
+    });
+
+    // Add new events to queue
+    this.event_queue.push(eventStart, eventObj, eventEnd);
 
     // Return event id
-    return event_obj.queue_id;
+    return eventObj.queue_id;
   }
 
   /**

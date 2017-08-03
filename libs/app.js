@@ -113,6 +113,9 @@ class App {
     if (config.service_retry_time_between)
       service.retry_time_between = config.service_retry_time_between;
 
+    if (config.run_min_time_between)
+      service.run_min_time_between = config.run_min_time_between;
+
     service.name = `${collector.model_name} collector`;
     this.bind_service_events(service);
     this.bind_model_events(collector);
