@@ -179,6 +179,23 @@ class App {
   }
 
   run() {
+    // graceful shutdown
+    process.on('SIGTERM', () => {
+      // halt web server
+      this.server.close();
+
+      // stop collector services
+      _.each(this.collect_services, service =>
+        service.stop().catch(console.log)
+      );
+
+      // stop event dispatcher service
+      this.event_dispatcher_service.stop().catch(console.log);
+
+      // terminate app process
+      process.exit(0);
+    });
+
     this.event_dispatcher_service.start().catch(console.log);
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
