@@ -170,10 +170,10 @@ class App {
         console.log(`${chalk.red('error details')}: ${chalk.grey(e.culprit)}`);
       }
     });
-    service.on('started', () =>
+    service.on('start', () =>
       console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('started')}.`)
     );
-    service.on('stopped', () =>
+    service.on('stop', () =>
       console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('stopped')}.`)
     );
   }

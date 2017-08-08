@@ -82,10 +82,10 @@ describe('Loop Service', () => {
     setImmediate(loopy_mc_loopface.stop.bind(loopy_mc_loopface));
   });
 
-  it('Should emit started event', () => {
+  it('Should emit start event', () => {
     let loopy_mc_loopface = new LoopService(async_fn_spy_wrapper());
     const event_spy = sinon.spy();
-    loopy_mc_loopface.on('started', event_spy);
+    loopy_mc_loopface.on('start', event_spy);
 
     return loopy_mc_loopface
       .start(true)
@@ -94,10 +94,10 @@ describe('Loop Service', () => {
       });
   });
 
-  it('Should emit stopped event', () => {
+  it('Should emit stop event', () => {
     let loopy_mc_loopface = new LoopService(async_fn_spy_wrapper());
     const event_spy = sinon.spy();
-    loopy_mc_loopface.on('stopped', event_spy);
+    loopy_mc_loopface.on('stop', event_spy);
 
     return loopy_mc_loopface
       .start(true)

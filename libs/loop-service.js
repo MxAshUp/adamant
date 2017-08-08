@@ -117,7 +117,7 @@ class LoopService extends EventEmitter {
     }
 
     // Trigger start event
-    this.emit('started');
+    this.emit('start');
 
     // Loop function
     const loop_function = () => {
@@ -177,8 +177,8 @@ class LoopService extends EventEmitter {
       this.run_status = false;
       this.stop_on_run = 0;
 
-      //Emit stopped event
-      this.emit('stopped'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
+      //Emit stop event
+      this.emit('stop'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
     });
 
     return promise;
