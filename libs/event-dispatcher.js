@@ -1,7 +1,8 @@
 const _ = require('lodash'),
   EventHandleError = require('../libs/errors').EventHandleError,
   EventEmitter = require('events'),
-  Event = require('./event');
+  Event = require('./event'),
+  utility = require('../libs/utility');
 
 /**
  * Handles enqueing of events, loading of event handlers, and dispatching events to handlers
@@ -94,7 +95,9 @@ class EventDispatcher extends EventEmitter {
 
     // Create array of return promises
     let ret_promises = _.map(_.filter(this.event_handlers, search), handler =>
-      Promise.resolve()
+      new Promise((resolve, reject) => {
+        utility.maybe_defer_handler(handler, resolve, reject);
+      })
         .then(
           handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
         )

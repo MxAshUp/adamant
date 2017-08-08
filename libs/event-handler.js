@@ -19,12 +19,13 @@ class EventHandler extends EventEmitter {
       args: {},
       event_name: '',
       supports_revert: false,
-      instance_id: ''
+      instance_id: '',
+      should_defer: () => Promise.resolve(false),
+      defer_delay: 30000, // 300000 = 5 mins
     };
 
     // Merge config and assign properties to this
     Object.assign(this, defaults);
-
   }
 
   /**
