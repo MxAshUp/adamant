@@ -124,7 +124,7 @@ class LoopService extends EventEmitter {
       this.loop_function_reject_cb = reject;
 
       // Loop function
-      let loop_function = (() => {
+      let loop_function = () => {
         if (this._should_stop) {
           // Should Stop is true if we've reach out run limit, or we're instructed to stop
           this.loop_function_resolve_cb();
@@ -171,7 +171,7 @@ class LoopService extends EventEmitter {
             })
             .catch(this.loop_function_reject_cb); // <-- This only happens for unhandled exceptions
         }
-      }).bind(this);
+      };
 
       // Start the loop
       setImmediate(loop_function);
