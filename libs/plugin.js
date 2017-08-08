@@ -23,7 +23,7 @@ class Plugin {
       version: '',
       description: '',
       author: '',
-      license: ''
+      license: '',
     };
 
     if (!config.hasOwnProperty('name'))
@@ -59,7 +59,10 @@ class Plugin {
 
     // Check version
     if (require_version && !semver.satisfies(this.version, require_version)) {
-      throw new Error(`Version requirements not met. Plugin version: ${this.version} Semver requirement: ${require_version}.`);
+      throw new Error(
+        `Version requirements not met. Plugin version: ${this
+          .version} Semver requirement: ${require_version}.`
+      );
     }
 
     return component;

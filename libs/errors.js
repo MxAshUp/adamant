@@ -32,6 +32,5 @@ class EventHandleError extends CustomError {
 module.exports = {
   CollectorInitializeError: CollectorInitializeError,
   CollectorDatabaseError: CollectorDatabaseError,
-  EventHandleError: EventHandleError
+  EventHandleError: EventHandleError,
 };
-

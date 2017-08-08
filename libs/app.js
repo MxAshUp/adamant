@@ -165,16 +165,24 @@ class App {
    */
   bind_service_events(service) {
     service.on('error', e => {
-      console.log(`${chalk.bgCyan(service.name)} service ${chalk.red('error')}: ${chalk.grey(e.stack)}`);
+      console.log(
+        `${chalk.bgCyan(service.name)} service ${chalk.red(
+          'error'
+        )}: ${chalk.grey(e.stack)}`
+      );
       if (e.culprit) {
         console.log(`${chalk.red('error details')}: ${chalk.grey(e.culprit)}`);
       }
     });
     service.on('start', () =>
-      console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('started')}.`)
+      console.log(
+        `${chalk.bgCyan(service.name)} service ${chalk.bold('started')}.`
+      )
     );
     service.on('stop', () =>
-      console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('stopped')}.`)
+      console.log(
+        `${chalk.bgCyan(service.name)} service ${chalk.bold('stopped')}.`
+      )
     );
   }
 
