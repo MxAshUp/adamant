@@ -36,6 +36,18 @@ describe('Utilities', () => {
     // should defer once?
     // should defer n times or until n time has passed?
 
+    it('Should defer N times and call condition_fn (N + 1) times', () => {
+      // get random int between 1-5
+      const n = Math.floor(Math.random() * 5 + 1);
+
+      condition_fn_stub.resolves(true);
+      condition_fn_stub.onCall(n).resolves(false);
+
+      return maybe_defer(condition_fn_stub, defer_delay).then(() => {
+        sinon.assert.callCount(condition_fn_stub, n + 1);
+      });
+    });
+
     it('Should return a promise that rejects when error is thrown in condition_fn', () => {
       condition_fn_stub.throws();
 
