@@ -4,7 +4,7 @@ const maybe_defer = (condition_fn, delay) => {
       condition_fn()
         .then(defer => {
           if (defer) {
-            setTimeout(check_conditition, delay);
+            setTimeout(check_condition, delay);
             return;
           }
           resolve();
