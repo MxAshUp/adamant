@@ -18,11 +18,11 @@ let console_log_spy = sinon.spy();
 describe('Utilities', () => {
   describe('Maybe Defer', () => {
     let condition_fn_stub = sinon.stub();
-    let defer_delay = 3000;
+    let defer_delay = 100;
 
     afterEach(() => {
       condition_fn_stub.reset();
-      defer_delay = 3000;
+      defer_delay = 100;
     });
 
     it('Should return a promise that resolves', () => {
