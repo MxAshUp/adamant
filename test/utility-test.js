@@ -17,25 +17,19 @@ let console_log_spy = sinon.spy();
 
 describe('Utilities', () => {
   describe('Maybe Defer', () => {
-    let defer = false;
-    let should_defer_stub = sinon.stub();
-    const mock_handler = {
-      defer_delay: 30000, // 30000 = 30 secs
-      should_defer: should_defer_stub,
-    };
+    let condition_fn_stub = sinon.stub();
+    let defer_delay = 3000;
 
     afterEach(() => {
-      should_defer_stub.reset();
+      condition_fn_stub.reset();
+      defer_delay = 3000;
     });
 
     it('Should return a promise that resolves', () => {
-      should_defer_stub.resolves(false);
+      condition_fn_stub.resolves(false);
 
-      return maybe_defer(
-        mock_handler.should_defer,
-        mock_handler.defer_delay
-      ).then(() => {
-        sinon.assert.callCount(should_defer_stub, 1);
+      return maybe_defer(condition_fn_stub, defer_delay).then(() => {
+        sinon.assert.callCount(condition_fn_stub, 1);
       });
     });
 
@@ -43,16 +37,9 @@ describe('Utilities', () => {
     // should defer n times or until n time has passed?
 
     it('Should return a promise that rejects when error is thrown in condition_fn', () => {
-      should_defer_stub.throws();
+      condition_fn_stub.throws();
 
-      const maybe_defer_promise = maybe_defer(
-        mock_handler.should_defer,
-        mock_handler.defer_delay
-      );
-
-      // return maybe_defer_promise.should.be.rejected;
-      return expect(maybe_defer_promise).to.be.rejected;
-      // return assert.isRejected(maybe_defer_promise);
+      return maybe_defer(condition_fn_stub, defer_delay).should.be.rejected;
     });
 
     it('Should never call console.log', () => {
