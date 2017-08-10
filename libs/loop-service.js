@@ -27,6 +27,7 @@ class LoopService extends EventEmitter {
     this.loop_function_timeout_id = 0;
     this.loop_function_resolve_cb = null;
     this.loop_function_reject_cb = null;
+    this.loop_function_promise = Promise.resolve();
   }
 
   /**
@@ -119,69 +120,78 @@ class LoopService extends EventEmitter {
     // Trigger start event
     this.emit('start');
 
-    // Loop function
-    const loop_function = () => {
-      if (this._should_stop) {
-        // Should Stop is true if we've reach out run limit, or we're instructed to stop
-        return this.loop_function_resolve_cb();
-      }
-
-      Promise.resolve()
-        .then(this.run_callback) // <--- this is where run_callback is executed
-        .then(() => {
-          // If all went well, let's do it again!
-          this.run_count++; // <--- note this only increments on success
-          this.retry_attempts = 0; // reset retries
-
-          // Set timeout for next loop_function run
-          this.loop_function_timeout_id = setTimeout(
-            loop_function,
-            this.run_min_time_between
-          );
-        })
-        .catch(e => {
-          // Catch errors from run_callback
-
-          // Maybe we'll retry loop_function
-          return this._maybe_retry(e)
-            .then(attempt => {
-              // We're good to retry!
-
-              // Emit error
-              this.emit('error', e);
-
-              // Retrying
-              this.emit('retry', attempt);
-
-              // Set timeout for next loop_function run
-              this.loop_function_timeout_id = setTimeout(
-                loop_function,
-                this.retry_time_between
-              );
-            })
-            .catch(er => {
-              this.emit('error', er);
-              this.loop_function_resolve_cb();
-            });
-        })
-        .catch(this.loop_function_reject_cb); // <-- This only happens for unhandled exceptions
-    };
-
-    const promise = new Promise((resolve, reject) => {
-      this.loop_function_resolve_cb = resolve;
-      this.loop_function_reject_cb = reject;
-
-      // Start the loop
-      setImmediate(loop_function);
-    }).then(() => {
+    return this._loop_promise()
+    .then(() => {
       this.run_status = false;
       this.stop_on_run = 0;
 
       //Emit stop event
       this.emit('stop'); //<-- Note, if error is thrown in handlers of this event, it will need to be caught by the code that executes start()
     });
+  }
 
-    return promise;
+  _loop_promise() {
+    this.loop_function_promise = new Promise((resolve, reject) => {
+
+      this.loop_function_resolve_cb = resolve;
+      this.loop_function_reject_cb = reject;
+
+      // Start the loop
+      setImmediate(this._loop_function.bind(this));
+    });
+    return this.loop_function_promise;
+  }
+
+  _set_loop_function_timer() {
+    this.loop_function_timeout_id = setTimeout(
+      this._loop_function.bind(this),
+      this.run_min_time_between
+    );
+  }
+
+  _loop_function() {
+
+    if (this._should_stop) {
+      // Should Stop is true if we've reach a run limit, or we're instructed to stop
+      return this.loop_function_resolve_cb();
+    }
+
+    // Otherwise Keep running...
+    Promise.resolve()
+    .then(this.run_callback) // <--- this is where run_callback is executed
+    .then(() => {
+
+      // If all went well, let's do it again!
+      this.run_count++; // <--- note this only increments on success
+      this.retry_attempts = 0; // reset retries
+
+      // Set timeout for next loop_function run
+      this._set_loop_function_timer();
+
+    }).catch((callback_error) => {
+      // Catch errors from run_callback
+      this.emit('error', callback_error);
+
+      // Maybe we'll retry loop_function
+      return this._maybe_retry(callback_error)
+        .then((attempt) => {
+          // We're good to retry!
+
+          // Retrying
+          this.emit('retry', attempt);
+
+          // Set timeout for next loop_function run
+          this._set_loop_function_timer();
+        }).catch((retry_error) => {
+          // We're not good to retry
+          if(retry_error !== callback_error) {
+            this.emit('error', retry_error);
+          }
+          return Promise.reject();
+        });
+    })
+    .catch(this.loop_function_resolve_cb); // <-- This only happens for unhandled exceptions
+
   }
 
   /**

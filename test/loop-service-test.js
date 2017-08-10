@@ -165,18 +165,14 @@ describe('Loop Service', () => {
     loopy_mc_loopface.retry_max_attempts = 3;
 
     return loopy_mc_loopface.start().then(() => {
-      sinon.assert.callCount(
-        error_event_spy,
-        loopy_mc_loopface.retry_max_attempts + 1
-      );
-      sinon.assert.callCount(
-        retry_event_spy,
-        loopy_mc_loopface.retry_max_attempts
-      );
-      sinon.assert.callCount(
-        loopy_mc_loopface.run_callback,
-        loopy_mc_loopface.retry_max_attempts + 1
-      );
+      sinon.assert.callCount(error_event_spy, loopy_mc_loopface.retry_max_attempts + 2);
+
+      let last_arg_passed = error_event_spy.getCall(loopy_mc_loopface.retry_max_attempts + 1).args[0];
+      expect(last_arg_passed).to.be.instanceof(Error);
+      expect(last_arg_passed.message).to.equal(`Max retry attempts (${ loopy_mc_loopface.retry_max_attempts}) reached.`);
+
+      sinon.assert.callCount(retry_event_spy, loopy_mc_loopface.retry_max_attempts);
+      sinon.assert.callCount(loopy_mc_loopface.run_callback, loopy_mc_loopface.retry_max_attempts + 1);
     });
   });
 
