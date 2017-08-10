@@ -48,6 +48,25 @@ describe('Utilities', () => {
       });
     });
 
+    it('Should defer for N milliseconds', () => {
+      // get random int (1-500)
+      const defer_delay = Math.floor(Math.random() * 500 + 1);
+      const start = new Date();
+
+      condition_fn_stub.resolves(true);
+      setTimeout(() => {
+        condition_fn_stub.resolves(false);
+      }, defer_delay);
+
+      return maybe_defer(condition_fn_stub, defer_delay).then(() => {
+        const end = new Date();
+        const duration = end.getTime() - start.getTime();
+
+        duration.should.be.greaterThan(defer_delay);
+        sinon.assert.callCount(condition_fn_stub, 2);
+      });
+    });
+
     it('Should return a promise that rejects when error is thrown in condition_fn', () => {
       condition_fn_stub.throws();
 
