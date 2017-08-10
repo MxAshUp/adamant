@@ -18,11 +18,11 @@ let console_log_spy = sinon.spy();
 describe('Utilities', () => {
   describe('Maybe Defer', () => {
     let condition_fn_stub = sinon.stub();
-    let defer_delay = 100;
+    let defer_delay = 10;
 
     afterEach(() => {
       condition_fn_stub.reset();
-      defer_delay = 100;
+      defer_delay = 10;
     });
 
     it('Should return a promise that resolves', () => {
@@ -46,8 +46,8 @@ describe('Utilities', () => {
     });
 
     it('Should defer for N milliseconds', () => {
-      // get random int (1-100)
-      const defer_delay = Math.floor(Math.random() * 100 + 1);
+      // get random int (1-10)
+      const defer_delay = Math.floor(Math.random() * 10 + 1);
       const start = new Date();
 
       condition_fn_stub.resolves(true);
