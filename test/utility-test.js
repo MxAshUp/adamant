@@ -33,9 +33,6 @@ describe('Utilities', () => {
       });
     });
 
-    // should defer once?
-    // should defer n times or until n time has passed?
-
     it('Should defer N times and call condition_fn (N + 1) times', () => {
       // get random int (1-5)
       const n = Math.floor(Math.random() * 5 + 1);
