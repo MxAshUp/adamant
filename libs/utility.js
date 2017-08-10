@@ -1,7 +1,8 @@
 const maybe_defer = (condition_fn, delay) => {
   return new Promise((resolve, reject) => {
     const check_condition = () => {
-      condition_fn()
+      Promise.resolve()
+        .then(condition_fn)
         .then(defer => {
           if (defer) {
             setTimeout(check_condition, delay);
