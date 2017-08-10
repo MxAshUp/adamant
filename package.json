@@ -13,8 +13,10 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "nyc --reporter=html --all mocha **/*-test.js",
-    "test-docker": "docker run --rm -t -v $PWD:/usr/src/app node /bin/bash -c \"npm set registry https://i.proqsolutions.com/npm && cd /usr/src/app && npm install && npm install -g mocha nyc && nyc --reporter=html --all mocha test/*-test.js\""
+    "test": "nyc --reporter=html --all mocha test/*-test.js",
+    "test-watch": "docker run --rm -t -v $PWD:/usr/src/app proq/docker-dev-node /bin/bash -c \"cd /usr/src/app && mocha -w test/*-test.js\"",
+    "test-coverage": "docker run --rm -t -v $PWD:/usr/src/app proq/docker-dev-node /bin/bash -c \"cd /usr/src/app && nyc --reporter=html --all mocha test/*-test.js\"",
+    "cli": "docker run --rm -it -v $PWD:/usr/src/app proq/docker-dev-node /bin/bash -c \"cd /usr/src/app && /bin/bash\""
   },
   "nyc": {
     "include": [
