@@ -46,8 +46,8 @@ describe('Utilities', () => {
     });
 
     it('Should defer for N milliseconds', () => {
-      // get random int (1-500)
-      const defer_delay = Math.floor(Math.random() * 500 + 1);
+      // get random int (1-100)
+      const defer_delay = Math.floor(Math.random() * 100 + 1);
       const start = new Date();
 
       condition_fn_stub.resolves(true);
