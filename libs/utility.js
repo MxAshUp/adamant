@@ -1,18 +1,25 @@
-const maybe_defer_handler = (handler, resolve, reject) => {
-  handler
-    .should_defer()
-    .then(defer => {
-      if (defer) {
-        setTimeout(maybe_defer_handler, handler.defer_delay);
-        return;
-      }
-      resolve();
-    })
-    .catch(e => {
-      reject(new Error(e));
-    });
+const maybe_defer = (condition_fn, delay) => {
+  return new Promise((resolve, reject) => {
+    const check_condition = () => {
+      Promise.resolve()
+        .then(condition_fn)
+        .then(defer => {
+          if (defer) {
+            setTimeout(check_condition, delay);
+            return;
+          }
+          resolve();
+        })
+        .catch(e => {
+          reject(new Error(e));
+        });
+    };
+    check_condition();
+  }).catch(e => {
+    throw new Error(e);
+  });
 };
 
 module.exports = {
-  maybe_defer_handler,
+  maybe_defer,
 };

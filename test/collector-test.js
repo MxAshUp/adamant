@@ -1,5 +1,4 @@
-const
-  // Test tools
+const // Test tools
   chai = require('chai'),
   expect = chai.expect,
   assert = chai.assert,
@@ -11,32 +10,28 @@ const
   // Modules to test
   Collector = rewire('../libs/collector');
 
-
-
 let get_model_by_name_stub = sinon.stub();
 
 // Rewire database stuff
-Collector.__set__("mongoose_utils", {
+Collector.__set__('mongoose_utils', {
   mongoose: mongooseMock,
   getModelByName: get_model_by_name_stub,
-  getModel: mongooseMock.model
+  getModel: mongooseMock.model,
 });
 
-
 console_log_spy = sinon.spy();
-Collector.__set__("console", {log: console_log_spy});
+Collector.__set__('console', { log: console_log_spy });
 
-var schema = mongooseMock.Schema({id: String});
+var schema = mongooseMock.Schema({ id: String });
 var testModel = mongooseMock.model('test.test_model', schema);
 
 get_model_by_name_stub.withArgs('test.test_model').returns({
   name: 'test.test_model',
   schema: schema,
-  primary_key: 'id'
+  primary_key: 'id',
 });
 
 describe('Collector Class', () => {
-
   testModel.findOneAndUpdate.returns(Promise.resolve());
   testModel.findOneAndRemove.returns(Promise.resolve());
 
@@ -72,11 +67,7 @@ describe('Collector Class', () => {
       expect(instance.garbage()).to.be.undefined;
     });
     it('Collect should be a generator that yields each item in prepared_data', () => {
-      const arr = [
-        Math.random(),
-        Math.random(),
-        Math.random()
-      ];
+      const arr = [Math.random(), Math.random(), Math.random()];
       let count = 0;
       const iter = instance.collect(arr);
       expect(iter.next().value).to.equal(arr[0]);
@@ -86,7 +77,6 @@ describe('Collector Class', () => {
   });
 
   describe('run', () => {
-
     after(() => {
       testModel.findOneAndUpdate.reset();
       testModel.findOneAndRemove.reset();
@@ -94,7 +84,6 @@ describe('Collector Class', () => {
     });
 
     describe('with nothing to do', () => {
-
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.collect = sinon.stub().returns([]);
@@ -142,7 +131,9 @@ describe('Collector Class', () => {
       test_collector_instance.collect = sinon.stub().returns([]);
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.garbage = sinon.stub().resolves();
-      let ret_promise = test_collector_instance.run().then(test_collector_instance.run.bind(test_collector_instance));
+      let ret_promise = test_collector_instance
+        .run()
+        .then(test_collector_instance.run.bind(test_collector_instance));
 
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
@@ -173,19 +164,15 @@ describe('Collector Class', () => {
     });
 
     describe('Inserting/Updating documents', () => {
-
       // Data currently in the db
-      let old_db_data = [
-        {id:'1', foo: 'bar'},
-        {id:'3', foo: 'bar3'}
-      ];
+      let old_db_data = [{ id: '1', foo: 'bar' }, { id: '3', foo: 'bar3' }];
 
       // Data to put in database
       let new_data = [
-        {id:'1', foo: 'bar'},
-        {id:'2', foo: 'bar2'},
-        {id:'3', foo: 'updated'},
-        {foo: 'so bar'}
+        { id: '1', foo: 'bar' },
+        { id: '2', foo: 'bar2' },
+        { id: '3', foo: 'updated' },
+        { foo: 'so bar' },
       ];
 
       let test_collector_instance = new TestCollectorClass();
@@ -195,12 +182,24 @@ describe('Collector Class', () => {
       test_collector_instance.garbage = sinon.stub().resolves();
 
       testModel.findOne.returns(Promise.resolve(null));
-      testModel.findOne.withArgs({id: new_data[0].id}).returns(Promise.resolve(old_db_data[0]));
-      testModel.findOne.withArgs({id: new_data[1].id}).returns(Promise.resolve(null));
-      testModel.findOne.withArgs({id: new_data[2].id}).returns(Promise.resolve(old_db_data[1]));
-      testModel.findOneAndUpdate.withArgs({id: new_data[0].id}).returns(Promise.resolve(new_data[0]));
-      testModel.findOneAndUpdate.withArgs({id: new_data[1].id}).returns(Promise.resolve(new_data[1]));
-      testModel.findOneAndUpdate.withArgs({id: new_data[2].id}).returns(Promise.resolve(new_data[2]));
+      testModel.findOne
+        .withArgs({ id: new_data[0].id })
+        .returns(Promise.resolve(old_db_data[0]));
+      testModel.findOne
+        .withArgs({ id: new_data[1].id })
+        .returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ id: new_data[2].id })
+        .returns(Promise.resolve(old_db_data[1]));
+      testModel.findOneAndUpdate
+        .withArgs({ id: new_data[0].id })
+        .returns(Promise.resolve(new_data[0]));
+      testModel.findOneAndUpdate
+        .withArgs({ id: new_data[1].id })
+        .returns(Promise.resolve(new_data[1]));
+      testModel.findOneAndUpdate
+        .withArgs({ id: new_data[2].id })
+        .returns(Promise.resolve(new_data[2]));
 
       let error_spy = sinon.spy();
 
@@ -228,71 +227,83 @@ describe('Collector Class', () => {
 
       it('Should not do anything with item 1, no data has changed', () => {
         return ret_promise.then(() => {
-          sinon.assert.neverCalledWith(update_handler,new_data[0]);
-          sinon.assert.neverCalledWith(create_handler,new_data[0]);
+          sinon.assert.neverCalledWith(update_handler, new_data[0]);
+          sinon.assert.neverCalledWith(create_handler, new_data[0]);
         });
       });
 
       it('Should insert data with item 2, data is new', () => {
         return ret_promise.then(() => {
-          sinon.assert.calledWith(create_handler,new_data[1]);
-          sinon.assert.neverCalledWith(update_handler,new_data[1]);
+          sinon.assert.calledWith(create_handler, new_data[1]);
+          sinon.assert.neverCalledWith(update_handler, new_data[1]);
         });
       });
 
       it('Should update data with item 3', () => {
         return ret_promise.then(() => {
-          sinon.assert.calledWith(update_handler,new_data[2],old_db_data[1]);
+          sinon.assert.calledWith(update_handler, new_data[2], old_db_data[1]);
         });
       });
 
       it('Should call findOneAndUpdate with upsert:true', () => {
         return ret_promise.then(() => {
-          expect(testModel.findOneAndUpdate.lastCall.args[2].upsert).to.equal(true);
+          expect(testModel.findOneAndUpdate.lastCall.args[2].upsert).to.equal(
+            true
+          );
         });
       });
 
       it('Should call findOneAndUpdate with setDefaultsOnInsert:true', () => {
         return ret_promise.then(() => {
-          expect(testModel.findOneAndUpdate.lastCall.args[2].setDefaultsOnInsert).to.equal(true);
+          expect(
+            testModel.findOneAndUpdate.lastCall.args[2].setDefaultsOnInsert
+          ).to.equal(true);
         });
       });
 
       it('Should call findOneAndUpdate with new:true', () => {
         return ret_promise.then(() => {
-          expect(testModel.findOneAndUpdate.lastCall.args[2].new).to.equal(true);
+          expect(testModel.findOneAndUpdate.lastCall.args[2].new).to.equal(
+            true
+          );
         });
       });
 
       it('Should throw error "Primary key not specified."', () => {
         return ret_promise.then(() => {
           expect(error_handler.lastCall.args[0]).to.be.instanceOf(Error);
-          expect(error_handler.lastCall.args[0].message).to.equal('Primary key not specified.');
+          expect(error_handler.lastCall.args[0].message).to.equal(
+            'Primary key not specified.'
+          );
         });
       });
     });
 
     describe('Removing documents', () => {
-
       // Data to put in database
-      let remove_data = [
-        {id:'9', foo: 'bar'},
-        {id:'11', foo: 'rab'}
-      ];
+      let remove_data = [{ id: '9', foo: 'bar' }, { id: '11', foo: 'rab' }];
 
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.collect = sinon.stub().returns([]);
-      test_collector_instance.garbage = sinon.stub().resolves([
-        {id: remove_data[0].id},
-        {id: remove_data[1].id},
-        {id: 'notfound'}
-      ]);
+      test_collector_instance.garbage = sinon
+        .stub()
+        .resolves([
+          { id: remove_data[0].id },
+          { id: remove_data[1].id },
+          { id: 'notfound' },
+        ]);
 
-      testModel.findOneAndRemove.withArgs({id: remove_data[0].id}).returns(Promise.resolve(remove_data[0]));
-      testModel.findOneAndRemove.withArgs({id: remove_data[1].id}).returns(Promise.resolve(remove_data[1]));
-      testModel.findOneAndRemove.withArgs({id: 'notfound'}).returns(Promise.resolve(null));
+      testModel.findOneAndRemove
+        .withArgs({ id: remove_data[0].id })
+        .returns(Promise.resolve(remove_data[0]));
+      testModel.findOneAndRemove
+        .withArgs({ id: remove_data[1].id })
+        .returns(Promise.resolve(remove_data[1]));
+      testModel.findOneAndRemove
+        .withArgs({ id: 'notfound' })
+        .returns(Promise.resolve(null));
 
       let error_spy = sinon.spy();
 
@@ -321,7 +332,6 @@ describe('Collector Class', () => {
     });
 
     describe('With error thrown in initialize()', () => {
-
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.stub().throws();
       test_collector_instance.prepare = sinon.spy();
@@ -346,7 +356,10 @@ describe('Collector Class', () => {
       });
       it('Should reject with CollectorInitializeError', () => {
         return ret_promise.then(() => {
-          assert.instanceOf(error_spy.lastCall.args[0],errors.CollectorInitializeError);
+          assert.instanceOf(
+            error_spy.lastCall.args[0],
+            errors.CollectorInitializeError
+          );
         });
       });
       it('Should set initialize_flag to false', () => {
@@ -363,9 +376,10 @@ describe('Collector Class', () => {
       });
     });
     describe('with error thrown in prepare()', () => {
-
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.initialize = sinon.stub().returns(Promise.resolve());
+      test_collector_instance.initialize = sinon
+        .stub()
+        .returns(Promise.resolve());
       test_collector_instance.prepare = sinon.stub().throws();
       test_collector_instance.collect = sinon.spy();
       test_collector_instance.garbage = sinon.spy();
@@ -394,7 +408,7 @@ describe('Collector Class', () => {
       });
       it('Should reject with error', () => {
         return ret_promise.then(() => {
-          assert.instanceOf(error_spy.lastCall.args[0],Error);
+          assert.instanceOf(error_spy.lastCall.args[0], Error);
         });
       });
       it('Should set initialize_flag to false', () => {
@@ -404,36 +418,40 @@ describe('Collector Class', () => {
       });
     });
     describe('with reject thrown in collect', () => {
-
       // Data currently in the db
-      let old_db_data = [
-        {id:'4', foo: 'barb'},
-        {id:'6', foo: 'bar3b'}
-      ];
+      let old_db_data = [{ id: '4', foo: 'barb' }, { id: '6', foo: 'bar3b' }];
 
       // Data to put in database
       let new_data = [
-        {id:'4', foo: 'barb'},
-        {id:'5', foo: 'bar2b'},
-        {id:'6', foo: 'updatedb'}
+        { id: '4', foo: 'barb' },
+        { id: '5', foo: 'bar2b' },
+        { id: '6', foo: 'updatedb' },
       ];
 
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
-      test_collector_instance.collect = sinon.stub().returns([
-        new_data[0],
-        Promise.reject(new Error()),
-        new_data[2]
-      ]);
+      test_collector_instance.collect = sinon
+        .stub()
+        .returns([new_data[0], Promise.reject(new Error()), new_data[2]]);
       test_collector_instance.garbage = sinon.stub().resolves();
 
       testModel.findOne.returns(Promise.resolve(null));
-      testModel.findOne.withArgs({id: new_data[0].id}).returns(Promise.resolve(old_db_data[0]));
-      testModel.findOne.withArgs({id: new_data[1].id}).returns(Promise.resolve(null));
-      testModel.findOne.withArgs({id: new_data[2].id}).returns(Promise.resolve(old_db_data[1]));
-      testModel.findOneAndUpdate.withArgs({id: new_data[0].id}).returns(Promise.resolve(new_data[0]));
-      testModel.findOneAndUpdate.withArgs({id: new_data[2].id}).returns(Promise.resolve(new_data[2]));
+      testModel.findOne
+        .withArgs({ id: new_data[0].id })
+        .returns(Promise.resolve(old_db_data[0]));
+      testModel.findOne
+        .withArgs({ id: new_data[1].id })
+        .returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ id: new_data[2].id })
+        .returns(Promise.resolve(old_db_data[1]));
+      testModel.findOneAndUpdate
+        .withArgs({ id: new_data[0].id })
+        .returns(Promise.resolve(new_data[0]));
+      testModel.findOneAndUpdate
+        .withArgs({ id: new_data[2].id })
+        .returns(Promise.resolve(new_data[2]));
 
       let error_spy = sinon.spy();
 
@@ -474,8 +492,6 @@ describe('Collector Class', () => {
       });
     });
     describe('with error thrown in collect', () => {
-
-
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
@@ -528,32 +544,33 @@ describe('Collector Class', () => {
       });
     });
     describe('With db error', () => {
-
       // Data currently in the db
-      let old_db_data = [
-        {id:'8', foo: 'bar3b'}
-      ];
+      let old_db_data = [{ id: '8', foo: 'bar3b' }];
 
       // Data to put in database
-      let new_data = [
-        {id:'7', foo: 'bar2b'},
-        {id:'8', foo: 'updatedb'}
-      ];
+      let new_data = [{ id: '7', foo: 'bar2b' }, { id: '8', foo: 'updatedb' }];
 
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
-      test_collector_instance.collect = sinon.stub().returns([
-        new_data[0],
-        new_data[1]
-      ]);
+      test_collector_instance.collect = sinon
+        .stub()
+        .returns([new_data[0], new_data[1]]);
       test_collector_instance.garbage = sinon.stub().resolves();
 
       testModel.findOne.returns(Promise.resolve(null));
-      testModel.findOne.withArgs({id: new_data[0].id}).returns(Promise.resolve(null));
-      testModel.findOne.withArgs({id: new_data[1].id}).returns(Promise.resolve(old_db_data[0]));
-      testModel.findOneAndUpdate.withArgs({id: new_data[0].id}).returns(Promise.reject());
-      testModel.findOneAndUpdate.withArgs({id: new_data[1].id}).returns(Promise.resolve(new_data[1]));
+      testModel.findOne
+        .withArgs({ id: new_data[0].id })
+        .returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ id: new_data[1].id })
+        .returns(Promise.resolve(old_db_data[0]));
+      testModel.findOneAndUpdate
+        .withArgs({ id: new_data[0].id })
+        .returns(Promise.reject());
+      testModel.findOneAndUpdate
+        .withArgs({ id: new_data[1].id })
+        .returns(Promise.resolve(new_data[1]));
 
       let error_spy = sinon.spy();
 
@@ -590,7 +607,10 @@ describe('Collector Class', () => {
       it('Should emit error event with CollectorDatabaseError', () => {
         return ret_promise.then(() => {
           sinon.assert.calledOnce(error_handle);
-          assert.instanceOf(error_handle.lastCall.args[0],errors.CollectorDatabaseError);
+          assert.instanceOf(
+            error_handle.lastCall.args[0],
+            errors.CollectorDatabaseError
+          );
         });
       });
       it('Should call garbage', () => {
@@ -603,13 +623,10 @@ describe('Collector Class', () => {
           expect(test_collector_instance.initialize_flag).to.be.equal(true);
         });
       });
-
     });
   });
 
   it('Should never call console.log', () => {
     sinon.assert.neverCalledWith(console_log_spy);
   });
-
 });
-

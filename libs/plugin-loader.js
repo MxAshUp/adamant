@@ -2,9 +2,7 @@ var Plugin = require('./plugin'),
   _ = require('lodash'),
   path = require('path');
 
-
 class PluginLoader {
-
   /**
    * Creates a new PluginLoader object.
    * A PluginLoader loads plugin files into memory, and provide factory for creating instances of plugin components.
@@ -15,7 +13,6 @@ class PluginLoader {
   constructor() {
     this.plugins = [];
   }
-
 
   /**
    * Loads a plugin into memeory.
@@ -29,7 +26,10 @@ class PluginLoader {
     let plugin_args = require(module_name);
 
     //Could not load it, or it's not a valid plugin_args
-    if(typeof plugin_args !== 'object') throw new Error(`Error loading plugin: ${module_name} - Invalid index.js contents.`);
+    if (typeof plugin_args !== 'object')
+      throw new Error(
+        `Error loading plugin: ${module_name} - Invalid index.js contents.`
+      );
 
     // Get some module info
     let plugin_info = PluginLoader.get_module_info(module_name);
@@ -39,7 +39,9 @@ class PluginLoader {
     plugin_args.version = plugin_info.version;
 
     // These aren't required
-    plugin_args.description = plugin_info.description ? plugin_info.description : '';
+    plugin_args.description = plugin_info.description
+      ? plugin_info.description
+      : '';
     plugin_args.author = plugin_info.author ? plugin_info.author : '';
     plugin_args.license = plugin_info.license ? plugin_info.license : '';
 
@@ -65,8 +67,14 @@ class PluginLoader {
    * @returns {Collector}
    */
   create_collector(collector_config) {
-    return this.get_plugin_by_name(collector_config.plugin_name)
-      .create_component('collectors', collector_config.collector_name, collector_config.config, collector_config.version);
+    return this.get_plugin_by_name(
+      collector_config.plugin_name
+    ).create_component(
+      'collectors',
+      collector_config.collector_name,
+      collector_config.config,
+      collector_config.version
+    );
   }
 
   /**
@@ -78,18 +86,22 @@ class PluginLoader {
    * @memberOf PluginLoader
    */
   create_event_handler(handler_config) {
-    return this.get_plugin_by_name(handler_config.plugin_name)
-      .create_component('event_handlers', handler_config.handler_name, handler_config.config, handler_config.version);
+    return this.get_plugin_by_name(handler_config.plugin_name).create_component(
+      'event_handlers',
+      handler_config.handler_name,
+      handler_config.config,
+      handler_config.version
+    );
   }
 
   get_plugin_by_name(plugin_name, exclude_disabled = true) {
     // Find plugin
-    const find = {name: plugin_name};
-    if(exclude_disabled) {
+    const find = { name: plugin_name };
+    if (exclude_disabled) {
       find.enabled = true;
     }
     const plugin = _.find(this.plugins, find);
-    if(!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
+    if (!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
     return plugin;
   }
 
@@ -103,7 +115,6 @@ class PluginLoader {
    * @memberOf PluginLoader
    */
   static get_module_info(module_name) {
-
     let module_path = require.resolve(module_name);
     module_path = path.dirname(module_path);
 
@@ -113,7 +124,6 @@ class PluginLoader {
 
     return pkg_contents;
   }
-
 }
 
 module.exports = PluginLoader;

@@ -11,7 +11,6 @@ const _ = require('lodash'),
  * @extends {EventEmitter}
  */
 class EventDispatcher extends EventEmitter {
-
   constructor() {
     super();
     this.event_handlers = [];
@@ -51,7 +50,7 @@ class EventDispatcher extends EventEmitter {
    */
   remove_event_handler(handler_id) {
     // Remove by id
-    const removed_handlers = _.remove(this.event_handlers, (handler) => {
+    const removed_handlers = _.remove(this.event_handlers, handler => {
       return handler.instance_id == handler_id;
     });
 
@@ -88,16 +87,15 @@ class EventDispatcher extends EventEmitter {
     // @todo: Emit event to confirm event was handled (ie, for updating db)
 
     // Create handler search args
-    let search = {event_name: event_obj.event_name};
-    if(!_.isUndefined(handler_id)) {
+    let search = { event_name: event_obj.event_name };
+    if (!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
 
     // Create array of return promises
     let ret_promises = _.map(_.filter(this.event_handlers, search), handler =>
-      new Promise((resolve, reject) => {
-        utility.maybe_defer_handler(handler, resolve, reject);
-      })
+      Promise.resolve()
+        .then(utility.maybe_defer(handler.should_defer, handler.defer_delay))
         .then(
           handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
         )
@@ -123,9 +121,12 @@ class EventDispatcher extends EventEmitter {
         })
     );
 
-    if(!ret_promises.length && this.error_on_unhandled_events) {
+    if (!ret_promises.length && this.error_on_unhandled_events) {
       // No handlers for dispatched event
-      this.emit('error', new Error(`No handlers found for event ${event_obj.event_name}.`));
+      this.emit(
+        'error',
+        new Error(`No handlers found for event ${event_obj.event_name}.`)
+      );
     }
 
     // Create promise return
@@ -145,20 +146,22 @@ class EventDispatcher extends EventEmitter {
     // Run revert with args
 
     // Create handler search args
-    let search = {event_name: event_obj.event_name};
-    if(!_.isUndefined(handler_id)) {
+    let search = { event_name: event_obj.event_name };
+    if (!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
 
     // Create promise return
     return Promise.all(
-      _.map(
-        _.filter(this.event_handlers, search),
-        handler => Promise.resolve().then(handler.revert.bind(handler, event_obj.data)).then(() => {
-          this.emit('reverted', event_obj, handler);
-        }).catch((e) => {
-          this.emit('error', new EventHandleError(e, event_obj, handler));
-        })
+      _.map(_.filter(this.event_handlers, search), handler =>
+        Promise.resolve()
+          .then(handler.revert.bind(handler, event_obj.data))
+          .then(() => {
+            this.emit('reverted', event_obj, handler);
+          })
+          .catch(e => {
+            this.emit('error', new EventHandleError(e, event_obj, handler));
+          })
       )
     );
   }
@@ -199,7 +202,7 @@ class EventDispatcher extends EventEmitter {
   run() {
     let promises = [];
 
-    while(this.event_queue_count > 0) {
+    while (this.event_queue_count > 0) {
       promises.push(this.dispatch_event(this.shift_event()));
     }
 
@@ -218,7 +221,6 @@ class EventDispatcher extends EventEmitter {
   get event_queue_count() {
     return this.event_queue.length;
   }
-
 }
 
 module.exports = EventDispatcher;

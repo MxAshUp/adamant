@@ -1,7 +1,4 @@
-
-
 class Event {
-
   /**
    * Creates an instance of Event.
    * @param {String} event_name
@@ -16,7 +13,6 @@ class Event {
     this.queue_id;
     this.revert_data;
   }
-
 }
 
 module.exports = Event;

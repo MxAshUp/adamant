@@ -10,5 +10,5 @@ module.exports = {
   LoopService: require('./libs/loop-service'),
   MongooseUtilities: require('./libs/mongoose-utilities'),
   PluginLoader: require('./libs/plugin-loader'),
-  Plugin: require('./libs/plugin')
+  Plugin: require('./libs/plugin'),
 };
