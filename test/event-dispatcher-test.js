@@ -390,7 +390,7 @@ describe('Event System - ', () => {
       expect(dispatcher.event_queue_count).to.not.equal(0);
       test_handler_1.dispatch = test_1_dispatch_cb;
       test_handler_2.dispatch = test_2_dispatch_cb;
-      dispatcher.run().then(() => {
+      return dispatcher.run().then(() => {
         expect(dispatcher.event_queue_count).to.equal(0);
         sinon.assert.callCount(test_1_dispatch_cb, 1);
         sinon.assert.calledWith(test_1_dispatch_cb, test_2_event.data);
@@ -400,6 +400,9 @@ describe('Event System - ', () => {
     });
 
     it('Should enqueue an event while being dispatched', () => {
+
+      dispatcher.event_queue = [];
+
       const test_event_data = Math.random();
       test_event_a = new Event('test.event_2', test_event_data);
 
