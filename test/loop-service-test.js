@@ -101,6 +101,16 @@ describe('Loop Service', () => {
     });
   });
 
+  it('Should emit complete event', () => {
+    let loopy_mc_loopface = new LoopService(async_fn_spy_wrapper());
+    const event_spy = sinon.spy();
+    loopy_mc_loopface.on('complete', event_spy);
+
+    return loopy_mc_loopface.start(true).then(() => {
+      sinon.assert.callCount(event_spy, 1);
+    });
+  });
+
   it('Should interrupt in the middle of a long time_between_runs', () => {
     let cb = sinon.spy();
     let loopy_mc_loopface = new LoopService(cb);

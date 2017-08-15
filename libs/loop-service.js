@@ -165,6 +165,8 @@ class LoopService extends EventEmitter {
       this.run_count++; // <--- note this only increments on success
       this.retry_attempts = 0; // reset retries
 
+      this.emit('complete');
+
       // Set timeout for next loop_function run
       this._set_loop_function_timer();
 
