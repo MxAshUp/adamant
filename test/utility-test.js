@@ -59,7 +59,7 @@ describe('Utilities', () => {
         const end = new Date();
         const duration = end.getTime() - start.getTime();
 
-        duration.should.be.greaterThan(defer_delay);
+        duration.should.be.at.least(defer_delay);
         sinon.assert.callCount(condition_fn_stub, 2);
       });
     });
