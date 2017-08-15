@@ -95,8 +95,8 @@ class EventDispatcher extends EventEmitter {
     // Create array of return promises
     let ret_promises = _.map(_.filter(this.event_handlers, search), handler =>
       Promise.resolve()
-        .then(utility.maybe_defer(handler.should_defer, handler.defer_delay))
         .then(handler.should_handle)
+        .then(utility.maybe_defer(handler.should_defer, handler.defer_delay))
         .then(
           handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
         )
