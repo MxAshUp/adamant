@@ -92,41 +92,53 @@ class EventDispatcher extends EventEmitter {
       search.instance_id = handler_id;
     }
 
+    // Filter event handlers
+    const filtered_event_handlers = _.filter(
+      _.filter(this.event_handlers, handler => handler.should_handle()),
+      search
+    );
+
     // Create array of return promises
-    let ret_promises = _.map(
-      _.filter(
-        _.filter(
-          this.event_handlers,
-          handler => handler.should_handle && handler.should_handle()
-        ),
-        search
-      ),
-      handler =>
-        Promise.resolve()
-          .then(() => utility.defer_until_event(handler, this))
-          .then(
-            handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
-          )
-          .then(dispatchResult => {
-            this.emit('dispatched', event_obj, handler);
+    let ret_promises = _.map(filtered_event_handlers, handler =>
+      Promise.resolve()
+        .then(() => {
+          if (
+            !handler ||
+            !handler.defer ||
+            !handler.defer.event_name ||
+            !handler.defer.fn
+          ) {
+            return;
+          }
+          return utility.defer_on_event(
+            handler.defer.event_name,
+            handler.defer.fn,
+            this
+          );
+        })
+        .then(
+          handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
+        )
+        .then(dispatchResult => {
+          this.emit('dispatched', event_obj, handler);
 
-            // enqueue event.complete event w/ result data
-            this.enqueue_event(
-              new Event(`${event_obj.event_name}.complete`, {
-                result: dispatchResult,
-              })
-            );
-          })
-          .catch(e => {
-            this.emit('error', new EventHandleError(e, event_obj, handler));
+          // enqueue event.complete event w/ result data
+          this.enqueue_event(
+            new Event(`${event_obj.event_name}.complete`, {
+              result: dispatchResult,
+            })
+          );
+        })
+        .catch(e => {
+          this.emit('error', new EventHandleError(e, event_obj, handler));
 
-            // enqueue event.complete event w/ error data
-            this.enqueue_event(
-              new Event(`${event_obj.event_name}.complete`, {
-                error: e,
-              })
-            );
-          })
+          // enqueue event.complete event w/ error data
+          this.enqueue_event(
+            new Event(`${event_obj.event_name}.complete`, {
+              error: e,
+            })
+          );
+        })
     );
 
     if (!ret_promises.length && this.error_on_unhandled_events) {
