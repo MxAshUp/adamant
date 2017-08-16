@@ -19,9 +19,7 @@ class EventHandler extends EventEmitter {
       event_name: '',
       supports_revert: false,
       instance_id: '',
-      should_handle: () => Promise.resolve(),
-      should_defer: () => Promise.resolve(false),
-      defer_delay: 30000, // 300000 = 5 mins
+      should_handle: () => true,
     };
 
     // Merge config and assign properties to this
