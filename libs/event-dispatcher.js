@@ -93,33 +93,40 @@ class EventDispatcher extends EventEmitter {
     }
 
     // Create array of return promises
-    let ret_promises = _.map(_.filter(this.event_handlers, search), handler =>
-      Promise.resolve()
-        .then(handler.should_handle)
-        .then(() => utility.defer_until_event(handler, this))
-        .then(
-          handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
-        )
-        .then(dispatchResult => {
-          this.emit('dispatched', event_obj, handler);
+    let ret_promises = _.map(
+      _.filter(
+        _.filter(
+          this.event_handlers,
+          handler => handler.should_handle && handler.should_handle()
+        ),
+        search
+      ),
+      handler =>
+        Promise.resolve()
+          .then(() => utility.defer_until_event(handler, this))
+          .then(
+            handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
+          )
+          .then(dispatchResult => {
+            this.emit('dispatched', event_obj, handler);
 
-          // enqueue event.complete event w/ result data
-          this.enqueue_event(
-            new Event(`${event_obj.event_name}.complete`, {
-              result: dispatchResult,
-            })
-          );
-        })
-        .catch(e => {
-          this.emit('error', new EventHandleError(e, event_obj, handler));
+            // enqueue event.complete event w/ result data
+            this.enqueue_event(
+              new Event(`${event_obj.event_name}.complete`, {
+                result: dispatchResult,
+              })
+            );
+          })
+          .catch(e => {
+            this.emit('error', new EventHandleError(e, event_obj, handler));
 
-          // enqueue event.complete event w/ error data
-          this.enqueue_event(
-            new Event(`${event_obj.event_name}.complete`, {
-              error: e,
-            })
-          );
-        })
+            // enqueue event.complete event w/ error data
+            this.enqueue_event(
+              new Event(`${event_obj.event_name}.complete`, {
+                error: e,
+              })
+            );
+          })
     );
 
     if (!ret_promises.length && this.error_on_unhandled_events) {
