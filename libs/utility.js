@@ -20,6 +20,21 @@ const maybe_defer = (condition_fn, delay) => {
   });
 };
 
+const defer_until_event = (handler, event_dispatcher) => {
+  return new Promise((resolve, reject) => {
+    if (
+      !handler ||
+      !handler.defer ||
+      !handler.defer.event_name ||
+      !event_dispatcher
+    ) {
+      resolve();
+    }
+    event_dispatcher.on(handler.defer.event_name, resolve);
+  });
+};
+
 module.exports = {
   maybe_defer,
+  defer_until_event,
 };
