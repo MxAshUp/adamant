@@ -87,7 +87,7 @@ class EventDispatcher extends EventEmitter {
     // @todo: Emit event to confirm event was handled (ie, for updating db)
 
     // Create handler search args
-    let search = { event_name: event_obj.event_name };
+    const search = { event_name: event_obj.event_name };
     if (!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
@@ -99,7 +99,7 @@ class EventDispatcher extends EventEmitter {
     );
 
     // Create array of return promises
-    let ret_promises = _.map(filtered_event_handlers, handler =>
+    const ret_promises = _.map(filtered_event_handlers, handler =>
       Promise.resolve()
         .then(() => {
           if (
