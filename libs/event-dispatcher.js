@@ -103,7 +103,6 @@ class EventDispatcher extends EventEmitter {
       Promise.resolve()
         .then(() => {
           if (
-            !handler ||
             !handler.defer ||
             !handler.defer.event_name ||
             !handler.defer.fn
