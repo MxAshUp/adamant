@@ -25,7 +25,10 @@ const defer_on_event = (event_name, defer_fn, event_emitter) => {
     if (!event_name || !defer_fn || !event_emitter) {
       return resolve();
     }
-    event_emitter.on(event_name, defer_fn.then(resolve).catch(reject));
+    event_emitter.on(
+      event_name,
+      defer_fn.then(resolve).catch(e => reject(new Error(e)))
+    );
   });
 };
 
