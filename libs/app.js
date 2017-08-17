@@ -119,7 +119,15 @@ class App {
     service.name = `${collector.model_name} collector`;
     this.bind_service_events(service);
     this.bind_model_events(collector);
+    service.on('complete', () =>
+      this.handle_service_event(`complete.${collector.model_name}`)
+    );
     this.collect_services.push(service);
+  }
+
+  handle_service_event(event_name) {
+    this.event_dispatcher.emit(event_name);
+    // in the future: for each service loop -> emit event
   }
 
   /**

@@ -165,6 +165,8 @@ class LoopService extends EventEmitter {
       this.run_count++; // <--- note this only increments on success
       this.retry_attempts = 0; // reset retries
 
+      this.emit('complete');
+
       // Set timeout for next loop_function run
       this._set_loop_function_timer();
 
@@ -187,7 +189,7 @@ class LoopService extends EventEmitter {
           if(retry_error !== callback_error) {
             this.emit('error', retry_error);
           }
-          return Promise.reject();
+          return Promise.reject(retry_error);
         });
     })
     .catch(this.loop_function_resolve_cb); // <-- This only happens for unhandled exceptions

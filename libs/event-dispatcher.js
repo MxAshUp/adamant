@@ -27,9 +27,13 @@ class EventDispatcher extends EventEmitter {
   * @returns {number} id of event handler as reference
   * @memberOf EventDispatcher
   */
-  load_event_handler(handler) {
+  load_event_handler(handler, event_name) {
     // Assign an instance id
     handler.instance_id = this.handler_count++;
+
+    if (event_name) {
+      handler.event_name = event_name;
+    }
 
     // Handle enqueue event
     handler.on('enqueue_event', this.enqueue_event.bind(this));
@@ -87,15 +91,34 @@ class EventDispatcher extends EventEmitter {
     // @todo: Emit event to confirm event was handled (ie, for updating db)
 
     // Create handler search args
-    let search = { event_name: event_obj.event_name };
+    const search = { event_name: event_obj.event_name };
     if (!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
 
+    // Filter event handlers
+    const filtered_event_handlers = _.filter(
+      _.filter(this.event_handlers, handler => handler.should_handle()),
+      search
+    );
+
     // Create array of return promises
-    let ret_promises = _.map(_.filter(this.event_handlers, search), handler =>
+    const ret_promises = _.map(filtered_event_handlers, handler =>
       Promise.resolve()
-        .then(utility.maybe_defer(handler.should_defer, handler.defer_delay))
+        .then(() => {
+          if (
+            !handler.defer ||
+            !handler.defer.event_name ||
+            !handler.defer.fn
+          ) {
+            return;
+          }
+          return utility.defer_on_event(
+            handler.defer.event_name,
+            handler.defer.fn,
+            this
+          );
+        })
         .then(
           handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
         )
