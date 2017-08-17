@@ -189,7 +189,7 @@ class LoopService extends EventEmitter {
           if(retry_error !== callback_error) {
             this.emit('error', retry_error);
           }
-          return Promise.reject();
+          return Promise.reject(retry_error);
         });
     })
     .catch(this.loop_function_resolve_cb); // <-- This only happens for unhandled exceptions
