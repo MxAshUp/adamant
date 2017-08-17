@@ -106,18 +106,13 @@ class EventDispatcher extends EventEmitter {
     const ret_promises = _.map(filtered_event_handlers, handler =>
       Promise.resolve()
         .then(() => {
-          if (
-            !handler.defer ||
-            !handler.defer.event_name ||
-            !handler.defer.fn
-          ) {
-            return;
+          if (handler.defer) {
+            return utility.defer_on_event(
+              handler.defer.event_name,
+              handler.defer.fn,
+              this
+            );
           }
-          return utility.defer_on_event(
-            handler.defer.event_name,
-            handler.defer.fn,
-            this
-          );
         })
         .then(
           handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
