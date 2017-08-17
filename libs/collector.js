@@ -90,49 +90,38 @@ class Collector extends EventEmitter {
     // Begin the run promise chain
     return (
       Promise.resolve()
-        .then(() => {
           // If not initialized, then try to initialize
-          return this.initialize_flag
+        .then(() => this.initialize_flag
             ? Promise.resolve()
-            : this.initialize.call(this, this.args);
-        })
+            : this.initialize.call(this, this.args)
+        )
         // Reformat possible error
-        .catch(err => {
-          return Promise.reject(new CollectorInitializeError(err));
-        })
+        .catch(err => Promise.reject(new CollectorInitializeError(err)))
         // Prepare to collect and remove data
-        .then(() => {
-          return Promise.resolve(this.prepare.call(this, this.args));
-        })
+        .then(this.prepare.bind(this, this.args))
         // Data is prepared
         .then(res => {
           this.prepared_data = res;
           return Promise.resolve();
         })
-        // Collect data and insert it
-        .then(() => {
-          const promises = [];
-          /**
-				 * Loop through collect data, and insert each row asynchronously into a database
-				 */
-          for (let to_collect of this.collect(this.prepared_data, this.args)) {
-            promises.push(
-              Promise.resolve(to_collect)
-                .then(this._insert_data.bind(this))
-                .catch(this._handle_collect_error.bind(this))
-            );
-          }
-
-          return Promise.all(promises);
-        })
+        // Map each collect Promise into array
+        .then(() => Promise.all(
+            _.map(this.collect(this.prepared_data, this.args),
+              (to_collect) => Promise.resolve(to_collect)
+              // Insert result of data
+              .then(this._insert_data.bind(this))
+              // Catch any errors thrown from collecting or inserting
+              .catch(this._handle_collect_error.bind(this))
+            )
+          )
+        )
         // Remove docs that may need to be removed
         .then(() => {
-          return Promise.resolve(
-            this.garbage(this.prepared_data, this.args)
-          ).then(to_remove => {
-            return Promise.all(_.map(to_remove, this._remove_data.bind(this)));
-          });
-        })
+          return Promise.resolve()
+            .then(this.garbage.bind(this, this.prepared_data, this.args))
+            .then(to_remove => Promise.all(_.map(to_remove, this._remove_data.bind(this))))
+          }
+        )
         // collect is success, cleanup and return data
         .then(data => {
           this.initialize_flag = true;
