@@ -1,9 +1,5 @@
 const defer_on_event = (event_name, defer_fn, event_emitter) => {
   return new Promise((resolve, reject) => {
-    if (!event_name || !defer_fn || !event_emitter) {
-      return resolve();
-    }
-
     event_emitter.on(
       event_name,
       defer_fn
