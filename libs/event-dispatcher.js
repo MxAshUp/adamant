@@ -27,9 +27,13 @@ class EventDispatcher extends EventEmitter {
   * @returns {number} id of event handler as reference
   * @memberOf EventDispatcher
   */
-  load_event_handler(handler) {
+  load_event_handler(handler, event_name) {
     // Assign an instance id
     handler.instance_id = this.handler_count++;
+
+    if (event_name) {
+      handler.event_name = event_name;
+    }
 
     // Handle enqueue event
     handler.on('enqueue_event', this.enqueue_event.bind(this));
