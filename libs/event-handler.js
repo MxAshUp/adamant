@@ -20,6 +20,7 @@ class EventHandler extends EventEmitter {
       supports_revert: false,
       instance_id: '',
       should_handle: () => true,
+      enqueue_complete_event: false,
     };
 
     // Merge config and assign properties to this
@@ -48,6 +49,7 @@ class EventHandler extends EventEmitter {
       throw Error('Handler does not support revert.');
     }
   }
+
 }
 
 module.exports = EventHandler;

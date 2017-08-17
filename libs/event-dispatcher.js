@@ -2,6 +2,7 @@ const _ = require('lodash'),
   EventHandleError = require('../libs/errors').EventHandleError,
   EventEmitter = require('events'),
   Event = require('./event'),
+  EventComplete = require('./event-complete'),
   utility = require('../libs/utility');
 
 /**
@@ -114,28 +115,20 @@ class EventDispatcher extends EventEmitter {
             );
           }
         })
-        .then(
-          handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)
-        )
+        .then(handler.dispatch.bind(handler, event_obj.data))
+        .then((dispatchResult) => {
+          // enqueue event.complete event w/ result data
+          // Only enqueue it if the handler instructs us to, and if the event object isn't already a .complete event
+          if(handler.enqueue_complete_event && !(event_obj instanceof EventComplete)) {
+            this.enqueue_event(new EventComplete(event_obj, dispatchResult));
+          }
+          return dispatchResult;
+        })
         .then(dispatchResult => {
           this.emit('dispatched', event_obj, handler);
-
-          // enqueue event.complete event w/ result data
-          this.enqueue_event(
-            new Event(`${event_obj.event_name}.complete`, {
-              result: dispatchResult,
-            })
-          );
         })
         .catch(e => {
           this.emit('error', new EventHandleError(e, event_obj, handler));
-
-          // enqueue event.complete event w/ error data
-          this.enqueue_event(
-            new Event(`${event_obj.event_name}.complete`, {
-              error: e,
-            })
-          );
         })
     );
 
