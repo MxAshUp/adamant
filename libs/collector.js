@@ -182,7 +182,7 @@ class Collector extends EventEmitter {
 				}
 
 				// Changed document
-				if(!_.isNull(old_doc) && !_.isEqual(new_doc,old_doc)) {
+				if(!_.isNull(old_doc) && !_.isMatch(old_doc, new_doc)) {
 					this.emit('update', new_doc, old_doc);
 				}
 
