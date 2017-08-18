@@ -1,5 +1,4 @@
-const mongoose = require('./mongoose-utilities'),
-  EventEmitter = require('events'),
+const EventEmitter = require('events'),
   _ = require('lodash');
 
 class EventHandler extends EventEmitter {
