@@ -1,5 +1,5 @@
 const defer_on_event = (event_name, defer_fn, event_emitter) => {
-  const handle_fn = () => {
+  const handle_fn = (resolve, reject) => {
     Promise.resolve()
       .then(defer_fn)
       .then(res => {
@@ -15,7 +15,7 @@ const defer_on_event = (event_name, defer_fn, event_emitter) => {
   };
 
   return new Promise((resolve, reject) => {
-    event_emitter.addListener(event_name, handle_fn);
+    event_emitter.addListener(event_name, () => handle_fn(resolve, reject));
   });
 };
 
