@@ -147,32 +147,31 @@ class Collector extends EventEmitter {
 
     const find = {};
     find[this.model_id_key] = data_row[this.model_id_key];
-    return this.model.findOne(find, '', { lean: true }).then(old_doc => {
-      return this.model
-        .findOneAndUpdate(find, data_row, {
-          upsert: true,
-          setDefaultsOnInsert: true,
-          new: true,
-          lean: true,
-        })
-        .catch(err => {
-          return Promise.reject(new CollectorDatabaseError(err));
-        })
-        .then(new_doc => {
-          // New document
-          if (_.isNull(old_doc)) {
-            this.emit('create', new_doc);
-            return Promise.resolve();
-          }
 
-          // Changed document
-          if (!_.isNull(old_doc) && !_.isEqual(new_doc, old_doc)) {
-            this.emit('update', new_doc, old_doc);
-          }
+    return this.model.findOne(find, '', { lean: true })
+    .then(old_doc => this.model
+      .findOneAndUpdate(find, data_row, {
+        upsert: true,
+        setDefaultsOnInsert: true,
+        new: true,
+        lean: true,
+      })
+      .catch(err => {
+        return Promise.reject(new CollectorDatabaseError(err));
+      })
+      .then(new_doc => {
+        // New document
+        if (_.isNull(old_doc)) {
+          this.emit('create', new_doc);
+        }
 
-          return Promise.resolve(new_doc);
-        });
-    });
+        // Changed document
+        if (!_.isNull(old_doc) && !_.isEqual(new_doc, old_doc)) {
+          this.emit('update', new_doc, old_doc);
+        }
+
+      })
+    );
   }
 
   /**
