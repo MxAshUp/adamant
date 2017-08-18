@@ -60,7 +60,7 @@ describe('Loop Service', () => {
   it('Should interrupt after 290ms (3 times)', () => {
     let cb = async_fn_spy_wrapper(100);
     let loopy_mc_loopface = new LoopService(cb);
-    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 290); // Just enough time for 3 runs
+    setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 300); // Just enough time for 3 runs
 
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(cb, 3);
