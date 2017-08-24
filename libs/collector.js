@@ -170,11 +170,10 @@ class Collector extends EventEmitter {
 				upsert: true,
 				setDefaultsOnInsert: true,
 				new: true,
-				lean: true
+				lean: false
 			}).catch((err) => {
 				return Promise.reject(new CollectorDatabaseError(err));
 			}).then((new_doc) => {
-
 				// New document
 				if(_.isNull(old_doc)) {
 					this.emit('create', new_doc);
@@ -182,11 +181,11 @@ class Collector extends EventEmitter {
 				}
 
 				// Changed document
-				if(!_.isNull(old_doc) && !_.isMatch(old_doc, new_doc)) {
-					this.emit('update', new_doc, old_doc);
+				if(!_.isNull(old_doc) && !_.isMatch(old_doc, new_doc.toObject())) {
+					this.emit('update', new_doc);
+					return Promise.resolve();
 				}
 
-				return Promise.resolve(new_doc);
 			});
 		});
 	}
