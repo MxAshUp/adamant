@@ -91,12 +91,11 @@ describe('Plugin Loader', function() {
       expect(plugin_a.license).to.equal(mock_plugin_a_pkg.license);
     });
 
-    it('Should load plugin_b mock plugin and call on_load and load_models', () => {
+    it('Should load plugin_b mock plugin and call on_load', () => {
       const config = Math.random();
       plugin_b = pl.load_plugin('plugin_b', config);
       expect(pl.plugins.length).to.equal(2);
       sinon.assert.calledWith(plugin_b.on_load, config);
-      sinon.assert.callOrder(plugin_b.on_load, plugin_b.load_models);
     });
 
     it('Should throw error trying to load malformed plugin', () => {
