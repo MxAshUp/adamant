@@ -1,5 +1,4 @@
-var mongoose_utils = require('./mongoose-utilities'),
-  _ = require('lodash'),
+var _ = require('lodash'),
   semver = require('semver');
 
 class Plugin {
@@ -66,13 +65,6 @@ class Plugin {
     }
 
     return component;
-  }
-
-  // Load models
-  load_models() {
-    for (let model of this.models) {
-      mongoose_utils.loadModel(model);
-    }
   }
 
   // default methods to be overridden
