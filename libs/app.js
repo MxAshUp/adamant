@@ -20,47 +20,66 @@ class App {
     this._config = config;
     this.plugin_loader = new PluginLoader();
     this.collect_services = [];
+
+    // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
     this.event_dispatcher_service = new LoopService(
       this.event_dispatcher.run.bind(this.event_dispatcher)
     );
     this.event_dispatcher_service.name = 'Event dispatcher';
     this.event_dispatcher.on('error', console.log);
-    this.bind_service_events(this.event_dispatcher_service);
-    this.express = express;
-    this.server = server;
-    this.io = io;
-    this.load_routes(this.express);
-    this.bind_socketio_events(this.io);
+    this._bind_service_events(this.event_dispatcher_service);
   }
 
+  /**
+   * Runs app initialize functions
+   *
+   * @returns
+   * @memberof App
+   */
   init() {
-    return mongoose_util.mongoose.connect(this._config.mongodb.uri);
+    return Promise.resolve()
+    .then(mongoose_util.mongoose.connect.bind(mongoose_util.mongoose,this._config.mongodb.uri))
+    .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose_util))
+    .then(this._load_routes.bind(this))
+    .then(this._bind_socket_events.bind(this));
   }
 
-  load_routes(express) {
+  /**
+   * Loads express endpoints for app and plugins
+   *
+   * @memberof App
+   */
+  _load_routes() {
+
+    // Default endpoints
     express.get('/', (req, res) => {
       res.send('Metric platform!');
     });
-    express.get('/login', (req, res) => {
-      res.send('Login!');
-    });
+
+    this.plugin_loader.load_plugin_routes(express);
   }
 
-  bind_socketio_events(io) {
+  /**
+   * Binds socket events for app and plugins
+   *
+   * @memberof App
+   */
+  _bind_socket_events() {
     io.on('connection', socket => {
-      socket.on('event', data => {
-        console.log('Socket.io client event!', data);
-      });
+
       socket.on('disconnect', () => {
-        console.log('Socket.io client disconnect!');
+        // @todo - perform disconnect routine here
       });
+
+      this.plugin_loader.load_plugin_sockets(socket);
     });
   }
 
   /**
    * Loads plugins
    *
+   * @param {Array} plugin_dirs - Array of plugin names to be required
    *
    * @memberOf App
    */
@@ -70,25 +89,10 @@ class App {
     });
   }
 
-  load_plugin_routes() {
-    // Look at each plugin
-    _.each(this.plugin_loader.plugins, plugin => {
-      // Load plugin routes (if any)
-      plugin.load_routes(this.express);
-    });
-  }
-
-  map_plugin_events() {
-    // Look at each plugin
-    _.each(this.plugin_loader.plugins, plugin => {
-      // Load plugin routes (if any)
-      plugin.map_events(this);
-    });
-  }
-
   /**
    * Loads a collector from config, creates a service
    *
+   * @param {object} config
    *
    * @memberOf App
    */
@@ -107,17 +111,12 @@ class App {
       service.run_min_time_between = config.run_min_time_between;
 
     service.name = `${collector.model_name} collector`;
-    this.bind_service_events(service);
-    this.bind_model_events(collector);
+    this._bind_service_events(service);
+    this._bind_model_events(collector);
     service.on('complete', () =>
-      this.handle_service_event(`complete.${collector.model_name}`)
+      this.event_dispatcher.emit(`complete.${collector.model_name}`)
     );
     this.collect_services.push(service);
-  }
-
-  handle_service_event(event_name) {
-    this.event_dispatcher.emit(event_name);
-    // in the future: for each service loop -> emit event
   }
 
   /**
@@ -133,13 +132,13 @@ class App {
   }
 
   /**
-   * Binds model data events in colelctor to event dispatcher queue
+   * Binds model data events in collector to event dispatcher queue
    *
    *  @param {Collector} collector
    *
    * @memberOf App
    */
-  bind_model_events(collector) {
+  _bind_model_events(collector) {
     //Add event handling
     _.each(['create', 'update', 'remove'], event => {
       collector.on(event, data => {
@@ -161,7 +160,7 @@ class App {
    *
    * @memberOf App
    */
-  bind_service_events(service) {
+  _bind_service_events(service) {
     service.on('error', e => {
       console.log(
         `${chalk.bgCyan(service.name)} service ${chalk.red(
@@ -184,29 +183,37 @@ class App {
     );
   }
 
+  /**
+   * Starts loop services and event dispatcher.
+   *
+   * @memberof App
+   */
   run() {
+
     // graceful shutdown
-    process.on('SIGTERM', () => {
-      // halt web server
-      this.server.close();
-
-      // stop collector services
-      _.each(this.collect_services, service =>
-        service.stop().catch(console.log)
-      );
-
-      // stop event dispatcher service
-      this.event_dispatcher_service.stop().catch(console.log);
-
-      // terminate app process
-      process.exit(0);
-    });
+    process.on('SIGTERM', this.stop.bind(this));
 
     this.event_dispatcher_service.start().catch(console.log);
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
     this.server.listen(this._config.web.port);
+  }
+
+  stop() {
+    // halt web server
+    this.server.close();
+
+    // stop collector services
+    _.each(this.collect_services, service =>
+      service.stop().catch(console.log)
+    );
+
+    // stop event dispatcher service
+    this.event_dispatcher_service.stop().catch(console.log);
+
+    // terminate app process
+    process.exit(0);
   }
 }
 
