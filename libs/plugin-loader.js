@@ -52,13 +52,13 @@ class PluginLoader {
     plugin.enabled = true;
 
     plugin.on_load(_config);
-    plugin.load_models();
 
     //Add plugin to array
     this.plugins.push(plugin);
 
     return plugin;
   }
+
 
   /**
    * After plugins are loaded into memeory, a collector service can be initialized.
@@ -94,6 +94,14 @@ class PluginLoader {
     );
   }
 
+  /**
+   * Looks up plugin by plugin name, returns plugin instance
+   *
+   * @param {String} plugin_name - Name of plugin, same name in package.json file
+   * @param {boolean} [exclude_disabled=true] - If true, disabled plugins will not be searched through
+   * @returns
+   * @memberof PluginLoader
+   */
   get_plugin_by_name(plugin_name, exclude_disabled = true) {
     // Find plugin
     const find = { name: plugin_name };
@@ -103,6 +111,39 @@ class PluginLoader {
     const plugin = _.find(this.plugins, find);
     if (!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
     return plugin;
+  }
+
+  /**
+   * Loops through plugins and loads models
+   *
+   * @memberof PluginLoader
+   */
+  load_plugin_models(load_model_fn) {
+    // Look at each plugin
+    _.each(this.plugins, plugin => {
+      // Look at each model
+      _.each(plugin.models, model => load_model_fn(model));
+    });
+  }
+
+  /**
+   * Loops through plugins and intializes express routes
+   *
+   * @memberof PluginLoader
+   */
+  load_plugin_routes(express) {
+    // Look at each plugin
+    _.each(this.plugins, plugin => plugin.load_routes(express));
+  }
+
+  /**
+   * Loops through plugins and intializes sockets io events
+   *
+   * @memberof PluginLoader
+   */
+  load_plugin_sockets(socket) {
+    // Look at each plugin
+    _.each(this.plugins, plugin => plugin.map_events(socket));
   }
 
   /**
