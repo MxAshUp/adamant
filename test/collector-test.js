@@ -19,8 +19,8 @@ Collector.__set__('mongoose_utils', {
   getModel: mongooseMock.model,
 });
 
-console_log_spy = sinon.spy();
-Collector.__set__('console', { log: console_log_spy });
+console_log_spy = sinon.stub().callsFake(console.log);
+Collector.__set__("console", {log: console_log_spy});
 
 var schema = mongooseMock.Schema({ id: String });
 var testModel = mongooseMock.model('test.test_model', schema);
@@ -175,6 +175,14 @@ describe('Collector Class', () => {
         { foo: 'so bar' },
       ];
 
+      new_data.forEach(function(data) {
+        data.toObject = function () {
+          const ret = Object.assign({}, data);
+          delete ret.toObject;
+          return ret;
+        };
+      });
+
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
@@ -241,7 +249,7 @@ describe('Collector Class', () => {
 
       it('Should update data with item 3', () => {
         return ret_promise.then(() => {
-          sinon.assert.calledWith(update_handler, new_data[2], old_db_data[1]);
+          sinon.assert.calledWith(update_handler,new_data[2]);
         });
       });
 
@@ -428,6 +436,14 @@ describe('Collector Class', () => {
         { id: '6', foo: 'updatedb' },
       ];
 
+      new_data.forEach(function(data) {
+        data.toObject = function () {
+          const ret = Object.assign({}, data);
+          delete ret.toObject;
+          return ret;
+        };
+      });
+
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
@@ -550,6 +566,14 @@ describe('Collector Class', () => {
       // Data to put in database
       let new_data = [{ id: '7', foo: 'bar2b' }, { id: '8', foo: 'updatedb' }];
 
+      new_data.forEach(function(data) {
+        data.toObject = function () {
+          const ret = Object.assign({}, data);
+          delete ret.toObject;
+          return ret;
+        };
+      });
+
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
@@ -627,6 +651,6 @@ describe('Collector Class', () => {
   });
 
   it('Should never call console.log', () => {
-    sinon.assert.neverCalledWith(console_log_spy);
+    expect(console_log_spy.callCount).to.equal(0);
   });
 });
