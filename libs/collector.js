@@ -1,5 +1,4 @@
-var mongoose_utils = require('./mongoose-utilities'),
-  EventEmitter = require('events'),
+var EventEmitter = require('events'),
   _ = require('lodash'),
   CollectorInitializeError = require('./errors').CollectorInitializeError,
   CollectorDatabaseError = require('./errors').CollectorDatabaseError;
@@ -27,7 +26,7 @@ class Collector extends EventEmitter {
 
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
-
+    this.mongoose = null; // mongoose instance. Should be set after constructing and before run()
     this.args = {};
   }
 
@@ -80,16 +79,37 @@ class Collector extends EventEmitter {
   }
 
   /**
+   * Fancy way to set mongoose instance reference
+   *
+   * @param {Object} mongoose
+   * @memberof Collector
+   */
+  setMongoose(mongoose) {
+    this.mongoose = mongoose;
+  }
+
+  /**
 	 * Run through the collector functions (initialize, prepare, collect, garbage)
 	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
 	 *
 	 * @memberOf Collector
 	 */
   run() {
+
+    // If Mongoose is undefined, someone is doing something wrong
+    if(typeof this.mongoose === 'undefined') {
+      throw new Error('Mongoose must be defined before run function is executed.')
+    }
+
+    // If not initialized, then get model
+    if(!this.initialize_flag) {
+      this.model = this.mongoose.model(this.model_name);
+    }
+
     // Begin the run promise chain
     return (
       Promise.resolve()
-          // If not initialized, then try to initialize
+        // If not initialized, then try to initialize
         .then(() => this.initialize_flag
             ? Promise.resolve()
             : this.initialize.call(this, this.args)
@@ -141,12 +161,11 @@ class Collector extends EventEmitter {
   _insert_data(data_row) {
     // Update time!
 
-    if (!(this.model_id_key in data_row)) {
+    if (!('_id' in data_row)) {
       throw new Error('Primary key not specified.');
     }
 
-    const find = {};
-    find[this.model_id_key] = data_row[this.model_id_key];
+    const find = {_id: data_row._id};
 
     return this.model.findOne(find, '', { lean: true })
     .then(old_doc => this.model
@@ -206,24 +225,6 @@ class Collector extends EventEmitter {
       }
       return Promise.resolve(!_.isNull(res));
     });
-  }
-
-  /**
-	 * Gets model object from mongooose
-	 *
-	 * @param {any} model_name
-	 *
-	 * @memberOf Collector
-	 */
-  _setup_model(model_name) {
-    if (typeof this.model !== 'undefined') {
-      throw Error('Model already setup.');
-    }
-    this.model_name = model_name;
-    this.model = mongoose_utils.mongoose.model(this.model_name);
-    this.model_id_key = mongoose_utils.getModelByName(
-      this.model_name
-    ).primary_key;
   }
 }
 

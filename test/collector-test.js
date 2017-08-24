@@ -22,13 +22,12 @@ Collector.__set__('mongoose_utils', {
 console_log_spy = sinon.stub().callsFake(console.log);
 Collector.__set__("console", {log: console_log_spy});
 
-var schema = mongooseMock.Schema({ id: String });
+var schema = mongooseMock.Schema({ _id: String });
 var testModel = mongooseMock.model('test.test_model', schema);
 
 get_model_by_name_stub.withArgs('test.test_model').returns({
   name: 'test.test_model',
   schema: schema,
-  primary_key: 'id',
 });
 
 describe('Collector Class', () => {
@@ -42,17 +41,13 @@ describe('Collector Class', () => {
 
       // Collector properties
       this.plugin_name = '_Test';
-      this._setup_model('test.test_model');
+      this.model_name = 'test.test_model';
+      this.mongoose = mongooseMock;
     }
   }
 
   it('Should construct an instance', () => {
     expect(() => new TestCollectorClass()).to.not.throw();
-  });
-
-  it('Should not allow second call to _setup_model', () => {
-    let instance = new TestCollectorClass();
-    expect(instance._setup_model.bind(instance)).to.throw();
   });
 
   describe('Default behavior of override functions', () => {
@@ -165,13 +160,13 @@ describe('Collector Class', () => {
 
     describe('Inserting/Updating documents', () => {
       // Data currently in the db
-      let old_db_data = [{ id: '1', foo: 'bar' }, { id: '3', foo: 'bar3' }];
+      let old_db_data = [{ _id: '1', foo: 'bar' }, { _id: '3', foo: 'bar3' }];
 
       // Data to put in database
       let new_data = [
-        { id: '1', foo: 'bar' },
-        { id: '2', foo: 'bar2' },
-        { id: '3', foo: 'updated' },
+        { _id: '1', foo: 'bar' },
+        { _id: '2', foo: 'bar2' },
+        { _id: '3', foo: 'updated' },
         { foo: 'so bar' },
       ];
 
@@ -191,22 +186,22 @@ describe('Collector Class', () => {
 
       testModel.findOne.returns(Promise.resolve(null));
       testModel.findOne
-        .withArgs({ id: new_data[0].id })
+        .withArgs({ _id: new_data[0]._id })
         .returns(Promise.resolve(old_db_data[0]));
       testModel.findOne
-        .withArgs({ id: new_data[1].id })
+        .withArgs({ _id: new_data[1]._id })
         .returns(Promise.resolve(null));
       testModel.findOne
-        .withArgs({ id: new_data[2].id })
+        .withArgs({ _id: new_data[2]._id })
         .returns(Promise.resolve(old_db_data[1]));
       testModel.findOneAndUpdate
-        .withArgs({ id: new_data[0].id })
+        .withArgs({ _id: new_data[0]._id })
         .returns(Promise.resolve(new_data[0]));
       testModel.findOneAndUpdate
-        .withArgs({ id: new_data[1].id })
+        .withArgs({ _id: new_data[1]._id })
         .returns(Promise.resolve(new_data[1]));
       testModel.findOneAndUpdate
-        .withArgs({ id: new_data[2].id })
+        .withArgs({ _id: new_data[2]._id })
         .returns(Promise.resolve(new_data[2]));
 
       let error_spy = sinon.spy();
@@ -289,7 +284,7 @@ describe('Collector Class', () => {
 
     describe('Removing documents', () => {
       // Data to put in database
-      let remove_data = [{ id: '9', foo: 'bar' }, { id: '11', foo: 'rab' }];
+      let remove_data = [{ _id: '9', foo: 'bar' }, { _id: '11', foo: 'rab' }];
 
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
@@ -298,19 +293,19 @@ describe('Collector Class', () => {
       test_collector_instance.garbage = sinon
         .stub()
         .resolves([
-          { id: remove_data[0].id },
-          { id: remove_data[1].id },
-          { id: 'notfound' },
+          { _id: remove_data[0]._id },
+          { _id: remove_data[1]._id },
+          { _id: 'notfound' },
         ]);
 
       testModel.findOneAndRemove
-        .withArgs({ id: remove_data[0].id })
+        .withArgs({ _id: remove_data[0]._id })
         .returns(Promise.resolve(remove_data[0]));
       testModel.findOneAndRemove
-        .withArgs({ id: remove_data[1].id })
+        .withArgs({ _id: remove_data[1]._id })
         .returns(Promise.resolve(remove_data[1]));
       testModel.findOneAndRemove
-        .withArgs({ id: 'notfound' })
+        .withArgs({ _id: 'notfound' })
         .returns(Promise.resolve(null));
 
       let error_spy = sinon.spy();
@@ -427,13 +422,13 @@ describe('Collector Class', () => {
     });
     describe('with reject thrown in collect', () => {
       // Data currently in the db
-      let old_db_data = [{ id: '4', foo: 'barb' }, { id: '6', foo: 'bar3b' }];
+      let old_db_data = [{ _id: '4', foo: 'barb' }, { _id: '6', foo: 'bar3b' }];
 
       // Data to put in database
       let new_data = [
-        { id: '4', foo: 'barb' },
-        { id: '5', foo: 'bar2b' },
-        { id: '6', foo: 'updatedb' },
+        { _id: '4', foo: 'barb' },
+        { _id: '5', foo: 'bar2b' },
+        { _id: '6', foo: 'updatedb' },
       ];
 
       new_data.forEach(function(data) {
@@ -454,19 +449,19 @@ describe('Collector Class', () => {
 
       testModel.findOne.returns(Promise.resolve(null));
       testModel.findOne
-        .withArgs({ id: new_data[0].id })
+        .withArgs({ _id: new_data[0]._id })
         .returns(Promise.resolve(old_db_data[0]));
       testModel.findOne
-        .withArgs({ id: new_data[1].id })
+        .withArgs({ _id: new_data[1]._id })
         .returns(Promise.resolve(null));
       testModel.findOne
-        .withArgs({ id: new_data[2].id })
+        .withArgs({ _id: new_data[2]._id })
         .returns(Promise.resolve(old_db_data[1]));
       testModel.findOneAndUpdate
-        .withArgs({ id: new_data[0].id })
+        .withArgs({ _id: new_data[0]._id })
         .returns(Promise.resolve(new_data[0]));
       testModel.findOneAndUpdate
-        .withArgs({ id: new_data[2].id })
+        .withArgs({ _id: new_data[2]._id })
         .returns(Promise.resolve(new_data[2]));
 
       let error_spy = sinon.spy();
@@ -561,10 +556,10 @@ describe('Collector Class', () => {
     });
     describe('With db error', () => {
       // Data currently in the db
-      let old_db_data = [{ id: '8', foo: 'bar3b' }];
+      let old_db_data = [{ _id: '8', foo: 'bar3b' }];
 
       // Data to put in database
-      let new_data = [{ id: '7', foo: 'bar2b' }, { id: '8', foo: 'updatedb' }];
+      let new_data = [{ _id: '7', foo: 'bar2b' }, { _id: '8', foo: 'updatedb' }];
 
       new_data.forEach(function(data) {
         data.toObject = function () {
@@ -584,16 +579,16 @@ describe('Collector Class', () => {
 
       testModel.findOne.returns(Promise.resolve(null));
       testModel.findOne
-        .withArgs({ id: new_data[0].id })
+        .withArgs({ _id: new_data[0]._id })
         .returns(Promise.resolve(null));
       testModel.findOne
-        .withArgs({ id: new_data[1].id })
+        .withArgs({ _id: new_data[1]._id })
         .returns(Promise.resolve(old_db_data[0]));
       testModel.findOneAndUpdate
-        .withArgs({ id: new_data[0].id })
+        .withArgs({ _id: new_data[0]._id })
         .returns(Promise.reject());
       testModel.findOneAndUpdate
-        .withArgs({ id: new_data[1].id })
+        .withArgs({ _id: new_data[1]._id })
         .returns(Promise.resolve(new_data[1]));
 
       let error_spy = sinon.spy();
