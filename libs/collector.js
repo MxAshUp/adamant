@@ -26,7 +26,7 @@ class Collector extends EventEmitter {
 
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
-    this.mongoose = null; // mongoose instance. Should be set after constructing and before run()
+    this.mongoose = undefined; // mongoose instance. Should be set after constructing and before run()
     this.args = {};
   }
 
@@ -98,12 +98,16 @@ class Collector extends EventEmitter {
 
     // If Mongoose is undefined, someone is doing something wrong
     if(typeof this.mongoose === 'undefined') {
-      throw new Error('Mongoose must be defined before run function is executed.')
+      return Promise.reject(new Error('Mongoose must be defined before run function is executed.'));
     }
 
     // If not initialized, then get model
     if(!this.initialize_flag) {
-      this.model = this.mongoose.model(this.model_name);
+      try {
+        this.model = this.mongoose.model(this.model_name);
+      } catch(e) {
+        return Promise.reject(new CollectorDatabaseError(e));
+      }
     }
 
     // Begin the run promise chain
