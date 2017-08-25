@@ -118,11 +118,24 @@ class PluginLoader {
    *
    * @memberof PluginLoader
    */
-  load_plugin_models(load_model_fn) {
+  load_plugin_models(mongoose) {
     // Look at each plugin
     _.each(this.plugins, plugin => {
       // Look at each model
-      _.each(plugin.models, model => load_model_fn(model));
+      _.each(plugin.models, model_config => {
+
+        model_config.schema = mongoose.Schema(model_config.schema);
+
+        // Allow schema_callback to provide plugin options, middleware stuff
+        if (typeof model_config.schema_callback === 'function') {
+          model_config.schema_callback(model_config.schema);
+        }
+
+        model_config.model = mongoose.model(model_config.name, schema);
+
+        return model_config.model;
+
+      });
     });
   }
 

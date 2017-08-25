@@ -1,5 +1,5 @@
 const PluginLoader = require('./plugin-loader'),
-  mongoose_util = require('./mongoose-utilities'),
+  mongoose = require('mongoose'),
   _ = require('lodash'),
   LoopService = require('./loop-service'),
   EventDispatcher = require('./event-dispatcher'),
@@ -39,10 +39,20 @@ class App {
    */
   init() {
     return Promise.resolve()
-    .then(mongoose_util.mongoose.connect.bind(mongoose_util.mongoose,this._config.mongodb.uri))
-    .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose_util))
+    .then(this._load_database.bind(this))
     .then(this._load_routes.bind(this))
-    .then(this._bind_socket_events.bind(this));
+    .then(this._load_sockets.bind(this));
+  }
+
+  /**
+   * Conencts to mongodb, loads mongoose, and loads plugin models
+   *
+   * @memberof App
+   */
+  _load_database() {
+    return Promise.resolve()
+    .then(mongoose.connect.bind(mongoose, this._config.mongodb.uri))
+    .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose));
   }
 
   /**
@@ -65,7 +75,7 @@ class App {
    *
    * @memberof App
    */
-  _bind_socket_events() {
+  _load_sockets() {
     io.on('connection', socket => {
 
       socket.on('disconnect', () => {
@@ -98,7 +108,6 @@ class App {
    */
   load_collector(config) {
     const collector = this.plugin_loader.create_collector(config);
-    collector.set_mongoose(mongoose_util.mongoose);
     const service = new LoopService(collector.run.bind(collector));
 
     if (config.service_retry_max_attempts)

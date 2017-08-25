@@ -1,4 +1,5 @@
 var EventEmitter = require('events'),
+  mongoose = require('mongoose'),
   _ = require('lodash'),
   CollectorInitializeError = require('./errors').CollectorInitializeError,
   CollectorDatabaseError = require('./errors').CollectorDatabaseError;
@@ -79,16 +80,6 @@ class Collector extends EventEmitter {
   }
 
   /**
-   * Fancy way to set mongoose instance reference
-   *
-   * @param {Object} mongoose
-   * @memberof Collector
-   */
-  set_mongoose(mongoose) {
-    this.mongoose = mongoose;
-  }
-
-  /**
 	 * Run through the collector functions (initialize, prepare, collect, garbage)
 	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
 	 *
@@ -96,15 +87,10 @@ class Collector extends EventEmitter {
 	 */
   run() {
 
-    // If Mongoose is undefined, someone is doing something wrong
-    if(typeof this.mongoose === 'undefined') {
-      return Promise.reject(new Error('Mongoose must be defined before run function is executed.'));
-    }
-
     // If not initialized, then get model
     if(!this.initialize_flag) {
       try {
-        this.model = this.mongoose.model(this.model_name);
+        this.model = mongoose.model(this.model_name);
       } catch(e) {
         return Promise.reject(new CollectorDatabaseError(e));
       }

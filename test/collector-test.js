@@ -17,11 +17,7 @@ chai.should();
 let get_model_by_name_stub = sinon.stub();
 
 // Rewire database stuff
-Collector.__set__('mongoose_utils', {
-  mongoose: mongooseMock,
-  getModelByName: get_model_by_name_stub,
-  getModel: mongooseMock.model,
-});
+Collector.__set__('mongoose', mongooseMock);
 
 console_log_spy = sinon.stub().callsFake(console.log);
 Collector.__set__("console", {log: console_log_spy});
@@ -56,7 +52,6 @@ describe('Collector Class', () => {
 
   describe('Default behavior of override functions', () => {
     let instance = new TestCollectorClass();
-    instance.set_mongoose(mongooseMock);
     it('Initialize should return nothing', () => {
       expect(instance.initialize()).to.be.undefined;
     });
@@ -83,14 +78,8 @@ describe('Collector Class', () => {
       testModel.findOne.reset();
     });
 
-    it(`Should reject with 'Mongoose must be defined before run function is executed.'`, () => {
-      let test_collector_instance = new TestCollectorClass();
-      return test_collector_instance.run().should.eventually.be.rejectedWith(Error, 'Mongoose must be defined before run function is executed.');
-    });
-
     describe('with nothing to do', () => {
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.collect = sinon.stub().returns([]);
       test_collector_instance.prepare = sinon.stub().resolves({});
@@ -133,7 +122,6 @@ describe('Collector Class', () => {
 
     describe('Run when already initialized', () => {
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.collect = sinon.stub().returns([]);
       test_collector_instance.prepare = sinon.stub().resolves({});
@@ -191,7 +179,6 @@ describe('Collector Class', () => {
       });
 
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.collect = sinon.stub().returns(new_data);
@@ -300,7 +287,6 @@ describe('Collector Class', () => {
       let remove_data = [{ _id: '9', foo: 'bar' }, { _id: '11', foo: 'rab' }];
 
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.collect = sinon.stub().returns([]);
@@ -350,7 +336,6 @@ describe('Collector Class', () => {
 
     describe('With error thrown in initialize()', () => {
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.stub().throws();
       test_collector_instance.prepare = sinon.spy();
       test_collector_instance.collect = sinon.spy();
@@ -395,7 +380,6 @@ describe('Collector Class', () => {
     });
     describe('with error thrown in prepare()', () => {
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon
         .stub()
         .returns(Promise.resolve());
@@ -456,7 +440,6 @@ describe('Collector Class', () => {
       });
 
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.collect = sinon
@@ -521,7 +504,6 @@ describe('Collector Class', () => {
     });
     describe('with error thrown in collect', () => {
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.collect = sinon.stub().throws();
@@ -588,7 +570,6 @@ describe('Collector Class', () => {
       });
 
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.set_mongoose(mongooseMock);
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.collect = sinon
