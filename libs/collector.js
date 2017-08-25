@@ -84,7 +84,7 @@ class Collector extends EventEmitter {
    * @param {Object} mongoose
    * @memberof Collector
    */
-  setMongoose(mongoose) {
+  set_mongoose(mongoose) {
     this.mongoose = mongoose;
   }
 

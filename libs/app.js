@@ -98,7 +98,7 @@ class App {
    */
   load_collector(config) {
     const collector = this.plugin_loader.create_collector(config);
-    collector.setMongoose(mongoose_util.mongoose);
+    collector.set_mongoose(mongoose_util.mongoose);
     const service = new LoopService(collector.run.bind(collector));
 
     if (config.service_retry_max_attempts)
