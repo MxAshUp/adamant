@@ -51,29 +51,6 @@ describe('Abstract Plugin', () => {
     expect(pl.event_handlers).to.deep.equal(event_handlers);
   });
 
-  it('Should load models into mongoose', () => {
-    let load_model_spy = sinon.spy();
-
-    // Rewire database stuff
-    let revert = plugin.__set__('mongoose_utils', {
-      loadModel: load_model_spy,
-    });
-
-    after(revert);
-
-    const models = [Math.random(), Math.random(), Math.random()];
-    let pl = new plugin({
-      name: '_test_plugin',
-      models: models,
-    });
-
-    expect(pl.load_models.bind(pl)).to.not.throw();
-    sinon.assert.calledThrice(load_model_spy);
-    sinon.assert.calledWith(load_model_spy, models[0]);
-    sinon.assert.calledWith(load_model_spy, models[1]);
-    sinon.assert.calledWith(load_model_spy, models[2]);
-  });
-
   describe('Creating plugin components', () => {
     class collector_a {
       constructor(args) {
