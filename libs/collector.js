@@ -109,25 +109,32 @@ class Collector extends EventEmitter {
         // Prepare to collect and remove data
         .then(this.prepare.bind(this, this.args))
         // Data is prepared
-        .then(prepared_data =>
-          // Map each collect Promise into array
-          Promise.all(
-            _.map(this.collect(prepared_data, this.args),
-              (to_collect) => Promise.resolve(to_collect)
-              // Insert result of data
+        .then((res) => {
+          this.prepared_data = res;
+          return Promise.resolve();
+        })
+        // Collect data and insert it
+        .then(() => {
+          const promises = [];
+          /**
+           * Loop through collect data, and insert each row asynchronously into a database
+           */
+          for(let to_collect of this.collect(this.prepared_data, this.args)) {
+            promises.push(
+              Promise.resolve(to_collect)
               .then(this._insert_data.bind(this))
-              // Catch any errors thrown from collecting or inserting
               .catch(this._handle_collect_error.bind(this))
-            )
-          )
-          // Remove docs that may need to be removed
-          .then(() => {
-            return Promise.resolve()
-              .then(this.garbage.bind(this, prepared_data, this.args))
-              .then(to_remove => Promise.all(_.map(to_remove, this._remove_data.bind(this))))
-            }
-          )
-        )
+            );
+          }
+
+          return Promise.all(promises);
+        })
+        // Remove docs that may need to be removed
+        .then(() => {
+          return Promise.resolve(this.garbage(this.prepared_data,this.args)).then(to_remove => {
+            return Promise.all(_.map(to_remove,this._remove_data.bind(this)));
+          });
+        })
         // collect is success, cleanup and return data
         .then(data => {
           this.initialize_flag = true;

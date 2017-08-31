@@ -216,11 +216,11 @@ class App {
 
     // stop collector services
     _.each(this.collect_services, service =>
-      service.stop().catch(console.log)
+      service.stop()
     );
 
     // stop event dispatcher service
-    this.event_dispatcher_service.stop().catch(console.log);
+    this.event_dispatcher_service.stop();
 
     // terminate app process
     process.exit(0);
