@@ -1,6 +1,6 @@
 {
   "name": "local-mp-core",
-  "version": "0.3.3-dev",
+  "version": "0.3.0-dev.3",
   "description": "Core code for Metrics Platform",
   "main": "index.js",
   "dependencies": {
