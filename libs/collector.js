@@ -61,10 +61,11 @@ class Collector extends EventEmitter {
 	 *
 	 * @memberOf Collector
 	 */
-  *collect(prepared_data, _args) {
+  collect(prepared_data, _args) {
     for (let i in prepared_data) {
-      yield prepared_data[i];
+      this.emit('data', prepared_data[i]);
     }
+    this.emit('end');
   }
 
   /**
@@ -115,19 +116,37 @@ class Collector extends EventEmitter {
         })
         // Collect data and insert it
         .then(() => {
-          const promises = [];
-          /**
-           * Loop through collect data, and insert each row asynchronously into a database
-           */
-          for(let to_collect of this.collect(this.prepared_data, this.args)) {
-            promises.push(
-              Promise.resolve(to_collect)
-              .then(this._insert_data.bind(this))
-              .catch(this._handle_collect_error.bind(this))
-            );
-          }
 
-          return Promise.all(promises);
+          const promises = [];
+
+          this.addListener('data', (data) => {
+            (!Array.isArray(data) ? [data] : data).forEach((to_collect) => {
+              promises.push(
+                Promise.resolve(to_collect)
+                .then(this._insert_data.bind(this))
+                .catch(this._handle_collect_error.bind(this))
+              );
+            });
+          });
+
+          return this.collect(this.prepared_data, this.args).then(() => {
+            this.removeAllListeners('data');
+            return Promise.all(promises);
+          });
+
+          // const promises = [];
+          // /**
+          //  * Loop through collect data, and insert each row asynchronously into a database
+          //  */
+          // for(let to_collect of this.collect(this.prepared_data, this.args)) {
+          //   promises.push(
+          //     Promise.resolve(to_collect)
+          //     .then(this._insert_data.bind(this))
+          //     .catch(this._handle_collect_error.bind(this))
+          //   );
+          // }
+
+          // return Promise.all(promises);
         })
         // Remove docs that may need to be removed
         .then(() => {
@@ -161,7 +180,7 @@ class Collector extends EventEmitter {
     if (!('_id' in data_row)) {
       throw new Error('Primary key not specified.');
     }
-
+    console.log(`Inserting... ${this.model_name}`, data_row._id);
     const find = {_id: data_row._id};
 
     return this.model.findOne(find, '', { lean: true })
@@ -172,10 +191,9 @@ class Collector extends EventEmitter {
         new: true,
         lean: false,
       })
-      .catch(err => {
-        return Promise.reject(new CollectorDatabaseError(err));
-      })
+      .catch(err => Promise.reject(new CollectorDatabaseError(err)))
       .then(new_doc => {
+
         // New document
         if (_.isNull(old_doc)) {
           this.emit('create', new_doc);
