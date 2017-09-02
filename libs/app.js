@@ -161,7 +161,7 @@ class App {
     collector.on('error', err => {
       console.log(`${chalk.red('error')}: ${chalk.grey(err.stack)}`);
       if (err.culprit) {
-        console.log(`${chalk.red('error details')}: ${chalk.grey(e.culprit)}`);
+        console.log(`${chalk.red('error details')}: ${chalk.grey(err.culprit)}`);
       }
     });
   }
