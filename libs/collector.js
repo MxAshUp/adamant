@@ -65,7 +65,7 @@ class Collector extends EventEmitter {
     for (let i in prepared_data) {
       this.emit('data', prepared_data[i]);
     }
-    this.emit('end');
+    return Promise.resolve();
   }
 
   /**
@@ -116,37 +116,11 @@ class Collector extends EventEmitter {
         })
         // Collect data and insert it
         .then(() => {
-
-          const promises = [];
-
-          this.addListener('data', (data) => {
-            (!Array.isArray(data) ? [data] : data).forEach((to_collect) => {
-              promises.push(
-                Promise.resolve(to_collect)
-                .then(this._insert_data.bind(this))
-                .catch(this._handle_collect_error.bind(this))
-              );
-            });
-          });
-
-          return this.collect(this.prepared_data, this.args).then(() => {
-            this.removeAllListeners('data');
-            return Promise.all(promises);
-          });
-
-          // const promises = [];
-          // /**
-          //  * Loop through collect data, and insert each row asynchronously into a database
-          //  */
-          // for(let to_collect of this.collect(this.prepared_data, this.args)) {
-          //   promises.push(
-          //     Promise.resolve(to_collect)
-          //     .then(this._insert_data.bind(this))
-          //     .catch(this._handle_collect_error.bind(this))
-          //   );
-          // }
-
-          // return Promise.all(promises);
+          if(this.collect.constructor.name === 'GeneratorFunction') {
+            return this.do_generator_collect();
+          } else {
+            return this.do_stream_collect();
+          }
         })
         // Remove docs that may need to be removed
         .then(() => {
@@ -167,6 +141,52 @@ class Collector extends EventEmitter {
     );
   }
 
+  insert_data_promise(data) {
+    return Promise.resolve(data)
+          .then(this._insert_data.bind(this))
+          .catch(this._handle_collect_error.bind(this))
+  }
+
+  do_generator_collect() {
+    const promises = [];
+
+    for(let to_collect of this.collect(this.prepared_data, this.args)) {
+      promises.push(this.insert_data_promise(to_collect));
+    }
+
+    return Promise.all(promises);
+  }
+
+  do_stream_collect() {
+
+    // Create array of promises
+    const promises = [];
+
+    const collect_fn = (data) => {
+      // Data may by a single document, or array of documents
+      (!Array.isArray(data) ? [data] : data).forEach((to_collect) => {
+        promises.push(this.insert_data_promise(to_collect));
+      });
+    };
+
+    // Add event listener for when data is received
+    this.addListener('data', collect_fn);
+
+    return Promise.resolve()
+    .then(this.collect.bind(this, this.prepared_data, this.args))
+    // The data resolved from collect will also be used for inserting into database
+    // This makes things backwards compatible
+    .then(collect_fn)
+    .catch(e => {
+      this.removeAllListeners('data');
+      return Promise.reject(e);
+    })
+    .then(() => {
+      this.removeAllListeners('data');
+      return Promise.all(promises);
+    });
+  }
+
   /**
 	 * Insert data into the database
 	 * @param  {object} data_row
@@ -180,7 +200,6 @@ class Collector extends EventEmitter {
     if (!('_id' in data_row)) {
       throw new Error('Primary key not specified.');
     }
-    console.log(`Inserting... ${this.model_name}`, data_row._id);
     const find = {_id: data_row._id};
 
     return this.model.findOne(find, '', { lean: true })

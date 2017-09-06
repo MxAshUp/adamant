@@ -61,13 +61,17 @@ describe('Collector Class', () => {
     it('Garbage should garbage nothing', () => {
       expect(instance.garbage()).to.be.undefined;
     });
-    it('Collect should be a generator that yields each item in prepared_data', () => {
+    it('Collect should return a promise that resolves after event is emitted for data', () => {
       const arr = [Math.random(), Math.random(), Math.random()];
       let count = 0;
-      const iter = instance.collect(arr);
-      expect(iter.next().value).to.equal(arr[0]);
-      expect(iter.next().value).to.equal(arr[1]);
-      expect(iter.next().value).to.equal(arr[2]);
+      const data_spy = sinon.spy();
+      instance.addListener('data', data_spy);
+      return instance.collect(arr).then(() => {
+        sinon.assert.callCount(data_spy, 3);
+        sinon.assert.calledWith(data_spy, arr[0]);
+        sinon.assert.calledWith(data_spy, arr[1]);
+        sinon.assert.calledWith(data_spy, arr[2]);
+      });
     });
   });
 
