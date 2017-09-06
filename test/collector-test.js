@@ -183,6 +183,11 @@ describe('Collector Class', () => {
       });
     });
 
+    describe('initializing model', () => {
+      it('should reject with CollectorDatabaseError');
+      it('Should only set model if initialize_flag is false');
+    })
+
     describe('Inserting/Updating documents', () => {
       // Data currently in the db
       let old_db_data = [{ _id: '1', foo: 'bar' }, { _id: '3', foo: 'bar3' }];
@@ -358,7 +363,10 @@ describe('Collector Class', () => {
         });
       });
     });
-
+    descrine('_do_collect', () => {
+      it('Should polyfill generator collector');
+      it('Should allow non-array to be resolved and emitted from collect');
+    });
     describe('With error thrown in initialize()', () => {
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.stub().throws();
