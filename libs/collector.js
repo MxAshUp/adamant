@@ -161,7 +161,7 @@ class Collector extends EventEmitter {
   /**
    * Runs this.collect and facilitates inserting data
    *
-   * @returns
+   * @returns {Promise} - Resolves when all data is collected and inserted. Rejects if error occurs during collect()
    * @memberof Collector
    */
   _do_collect() {

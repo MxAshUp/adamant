@@ -633,6 +633,40 @@ describe('Collector Class', () => {
         });
       });
     });
+    describe('with non-objects returned in collect', () => {
+
+      // Data to put in database. Clearly not objects
+      let new_data = [
+        true,
+        'string',
+        13,
+      ];
+
+      let test_collector_instance = new TestCollectorClass();
+      test_collector_instance.initialize = sinon.spy();
+      test_collector_instance.prepare = sinon.stub().resolves({});
+      test_collector_instance.collect = sinon
+        .stub()
+        .returns(new_data);
+
+      let error_handle = sinon.spy();
+      let update_handler = sinon.spy();
+      let create_handler = sinon.spy();
+
+      test_collector_instance.on('update', update_handler);
+      test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('error', error_handle);
+
+      it('Should emit error events', () => {
+        return test_collector_instance.run().then(() => {
+          sinon.assert.calledThrice(error_handle);
+          expect(error_handle.lastCall.args[0]).to.be.instanceOf(Error);
+          expect(error_handle.lastCall.args[0].message).to.equal(
+            'Data to insert is not an object.'
+          );
+        });
+      });
+    });
     describe('With db error', () => {
       // Data currently in the db
       let old_db_data = [{ _id: '8', foo: 'bar3b' }];
