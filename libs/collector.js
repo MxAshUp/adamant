@@ -144,17 +144,17 @@ class Collector extends EventEmitter {
    * @memberof Collector
    */
   _polyfill_generator_collect(collect_fn) {
-    return util.deprecate(() => {
+    return util.deprecate((prepared_data, _args) => {
       const promises = [];
 
-      for(let to_collect of collect_fn()) {
+      for(let to_collect of collect_fn(prepared_data, _args)) {
         promises.push(
           Promise.resolve(to_collect)
           .then(this.emit.bind(this, 'data'))
         );
       }
 
-      return Promise.all(promises);
+      return Promise.all(promises).then(() => {});
     }, 'Collect as a generator is deprecated.');
   }
 
@@ -192,7 +192,7 @@ class Collector extends EventEmitter {
     .then(collect_fn.bind(this, this.prepared_data, this.args))
     // The data resolved from collect will also be used for inserting into database
     // This makes things backwards compatible
-    .then(insert_fn)
+    .then(res_data => typeof res_data !== 'undefined' && insert_fn(res_data))
     .catch(e => {
       this.removeAllListeners('data');
       return Promise.reject(e);
@@ -211,13 +211,16 @@ class Collector extends EventEmitter {
 	 * @memberOf Collector
 	 */
   _insert_data(data_row) {
-    // Update time!
+
+    if (typeof data_row !== 'object') {
+      throw new Error('Data to insert is not an object.');
+    }
 
     if (!('_id' in data_row)) {
       throw new Error('Primary key not specified.');
     }
-    const find = {_id: data_row._id};
 
+    const find = {_id: data_row._id};
     return this.model.findOne(find, '', { lean: true })
     .then(old_doc => this.model
       .findOneAndUpdate(find, data_row, {

@@ -9,6 +9,7 @@ const // Test tools
   errors = require('../libs/errors'),
   mongooseMock = require('mongoose-mock'),
   // Modules to test
+  CollectorDatabaseError = require('../libs/errors').CollectorDatabaseError,
   Collector = rewire('../libs/collector');
 
 chai.use(chaiAsPromised);
@@ -61,7 +62,7 @@ describe('Collector Class', () => {
     it('Garbage should garbage nothing', () => {
       expect(instance.garbage()).to.be.undefined;
     });
-    it('Collect should return a promise that resolves after event is emitted for data', () => {
+    it('Should return a promise that resolves after events are emitted for data', () => {
       const arr = [Math.random(), Math.random(), Math.random()];
       let count = 0;
       const data_spy = sinon.spy();
@@ -71,27 +72,6 @@ describe('Collector Class', () => {
         sinon.assert.calledWith(data_spy, arr[0]);
         sinon.assert.calledWith(data_spy, arr[1]);
         sinon.assert.calledWith(data_spy, arr[2]);
-      });
-    });
-    describe('Collect as a generator function', () => {
-      it('Collect should return a promise that resolves after event is emitted for data', () => {
-        const instance = new TestCollectorClass();
-        instance.collect = function*(prepared_data) {
-          for(let i in prepared_data) {
-            yield prepared_data[i];
-          }
-        }
-        const arr = [Math.random(), Math.random(), Math.random()];
-        let count = 0;
-        const data_spy = sinon.spy();
-        instance.addListener('data', data_spy);
-        return instance._polyfill_generator_collect(instance.collect.bind(instance, arr))().then(() => {
-          sinon.assert.callCount(data_spy, 3);
-          sinon.assert.calledWith(data_spy, arr[0]);
-          sinon.assert.calledWith(data_spy, arr[1]);
-          sinon.assert.calledWith(data_spy, arr[2]);
-          instance.removeAllListeners('data');
-        });
       });
     });
   });
@@ -145,6 +125,45 @@ describe('Collector Class', () => {
       });
     });
 
+    describe('Collect as a generator function', () => {
+      it('Should return a promise that resolves after events are emitted for data', () => {
+        // Data to put in database
+        const new_data = [
+          { _id: '11', foo: 'bar' },
+          { _id: '12', foo: 'bar2' },
+          { _id: '13', foo: 'updated' },
+        ];
+
+        testModel.findOneAndUpdate
+          .withArgs({ _id: new_data[0]._id })
+          .returns(Promise.resolve(new_data[0]));
+        testModel.findOneAndUpdate
+          .withArgs({ _id: new_data[1]._id })
+          .returns(Promise.resolve(new_data[1]));
+        testModel.findOneAndUpdate
+          .withArgs({ _id: new_data[2]._id })
+          .returns(Promise.resolve(new_data[2]));
+
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.prepare = sinon.stub().resolves(new_data);
+        test_collector_instance.garbage = sinon.stub().resolves();
+        test_collector_instance.collect = function*(prepared_data) {
+          for(let i in prepared_data) {
+            yield prepared_data[i];
+          }
+        }
+        const create_handler = sinon.spy();
+        test_collector_instance.on('create', create_handler);
+
+        return test_collector_instance.run().then(() => {
+          sinon.assert.callCount(create_handler, 3);
+          sinon.assert.calledWith(create_handler, new_data[0]);
+          sinon.assert.calledWith(create_handler, new_data[1]);
+          sinon.assert.calledWith(create_handler, new_data[2]);
+        });
+      });
+    });
+
     describe('Run when already initialized', () => {
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
@@ -184,8 +203,39 @@ describe('Collector Class', () => {
     });
 
     describe('initializing model', () => {
-      it('should reject with CollectorDatabaseError');
-      it('Should only set model if initialize_flag is false');
+      it('should reject with CollectorDatabaseError', () => {
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.initialize = sinon.spy();
+        test_collector_instance.collect = sinon.stub().returns([]);
+        test_collector_instance.prepare = sinon.stub().resolves({});
+        test_collector_instance.garbage = sinon.stub().resolves();
+        sinon.stub(mongooseMock, 'model').throws();
+        expect(test_collector_instance.model).to.be.undefined;
+        return test_collector_instance.run().should.be.rejectedWith(CollectorDatabaseError).then(mongooseMock.model.restore);
+      });
+      it('Should set model on first run', () => {
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.initialize = sinon.spy();
+        test_collector_instance.collect = sinon.stub().returns([]);
+        test_collector_instance.prepare = sinon.stub().resolves({});
+        test_collector_instance.garbage = sinon.stub().resolves();
+        expect(test_collector_instance.model).to.be.undefined;
+        return test_collector_instance.run().then(() => {
+          expect(test_collector_instance.model).to.not.be.undefined;
+        });
+      });
+      it('Should not set model if initialize_flag is true', () => {
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.initialize = sinon.spy();
+        test_collector_instance.collect = sinon.stub().returns([]);
+        test_collector_instance.prepare = sinon.stub().resolves({});
+        test_collector_instance.garbage = sinon.stub().resolves();
+        test_collector_instance.initialize_flag = true;
+        expect(test_collector_instance.model).to.be.undefined;
+        return test_collector_instance.run().then(() => {
+          expect(test_collector_instance.model).to.be.undefined;
+        });
+      });
     })
 
     describe('Inserting/Updating documents', () => {
@@ -362,10 +412,6 @@ describe('Collector Class', () => {
           sinon.assert.calledTwice(remove_handler);
         });
       });
-    });
-    descrine('_do_collect', () => {
-      it('Should polyfill generator collector');
-      it('Should allow non-array to be resolved and emitted from collect');
     });
     describe('With error thrown in initialize()', () => {
       let test_collector_instance = new TestCollectorClass();
