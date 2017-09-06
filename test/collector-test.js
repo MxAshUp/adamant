@@ -51,7 +51,7 @@ describe('Collector Class', () => {
   });
 
   describe('Default behavior of override functions', () => {
-    let instance = new TestCollectorClass();
+    const instance = new TestCollectorClass();
     it('Initialize should return nothing', () => {
       expect(instance.initialize()).to.be.undefined;
     });
@@ -71,6 +71,27 @@ describe('Collector Class', () => {
         sinon.assert.calledWith(data_spy, arr[0]);
         sinon.assert.calledWith(data_spy, arr[1]);
         sinon.assert.calledWith(data_spy, arr[2]);
+      });
+    });
+    describe('Collect as a generator function', () => {
+      it('Collect should return a promise that resolves after event is emitted for data', () => {
+        const instance = new TestCollectorClass();
+        instance.collect = function*(prepared_data) {
+          for(let i in prepared_data) {
+            yield prepared_data[i];
+          }
+        }
+        const arr = [Math.random(), Math.random(), Math.random()];
+        let count = 0;
+        const data_spy = sinon.spy();
+        instance.addListener('data', data_spy);
+        return instance._polyfill_generator_collect(instance.collect.bind(instance, arr))().then(() => {
+          sinon.assert.callCount(data_spy, 3);
+          sinon.assert.calledWith(data_spy, arr[0]);
+          sinon.assert.calledWith(data_spy, arr[1]);
+          sinon.assert.calledWith(data_spy, arr[2]);
+          instance.removeAllListeners('data');
+        });
       });
     });
   });
