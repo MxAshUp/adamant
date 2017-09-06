@@ -2,7 +2,8 @@ var EventEmitter = require('events'),
   mongoose = require('mongoose'),
   _ = require('lodash'),
   CollectorInitializeError = require('./errors').CollectorInitializeError,
-  CollectorDatabaseError = require('./errors').CollectorDatabaseError;
+  CollectorDatabaseError = require('./errors').CollectorDatabaseError,
+  util = require('util');
 
 class Collector extends EventEmitter {
   /**
@@ -115,13 +116,7 @@ class Collector extends EventEmitter {
           return Promise.resolve();
         })
         // Collect data and insert it
-        .then(() => {
-          if(this.collect.constructor.name === 'GeneratorFunction') {
-            return this.do_generator_collect();
-          } else {
-            return this.do_stream_collect();
-          }
-        })
+        .then(this._do_collect.bind(this))
         // Remove docs that may need to be removed
         .then(() => {
           return Promise.resolve(this.garbage(this.prepared_data,this.args)).then(to_remove => {
@@ -141,42 +136,63 @@ class Collector extends EventEmitter {
     );
   }
 
-  insert_data_promise(data) {
-    return Promise.resolve(data)
-          .then(this._insert_data.bind(this))
-          .catch(this._handle_collect_error.bind(this))
+  /**
+   * This is used to polyfill deprecated version of Collect that are generator functions
+   *
+   * @param {Function} collect_fn - The collect function
+   * @returns
+   * @memberof Collector
+   */
+  _polyfill_generator_collect(collect_fn) {
+    return util.deprecate(() => {
+      const promises = [];
+
+      for(let to_collect of collect_fn()) {
+        promises.push(
+          Promise.resolve(to_collect)
+          .then(this.emit.bind(this, 'data'))
+        );
+      }
+
+      return Promise.all(promises);
+    }, 'Collect as a generator is deprecated.');
   }
 
-  do_generator_collect() {
+  /**
+   * Runs this.collect and facilitates inserting data
+   *
+   * @returns
+   * @memberof Collector
+   */
+  _do_collect() {
+
+    // If this.collect is a generator, need to polyfill it
+    const collect_fn = this.collect.constructor.name === "GeneratorFunction" ?
+      this._polyfill_generator_collect(this.collect) :
+      this.collect;
+
+    // Create array of promises that represent all collects and inserts
     const promises = [];
 
-    for(let to_collect of this.collect(this.prepared_data, this.args)) {
-      promises.push(this.insert_data_promise(to_collect));
-    }
-
-    return Promise.all(promises);
-  }
-
-  do_stream_collect() {
-
-    // Create array of promises
-    const promises = [];
-
-    const collect_fn = (data) => {
+    const insert_fn = (data) => {
       // Data may by a single document, or array of documents
       (!Array.isArray(data) ? [data] : data).forEach((to_collect) => {
-        promises.push(this.insert_data_promise(to_collect));
+        promises.push(
+          Promise.resolve(to_collect)
+          .then(this._insert_data.bind(this))
+          .catch(this._handle_collect_error.bind(this))
+        );
       });
     };
 
     // Add event listener for when data is received
-    this.addListener('data', collect_fn);
+    this.addListener('data', insert_fn);
 
     return Promise.resolve()
-    .then(this.collect.bind(this, this.prepared_data, this.args))
+    .then(collect_fn.bind(this, this.prepared_data, this.args))
     // The data resolved from collect will also be used for inserting into database
     // This makes things backwards compatible
-    .then(collect_fn)
+    .then(insert_fn)
     .catch(e => {
       this.removeAllListeners('data');
       return Promise.reject(e);
