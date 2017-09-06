@@ -2,7 +2,8 @@ var EventEmitter = require('events'),
   mongoose = require('mongoose'),
   _ = require('lodash'),
   CollectorInitializeError = require('./errors').CollectorInitializeError,
-  CollectorDatabaseError = require('./errors').CollectorDatabaseError;
+  CollectorDatabaseError = require('./errors').CollectorDatabaseError,
+  util = require('util');
 
 class Collector extends EventEmitter {
   /**
@@ -61,10 +62,11 @@ class Collector extends EventEmitter {
 	 *
 	 * @memberOf Collector
 	 */
-  *collect(prepared_data, _args) {
+  collect(prepared_data, _args) {
     for (let i in prepared_data) {
-      yield prepared_data[i];
+      this.emit('data', prepared_data[i]);
     }
+    return Promise.resolve();
   }
 
   /**
@@ -109,25 +111,18 @@ class Collector extends EventEmitter {
         // Prepare to collect and remove data
         .then(this.prepare.bind(this, this.args))
         // Data is prepared
-        .then(prepared_data =>
-          // Map each collect Promise into array
-          Promise.all(
-            _.map(this.collect(prepared_data, this.args),
-              (to_collect) => Promise.resolve(to_collect)
-              // Insert result of data
-              .then(this._insert_data.bind(this))
-              // Catch any errors thrown from collecting or inserting
-              .catch(this._handle_collect_error.bind(this))
-            )
-          )
-          // Remove docs that may need to be removed
-          .then(() => {
-            return Promise.resolve()
-              .then(this.garbage.bind(this, prepared_data, this.args))
-              .then(to_remove => Promise.all(_.map(to_remove, this._remove_data.bind(this))))
-            }
-          )
-        )
+        .then((res) => {
+          this.prepared_data = res;
+          return Promise.resolve();
+        })
+        // Collect data and insert it
+        .then(this._do_collect.bind(this))
+        // Remove docs that may need to be removed
+        .then(() => {
+          return Promise.resolve(this.garbage(this.prepared_data,this.args)).then(to_remove => {
+            return Promise.all(_.map(to_remove,this._remove_data.bind(this)));
+          });
+        })
         // collect is success, cleanup and return data
         .then(data => {
           this.initialize_flag = true;
@@ -142,6 +137,73 @@ class Collector extends EventEmitter {
   }
 
   /**
+   * This is used to polyfill deprecated version of Collect that are generator functions
+   *
+   * @param {Function} collect_fn - The collect function
+   * @returns
+   * @memberof Collector
+   */
+  _polyfill_generator_collect(collect_fn) {
+    return util.deprecate((prepared_data, _args) => {
+      const promises = [];
+
+      for(let to_collect of collect_fn(prepared_data, _args)) {
+        promises.push(
+          Promise.resolve(to_collect)
+          .then(this.emit.bind(this, 'data'))
+        );
+      }
+
+      return Promise.all(promises).then(() => {});
+    }, 'Collect as a generator is deprecated.');
+  }
+
+  /**
+   * Runs this.collect and facilitates inserting data
+   *
+   * @returns {Promise} - Resolves when all data is collected and inserted. Rejects if error occurs during collect()
+   * @memberof Collector
+   */
+  _do_collect() {
+
+    // If this.collect is a generator, need to polyfill it
+    const collect_fn = this.collect.constructor.name === "GeneratorFunction" ?
+      this._polyfill_generator_collect(this.collect) :
+      this.collect;
+
+    // Create array of promises that represent all collects and inserts
+    const promises = [];
+
+    const insert_fn = (data) => {
+      // Data may by a single document, or array of documents
+      (!Array.isArray(data) ? [data] : data).forEach((to_collect) => {
+        promises.push(
+          Promise.resolve(to_collect)
+          .then(this._insert_data.bind(this))
+          .catch(this._handle_collect_error.bind(this))
+        );
+      });
+    };
+
+    // Add event listener for when data is received
+    this.addListener('data', insert_fn);
+
+    return Promise.resolve()
+    .then(collect_fn.bind(this, this.prepared_data, this.args))
+    // The data resolved from collect will also be used for inserting into database
+    // This makes things backwards compatible
+    .then(res_data => typeof res_data !== 'undefined' && insert_fn(res_data))
+    .catch(e => {
+      this.removeAllListeners('data');
+      return Promise.reject(e);
+    })
+    .then(() => {
+      this.removeAllListeners('data');
+      return Promise.all(promises);
+    });
+  }
+
+  /**
 	 * Insert data into the database
 	 * @param  {object} data_row
 	 * @return {Promise} Promise resolves when success or rejects when error
@@ -149,14 +211,16 @@ class Collector extends EventEmitter {
 	 * @memberOf Collector
 	 */
   _insert_data(data_row) {
-    // Update time!
+
+    if (typeof data_row !== 'object') {
+      throw new Error('Data to insert is not an object.');
+    }
 
     if (!('_id' in data_row)) {
       throw new Error('Primary key not specified.');
     }
 
     const find = {_id: data_row._id};
-
     return this.model.findOne(find, '', { lean: true })
     .then(old_doc => this.model
       .findOneAndUpdate(find, data_row, {
@@ -165,10 +229,9 @@ class Collector extends EventEmitter {
         new: true,
         lean: false,
       })
-      .catch(err => {
-        return Promise.reject(new CollectorDatabaseError(err));
-      })
+      .catch(err => Promise.reject(new CollectorDatabaseError(err)))
       .then(new_doc => {
+
         // New document
         if (_.isNull(old_doc)) {
           this.emit('create', new_doc);

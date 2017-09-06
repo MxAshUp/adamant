@@ -9,6 +9,7 @@ const // Test tools
   errors = require('../libs/errors'),
   mongooseMock = require('mongoose-mock'),
   // Modules to test
+  CollectorDatabaseError = require('../libs/errors').CollectorDatabaseError,
   Collector = rewire('../libs/collector');
 
 chai.use(chaiAsPromised);
@@ -51,7 +52,7 @@ describe('Collector Class', () => {
   });
 
   describe('Default behavior of override functions', () => {
-    let instance = new TestCollectorClass();
+    const instance = new TestCollectorClass();
     it('Initialize should return nothing', () => {
       expect(instance.initialize()).to.be.undefined;
     });
@@ -61,13 +62,17 @@ describe('Collector Class', () => {
     it('Garbage should garbage nothing', () => {
       expect(instance.garbage()).to.be.undefined;
     });
-    it('Collect should be a generator that yields each item in prepared_data', () => {
+    it('Should return a promise that resolves after events are emitted for data', () => {
       const arr = [Math.random(), Math.random(), Math.random()];
       let count = 0;
-      const iter = instance.collect(arr);
-      expect(iter.next().value).to.equal(arr[0]);
-      expect(iter.next().value).to.equal(arr[1]);
-      expect(iter.next().value).to.equal(arr[2]);
+      const data_spy = sinon.spy();
+      instance.addListener('data', data_spy);
+      return instance.collect(arr).then(() => {
+        sinon.assert.callCount(data_spy, 3);
+        sinon.assert.calledWith(data_spy, arr[0]);
+        sinon.assert.calledWith(data_spy, arr[1]);
+        sinon.assert.calledWith(data_spy, arr[2]);
+      });
     });
   });
 
@@ -120,6 +125,45 @@ describe('Collector Class', () => {
       });
     });
 
+    describe('Collect as a generator function', () => {
+      it('Should return a promise that resolves after events are emitted for data', () => {
+        // Data to put in database
+        const new_data = [
+          { _id: '11', foo: 'bar' },
+          { _id: '12', foo: 'bar2' },
+          { _id: '13', foo: 'updated' },
+        ];
+
+        testModel.findOneAndUpdate
+          .withArgs({ _id: new_data[0]._id })
+          .returns(Promise.resolve(new_data[0]));
+        testModel.findOneAndUpdate
+          .withArgs({ _id: new_data[1]._id })
+          .returns(Promise.resolve(new_data[1]));
+        testModel.findOneAndUpdate
+          .withArgs({ _id: new_data[2]._id })
+          .returns(Promise.resolve(new_data[2]));
+
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.prepare = sinon.stub().resolves(new_data);
+        test_collector_instance.garbage = sinon.stub().resolves();
+        test_collector_instance.collect = function*(prepared_data) {
+          for(let i in prepared_data) {
+            yield prepared_data[i];
+          }
+        }
+        const create_handler = sinon.spy();
+        test_collector_instance.on('create', create_handler);
+
+        return test_collector_instance.run().then(() => {
+          sinon.assert.callCount(create_handler, 3);
+          sinon.assert.calledWith(create_handler, new_data[0]);
+          sinon.assert.calledWith(create_handler, new_data[1]);
+          sinon.assert.calledWith(create_handler, new_data[2]);
+        });
+      });
+    });
+
     describe('Run when already initialized', () => {
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
@@ -157,6 +201,42 @@ describe('Collector Class', () => {
         });
       });
     });
+
+    describe('initializing model', () => {
+      it('should reject with CollectorDatabaseError', () => {
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.initialize = sinon.spy();
+        test_collector_instance.collect = sinon.stub().returns([]);
+        test_collector_instance.prepare = sinon.stub().resolves({});
+        test_collector_instance.garbage = sinon.stub().resolves();
+        sinon.stub(mongooseMock, 'model').throws();
+        expect(test_collector_instance.model).to.be.undefined;
+        return test_collector_instance.run().should.be.rejectedWith(CollectorDatabaseError).then(mongooseMock.model.restore);
+      });
+      it('Should set model on first run', () => {
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.initialize = sinon.spy();
+        test_collector_instance.collect = sinon.stub().returns([]);
+        test_collector_instance.prepare = sinon.stub().resolves({});
+        test_collector_instance.garbage = sinon.stub().resolves();
+        expect(test_collector_instance.model).to.be.undefined;
+        return test_collector_instance.run().then(() => {
+          expect(test_collector_instance.model).to.not.be.undefined;
+        });
+      });
+      it('Should not set model if initialize_flag is true', () => {
+        const test_collector_instance = new TestCollectorClass();
+        test_collector_instance.initialize = sinon.spy();
+        test_collector_instance.collect = sinon.stub().returns([]);
+        test_collector_instance.prepare = sinon.stub().resolves({});
+        test_collector_instance.garbage = sinon.stub().resolves();
+        test_collector_instance.initialize_flag = true;
+        expect(test_collector_instance.model).to.be.undefined;
+        return test_collector_instance.run().then(() => {
+          expect(test_collector_instance.model).to.be.undefined;
+        });
+      });
+    })
 
     describe('Inserting/Updating documents', () => {
       // Data currently in the db
@@ -333,7 +413,6 @@ describe('Collector Class', () => {
         });
       });
     });
-
     describe('With error thrown in initialize()', () => {
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.stub().throws();
@@ -551,6 +630,40 @@ describe('Collector Class', () => {
       it('Should reject run with Error', () => {
         return ret_promise.then(() => {
           sinon.assert.calledOnce(error_spy);
+        });
+      });
+    });
+    describe('with non-objects returned in collect', () => {
+
+      // Data to put in database. Clearly not objects
+      let new_data = [
+        true,
+        'string',
+        13,
+      ];
+
+      let test_collector_instance = new TestCollectorClass();
+      test_collector_instance.initialize = sinon.spy();
+      test_collector_instance.prepare = sinon.stub().resolves({});
+      test_collector_instance.collect = sinon
+        .stub()
+        .returns(new_data);
+
+      let error_handle = sinon.spy();
+      let update_handler = sinon.spy();
+      let create_handler = sinon.spy();
+
+      test_collector_instance.on('update', update_handler);
+      test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('error', error_handle);
+
+      it('Should emit error events', () => {
+        return test_collector_instance.run().then(() => {
+          sinon.assert.calledThrice(error_handle);
+          expect(error_handle.lastCall.args[0]).to.be.instanceOf(Error);
+          expect(error_handle.lastCall.args[0].message).to.equal(
+            'Data to insert is not an object.'
+          );
         });
       });
     });

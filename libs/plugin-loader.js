@@ -151,7 +151,7 @@ class PluginLoader {
           model_config.schema_callback(model_config.schema);
         }
 
-        model_config.model = mongoose.model(model_config.name, schema);
+        model_config.model = mongoose.model(model_config.name, model_config.schema);
 
         return model_config.model;
 

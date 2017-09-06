@@ -6,9 +6,7 @@ const PluginLoader = require('./plugin-loader'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
   chalk = require('chalk'),
-  express = require('express')(),
-  server = require('http').createServer(express),
-  io = require('socket.io')(server);
+  express = require('express');
 
 /**
  * A singleton class
@@ -29,6 +27,9 @@ class App {
     this.event_dispatcher_service.name = 'Event dispatcher';
     this.event_dispatcher.on('error', console.log);
     this._bind_service_events(this.event_dispatcher_service);
+    this.express_app = express();
+    this.server = require('http').createServer(this.express_app);
+    this.io = require('socket.io')(this.server);
   }
 
   /**
@@ -63,11 +64,11 @@ class App {
   _load_routes() {
 
     // Default endpoints
-    express.get('/', (req, res) => {
+    this.express_app.get('/', (req, res) => {
       res.send('Metric platform!');
     });
 
-    this.plugin_loader.load_plugin_routes(express);
+    this.plugin_loader.load_plugin_routes(this.express_app);
   }
 
   /**
@@ -76,7 +77,7 @@ class App {
    * @memberof App
    */
   _load_sockets() {
-    io.on('connection', socket => {
+    this.io.on('connection', socket => {
 
       socket.on('disconnect', () => {
         // @todo - perform disconnect routine here
@@ -159,6 +160,9 @@ class App {
 
     collector.on('error', err => {
       console.log(`${chalk.red('error')}: ${chalk.grey(err.stack)}`);
+      if (err.culprit) {
+        console.log(`${chalk.red('error details')}: ${chalk.grey(err.culprit)}`);
+      }
     });
   }
 
@@ -215,11 +219,11 @@ class App {
 
     // stop collector services
     _.each(this.collect_services, service =>
-      service.stop().catch(console.log)
+      service.stop()
     );
 
     // stop event dispatcher service
-    this.event_dispatcher_service.stop().catch(console.log);
+    this.event_dispatcher_service.stop();
 
     // terminate app process
     process.exit(0);
