@@ -11,7 +11,8 @@ const // Test tools
   EventHandleError = require('../libs/errors').EventHandleError,
   EventHandler = rewire('../libs/event-handler'),
   EventDispatcher = rewire('../libs/event-dispatcher'),
-  Event = rewire('../libs/event');
+  Event = rewire('../libs/event'),
+  EventComplete = require('../libs/event-complete');
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -413,6 +414,32 @@ describe('Event System - ', () => {
       test_handler_1.dispatch.apply(test_handler_1);
 
       expect(dispatcher.shift_event()).to.deep.equal(test_event_a);
+    });
+
+    it('Should enqueue an EventComplete when dispatching an event', () => {
+
+      dispatcher.event_queue = [];
+
+      const test_event_data = Math.random();
+      const test_event_data_return = Math.random();
+      test_event_a = new Event('test.event_1', test_event_data);
+
+      test_handler_1.dispatch = () => test_event_data_return;
+
+      test_handler_1.enqueue_complete_event = true;
+
+      dispatcher.enqueue_event(test_event_a);
+
+      return dispatcher.run().then(() => {
+        const event_remaining = dispatcher.shift_event();
+        expect(event_remaining).to.be.instanceof(EventComplete);
+        expect(event_remaining.event_name).to.equal('test.event_1.complete');
+        expect(event_remaining.data).to.equal(test_event_data_return);
+        return dispatcher.run().then(() => {
+          // When dispatching the complete event, should not enqueue another event
+          expect(dispatcher.shift_event()).to.be.undefined;
+        });
+      })
     });
   });
 
