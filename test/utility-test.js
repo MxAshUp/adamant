@@ -11,7 +11,7 @@ const chai = require('chai'),
 chai.use(chaiAsPromised);
 chai.should();
 
-let console_log_spy = sinon.spy();
+console_log_spy = sinon.stub().callsFake(console.log);
 utility.__set__('console', { log: console_log_spy });
 
 describe('Utilities', () => {

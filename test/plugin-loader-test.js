@@ -7,7 +7,7 @@ const rewire = require('rewire'),
   Plugin = require('../libs/plugin'),
   PluginLoader = rewire('../libs/plugin-loader');
 
-console_log_spy = sinon.spy();
+console_log_spy = sinon.stub().callsFake(console.log);
 PluginLoader.__set__('console', { log: console_log_spy });
 
 describe('Plugin Loader', function() {
