@@ -33,6 +33,29 @@ class Plugin {
   }
 
   /**
+   * Allows extending model schema before model is loaded
+   *
+   * @param {String} plugin_name
+   * @param {String} model_name
+   * @param {Object} schema
+   * @memberof PluginLoader
+   */
+  extend_schema(model_name, extend_schema) {
+    const model_config = _.find(this.models, {name: model_name});
+    const extend_path_keys = _.keys(extend_schema);
+    const existing_path_keys = _.union(_.keys(model_config.schema), ['_id']);
+    const not_allowed_keys = _.intersection(extend_path_keys, existing_path_keys);
+    if(not_allowed_keys.length) {
+      throw new Error(`Cannot extend ${model_name} because path(s) cannot be overwritten: ${not_allowed_keys.join(', ')}`);
+    }
+    // Save a copy of original schema
+    if(_.isUndefined(model_config._original_schema)) {
+      model_config._original_schema = Object.assign({}, model_config.schema);
+    }
+    model_config.schema = Object.assign({}, model_config.schema, extend_schema);
+  }
+
+  /**
 	 * Abstract way to create a component from a plugin
 	 *
 	 * @param {any} type collectors, event_handlers

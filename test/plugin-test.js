@@ -4,28 +4,28 @@ const rewire = require('rewire'),
   expect = chai.expect,
   assert = chai.assert,
   // components to test
-  plugin = rewire('../libs/plugin');
+  Plugin = rewire('../libs/plugin');
 
-console_log_spy = sinon.spy();
-plugin.__set__('console', { log: console_log_spy });
+console_log_spy = sinon.stub().callsFake(console.log);
+Plugin.__set__('console', { log: console_log_spy });
 
 describe('Abstract Plugin', () => {
   it('Should construct without throwing error', () => {
     expect(
       () =>
-        new plugin({
+        new Plugin({
           name: '_test_plugin',
         })
     ).to.not.throw();
   });
   it('Should construct and throw error if name not specified', () => {
-    expect(() => new plugin()).to.throw(
+    expect(() => new Plugin()).to.throw(
       `A valid name is required for Plugin object.`
     );
   });
   it('Should construct and assign models', () => {
     const models = [Math.random(), Math.random(), Math.random()];
-    let pl = new plugin({
+    let pl = new Plugin({
       name: '_test_plugin',
       models: models,
     });
@@ -34,7 +34,7 @@ describe('Abstract Plugin', () => {
   });
   it('Should construct and assign collectors', () => {
     const collectors = [Math.random(), Math.random(), Math.random()];
-    let pl = new plugin({
+    let pl = new Plugin({
       name: '_test_plugin',
       collectors: collectors,
     });
@@ -43,7 +43,7 @@ describe('Abstract Plugin', () => {
   });
   it('Should construct and assign event handlers', () => {
     const event_handlers = [Math.random(), Math.random(), Math.random()];
-    let pl = new plugin({
+    let pl = new Plugin({
       name: '_test_plugin',
       event_handlers: event_handlers,
     });
@@ -82,7 +82,7 @@ describe('Abstract Plugin', () => {
 
     const collectors = [collector_a, collector_b];
     const event_handlers = [handler_a, handler_b];
-    let pl = new plugin({
+    let pl = new Plugin({
       name: '_test_plugin',
       collectors: collectors,
       event_handlers: event_handlers,
@@ -154,7 +154,7 @@ describe('Abstract Plugin', () => {
   });
 
   describe('Default behavior of override functions', () => {
-    let pl = new plugin({ name: '_test_plugin' });
+    let pl = new Plugin({ name: '_test_plugin' });
     it('on_load should return nothing', () => {
       expect(pl.on_load()).to.be.undefined;
     });
@@ -163,6 +163,190 @@ describe('Abstract Plugin', () => {
     });
     it('load_routes should return nothing', () => {
       expect(pl.load_routes()).to.be.undefined;
+    });
+  });
+
+  describe('extend_schema', () => {
+    it('Should extend schema as expected.', () => {
+
+      const mock_schema_tests = [
+        {
+          original_schema: {
+            name: String,
+            age: Number,
+          },
+          extended_schema: {
+            deceased: Boolean,
+          },
+          expected_schema: {
+            name: String,
+            age: Number,
+            deceased: Boolean,
+          }
+        },
+        {
+          original_schema: {
+            _id: String,
+          },
+          extended_schema: {
+            deceased: Boolean,
+          },
+          expected_schema: {
+            _id: String,
+            deceased: Boolean,
+          }
+        }
+      ];
+
+      mock_schema_tests.forEach((mock_schema_test) => {
+
+        let pl = new Plugin({
+          name: '_test_plugin',
+          models: [
+            {
+              name: 'not_used_model',
+              schema: {}
+            },
+            {
+              name: 'not_used_model_2',
+              schema: {}
+            },
+            {
+              name: 'test.model',
+              schema: mock_schema_test.original_schema
+            },
+            {
+              name: 'not_used_model_3',
+              schema: {}
+            },
+          ],
+        });
+
+        pl.extend_schema('test.model', mock_schema_test.extended_schema);
+        expect(pl.models[2].schema).to.deep.equal(mock_schema_test.expected_schema);
+
+      });
+    });
+    it('Should try to extend schema but throw error.', () => {
+
+      const mock_schema_tests = [
+        {
+          original_schema: {
+            _id: String,
+            age: Number,
+          },
+          extended_schema: {
+            age: String,
+          },
+          expected_error: `Cannot extend test.model because path(s) cannot be overwritten: age`
+        },
+        {
+          original_schema: {
+            _id: String,
+          },
+          extended_schema: {
+            _id: Number,
+          },
+          expected_error: `Cannot extend test.model because path(s) cannot be overwritten: _id`
+        },
+        {
+          original_schema: {
+            name: String,
+          },
+          extended_schema: {
+            _id: Number,
+          },
+          expected_error: `Cannot extend test.model because path(s) cannot be overwritten: _id`
+        }
+      ];
+
+      mock_schema_tests.forEach((mock_schema_test) => {
+
+        let pl = new Plugin({
+          name: '_test_plugin',
+          models: [
+            {
+              name: 'not_used_model',
+              schema: {}
+            },
+            {
+              name: 'not_used_model_2',
+              schema: {}
+            },
+            {
+              name: 'test.model',
+              schema: mock_schema_test.original_schema
+            },
+            {
+              name: 'not_used_model_3',
+              schema: {}
+            },
+          ],
+        });
+
+        expect(() => {
+          pl.extend_schema('test.model', mock_schema_test.extended_schema);
+        }).to.throw(Error, mock_schema_test.expected_error);
+
+      });
+    });
+    it('Should preserve original schema in _original_schema.', () => {
+      const mock_original_schema = {
+        _id: String,
+        name: String
+      };
+
+      let pl = new Plugin({
+        name: '_test_plugin',
+        models: [
+          {
+            name: 'test.model',
+            schema: mock_original_schema
+          },
+        ],
+      });
+
+      pl.extend_schema('test.model', {
+        age: Number
+      });
+
+      expect(pl.models[0]._original_schema).to.deep.equal(mock_original_schema);
+
+    });
+    it('Should extend schema twice.', () => {
+
+      const mock_original_schema = {
+        _id: String,
+        name: String
+      };
+
+      const mock_expected_schema = {
+        _id: String,
+        name: String,
+        job: String,
+        position: String
+      };
+
+      let pl = new Plugin({
+        name: '_test_plugin',
+        models: [
+          {
+            name: 'test.model',
+            schema: mock_original_schema
+          },
+        ],
+      });
+
+      pl.extend_schema('test.model', {
+        job: String
+      });
+
+      pl.extend_schema('test.model', {
+        position: String
+      });
+
+      expect(pl.models[0].schema).to.deep.equal(mock_expected_schema);
+
     });
   });
 

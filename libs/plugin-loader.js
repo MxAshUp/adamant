@@ -114,6 +114,26 @@ class PluginLoader {
   }
 
   /**
+   * Allows extending model schema before model is loaded
+   *
+   * @param {String} plugin_name
+   * @param {String} model_name
+   * @param {Object} schema
+   * @memberof PluginLoader
+   */
+  extend_schema(plugin_name, model_name, extend_schema) {
+    const plugin = _.find(this.plugins, {name: plugin_name});
+    const model_config = _.find(plugin.models, {name: model_name});
+    const extend_path_keys = _.keys(extend_schema);
+    const existing_path_keys = _.keys(model_config.extend_schema);
+    const not_allowed_keys = _.intersection(extend_path_keys, existing_path_keys);
+    if(not_allowed_keys.length) {
+      throw new Error(`Cannot extend ${model_name} because path(s) cannot be overwritten: ${not_allowed_keys.join(', ')}`);
+    }
+    Object.assign(model_config.schema, extend_schema);
+  }
+
+  /**
    * Loops through plugins and loads models
    *
    * @memberof PluginLoader
