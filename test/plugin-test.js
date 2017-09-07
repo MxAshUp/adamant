@@ -3,11 +3,12 @@ const rewire = require('rewire'),
   chai = require('chai'),
   expect = chai.expect,
   assert = chai.assert,
+  mongooseMock = require('mongoose'),
   // components to test
   Plugin = rewire('../libs/plugin');
 
 console_log_spy = sinon.stub().callsFake(console.log);
-Plugin.__set__('console', { log: console_log_spy });
+Plugin.__set__('console', { log: console_log_spy });;
 
 describe('Abstract Plugin', () => {
   it('Should construct without throwing error', () => {
@@ -153,6 +154,94 @@ describe('Abstract Plugin', () => {
     });
   });
 
+  describe('load_models', () => {
+
+    it('Should load each plugin.model into mongoose', () => {
+
+      const mock_models = [
+        {
+          name: 'mock_model_1',
+          schema: {
+            _id: String,
+            prop1: Number
+          }
+        },
+        {
+          name: 'mock_model_2',
+          schema_callback: sinon.spy(),
+          schema: {
+            _id: String,
+            prop2: Number
+          }
+        },
+        {
+          name: 'mock_model_3',
+          schema: {
+            _id: String,
+            prop3: Number
+          }
+        }
+      ];
+
+      afterEach(() => {
+        mock_models.forEach((model) => {
+          delete mongooseMock.models[model.name];
+          delete mongooseMock.modelSchemas[model.name];
+        });
+      });
+
+      let pl = new Plugin({ name: '_test_plugin', models: mock_models });
+
+      pl.load_models(mongooseMock);
+
+      mock_models.forEach((model_config) => {
+        expect(mongooseMock.model(model_config.name).schema.obj).to.deep.equal(model_config.schema.obj);
+      })
+
+    });
+    it('Should load plugin.model and run schema_callback', () => {
+
+      const mock_models = [
+        {
+          name: 'mock_model_1',
+          schema: {
+            _id: String,
+            prop1: Number
+          }
+        },
+        {
+          name: 'mock_model_2',
+          schema_callback: sinon.spy(),
+          schema: {
+            _id: String,
+            prop2: Number
+          }
+        },
+        {
+          name: 'mock_model_3',
+          schema: {
+            _id: String,
+            prop3: Number
+          }
+        }
+      ];
+
+      afterEach(() => {
+        mock_models.forEach((model) => {
+          delete mongooseMock.models[model.name];
+          delete mongooseMock.modelSchemas[model.name];
+        });
+      });
+
+      let pl = new Plugin({ name: '_test_plugin', models: mock_models });
+
+      pl.load_models(mongooseMock);
+
+      sinon.assert.calledWith(mock_models[1].schema_callback, mock_models[1].schema);
+
+    });
+  });
+
   describe('Default behavior of override functions', () => {
     let pl = new Plugin({ name: '_test_plugin' });
     it('on_load should return nothing', () => {
@@ -163,6 +252,9 @@ describe('Abstract Plugin', () => {
     });
     it('load_routes should return nothing', () => {
       expect(pl.load_routes()).to.be.undefined;
+    });
+    it('map_events should return nothing', () => {
+      expect(pl.map_events()).to.be.undefined;
     });
   });
 
