@@ -67,10 +67,32 @@ class Plugin {
     return component;
   }
 
-  // default methods to be overridden
-  load_routes() {}
+  /**
+   * Loops through plugins and loads models
+   *
+   * @memberof PluginLoader
+   */
+  load_models(mongoose) {
+    // Look at each model
+    _.each(this.models, model_config => {
 
-  map_events() {}
+      model_config.schema = mongoose.Schema(model_config.schema);
+
+      // Allow schema_callback to provide plugin options, middleware stuff
+      if (typeof model_config.schema_callback === 'function') {
+        model_config.schema_callback(model_config.schema);
+      }
+
+      model_config.model = mongoose.model(model_config.name, model_config.schema);
+
+      return model_config.model;
+    });
+  }
+
+  // default methods to be overridden
+  load_routes(express) {}
+
+  map_events(socket) {}
 
   on_load() {}
 
