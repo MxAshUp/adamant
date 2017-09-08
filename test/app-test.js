@@ -104,7 +104,43 @@ describe('App', () => {
     });
   });
 
-  describe('run', () => {});
+  describe('run', () => {
+    const y = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
+    const app = new App({
+      web: {
+        port: y,
+      },
+    });
+    app.stop = sinon.stub();
+    app.event_dispatcher_service = {
+      start: sinon.stub().resolves(),
+    };
+    app.collect_services = [];
+    const n = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
+    const serviceStartStub = sinon.stub().resolves();
+    for (var i = 0; i < n; i++) {
+      const service = { start: serviceStartStub };
+      app.collect_services.push(service);
+    }
+    app.server = {
+      listen: sinon.stub(),
+    };
+
+    app.run();
+
+    it('Should start Event Dispatcher Service', () => {
+      expect(app.event_dispatcher_service.start.callCount).to.equal(1);
+    });
+
+    it('Should start N collector services', () => {
+      expect(serviceStartStub.callCount).to.equal(n);
+    });
+
+    it('Should instruct Express Server to listen on port Y', () => {
+      expect(app.server.listen.callCount).to.equal(1);
+      sinon.assert.calledWith(app.server.listen, y);
+    });
+  });
 
   describe('stop', () => {});
 
