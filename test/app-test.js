@@ -23,10 +23,16 @@ const EventDispatcherInstanceMock = {
 };
 const EventDispatcherMock = sinon.stub().returns(EventDispatcherInstanceMock);
 
+const LoopServiceInstanceMock = {
+  on: sinon.stub(),
+};
+const LoopServiceMock = sinon.stub().returns(LoopServiceInstanceMock);
+
 console_log_spy = sinon.spy();
 App.__set__('console', { log: console_log_spy });
 App.__set__('PluginLoader', PluginLoaderMock);
 App.__set__('EventDispatcher', EventDispatcherMock);
+App.__set__('LoopService', LoopServiceMock);
 
 describe('App', () => {
   beforeEach(() => {
