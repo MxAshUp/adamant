@@ -95,7 +95,7 @@ class EventDispatcher extends EventEmitter {
 
     // Filter event handlers
     const filtered_event_handlers = _.filter(
-      _.filter(this.event_handlers, handler => handler.should_handle()),
+      _.filter(this.event_handlers, handler => !handler.should_handle || handler.should_handle()),
       search
     );
 
