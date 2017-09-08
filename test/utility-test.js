@@ -71,7 +71,7 @@ describe('Utilities', () => {
           return immmediatePromise();
         })
         .then(() => {
-          // Shouldn't be resolved yet
+          // Should now be resolved
           sinon.assert.calledOnce(resolved_spy);
         });
     });
@@ -107,7 +107,7 @@ describe('Utilities', () => {
           return immmediatePromise();
         })
         .then(() => {
-          // Shouldn't be resolved yet
+          // Should now be resolved
           sinon.assert.calledOnce(resolved_spy);
         });
 
