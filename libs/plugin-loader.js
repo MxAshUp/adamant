@@ -42,8 +42,12 @@ class PluginLoader {
     plugin_args.description = plugin_info.description
       ? plugin_info.description
       : '';
-    plugin_args.author = plugin_info.author ? plugin_info.author : '';
-    plugin_args.license = plugin_info.license ? plugin_info.license : '';
+    plugin_args.author = plugin_info.author
+      ? plugin_info.author
+      : '';
+    plugin_args.license = plugin_info.license
+      ? plugin_info.license
+      : '';
 
     //Initialize plugin
     const plugin = new Plugin(plugin_args);
