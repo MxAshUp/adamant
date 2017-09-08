@@ -36,9 +36,12 @@ App.__set__('LoopService', LoopServiceMock);
 
 describe('App', () => {
   beforeEach(() => {
+    // Reset PluginLoaderMock
     PluginLoaderInstanceMock.load_plugin.reset();
-    PluginLoaderInstanceMock.create_event_handler.reset();
-    PluginLoaderInstanceMock.create_event_handler.returns({});
+    PluginLoaderInstanceMock.create_event_handler.resetHistory();
+    PluginLoaderInstanceMock.create_collector.resetHistory();
+
+    // Reset EventDispatcherMock
     EventDispatcherInstanceMock.load_event_handler.reset();
   });
 
