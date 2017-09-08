@@ -142,8 +142,8 @@ class App {
     if (config.event_name)
       handler.event_name = config.event_name;
 
-    if (config.defer)
-      handler.defer = config.defer;
+    if (config.defer_dispatch)
+      handler.defer_dispatch = config.defer_dispatch;
 
     if (config.should_handle)
       handler.should_handle = config.should_handle;
