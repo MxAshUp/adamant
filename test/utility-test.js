@@ -42,6 +42,21 @@ describe('Utilities', () => {
       defer_fn_stub.reset();
     });
 
+    it('Should call defer_fn with event data', () => {
+      const mock_data = Math.random();
+
+      return Promise.resolve()
+        .then(() => {
+          // Triggering this event will allow it to be resolved
+          event_emitter.emit(event_name_test,mock_data);
+          return immmediatePromise();
+        })
+        .then(() => {
+          // Shouldn't be resolved yet
+          sinon.assert.calledWith(defer_fn_stub, mock_data);
+        });
+    });
+
     it('Should return a promise that resolves after event is emitted', () => {
 
       return Promise.resolve()
@@ -110,7 +125,7 @@ describe('Utilities', () => {
     });
   });
 
-  describe('defer_on_event', () => {
+  describe('defer_on_event errors', () => {
     const event_name_test = 'testEvent';
     const mock_error = 'An Error message ' + Math.random();
     const defer_fn_stub = sinon.stub();

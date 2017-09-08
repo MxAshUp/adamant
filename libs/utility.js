@@ -8,9 +8,9 @@
  */
 const defer_on_event = (event_name, defer_fn, event_emitter) => {
   return new Promise((resolve, reject) => {
-    const handle_fn = () => {
+    const handle_fn = (event_data) => {
       Promise.resolve()
-        .then(defer_fn)
+        .then(defer_fn.bind(null, event_data))
         .then(res => {
           if (res) {
             event_emitter.removeListener(event_name, handle_fn);
