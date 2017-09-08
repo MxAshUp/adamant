@@ -175,7 +175,7 @@ class EventDispatcher extends EventEmitter {
   /**
   * Enqueues an event to be handled
   *
-  * @param {EVent} event_obj - event to enqueue
+  * @param {Event} event_obj - event to enqueue
   *
   * @memberOf EventDispatcher
   */
