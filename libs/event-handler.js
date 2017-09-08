@@ -17,7 +17,7 @@ class EventHandler extends EventEmitter {
       event_name: '',
       supports_revert: false,
       instance_id: '',
-      should_handle: () => true,
+      should_handle: null,
       enqueue_complete_event: false,
     };
 
