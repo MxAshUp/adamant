@@ -6,6 +6,7 @@ const rewire = require('rewire');
 // components to test
 const App = rewire('../libs/app');
 
+// PluginLoader Mock
 const PluginLoaderInstanceMock = {
   load_plugin: sinon.spy(),
   // load_plugin_models: null,
@@ -16,6 +17,7 @@ const PluginLoaderInstanceMock = {
 };
 const PluginLoaderMock = sinon.stub().returns(PluginLoaderInstanceMock);
 
+// Event Dispatcher Mock
 const EventDispatcherInstanceMock = {
   load_event_handler: sinon.stub(),
   run: sinon.stub(),
@@ -23,10 +25,17 @@ const EventDispatcherInstanceMock = {
 };
 const EventDispatcherMock = sinon.stub().returns(EventDispatcherInstanceMock);
 
+// LoopService Mock
 const LoopServiceInstanceMock = {
   on: sinon.stub(),
 };
 const LoopServiceMock = sinon.stub().returns(LoopServiceInstanceMock);
+
+// Collector Instance Mock
+const CollectorInstanceMock = {
+  model_name: 'stub',
+  run: sinon.stub(),
+};
 
 console_log_spy = sinon.spy();
 App.__set__('console', { log: console_log_spy });
@@ -41,7 +50,7 @@ describe('App', () => {
     PluginLoaderInstanceMock.create_event_handler.reset();
     PluginLoaderInstanceMock.create_event_handler.returns({});
     PluginLoaderInstanceMock.create_collector.reset();
-    PluginLoaderInstanceMock.create_collector.returns({});
+    PluginLoaderInstanceMock.create_collector.returns(CollectorInstanceMock);
 
     // Reset EventDispatcherMock
     EventDispatcherInstanceMock.load_event_handler.reset();
