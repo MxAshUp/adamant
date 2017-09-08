@@ -27,7 +27,21 @@ describe('App', () => {
 
   describe('init', () => {});
 
-  describe('load_plugins', () => {});
+  describe('load_plugins', () => {
+    const app = new App({});
+
+    it('Should call load_plugin N times and not throw', () => {
+      const pluginDirPaths = [];
+      const n = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
+      for (var i = 0; i < n; i++) {
+        pluginDirPaths.push('z');
+      }
+
+      app.load_plugins(pluginDirPaths);
+      expect(PluginLoaderLoadPluginSpy).to.not.throw;
+      expect(PluginLoaderLoadPluginSpy.callCount).to.equal(n);
+    });
+  });
 
   describe('load_collector', () => {});
 
