@@ -11,8 +11,8 @@ const PluginLoaderInstanceMock = {
   // load_plugin_models: null,
   // load_plugin_routes: null,
   // load_plugin_sockets: null,
-  // create_collector: null,
-  create_event_handler: sinon.stub().returns({}),
+  create_collector: sinon.stub(),
+  create_event_handler: sinon.stub(),
 };
 const PluginLoaderMock = sinon.stub().returns(PluginLoaderInstanceMock);
 
@@ -38,8 +38,10 @@ describe('App', () => {
   beforeEach(() => {
     // Reset PluginLoaderMock
     PluginLoaderInstanceMock.load_plugin.reset();
-    PluginLoaderInstanceMock.create_event_handler.resetHistory();
-    PluginLoaderInstanceMock.create_collector.resetHistory();
+    PluginLoaderInstanceMock.create_event_handler.reset();
+    PluginLoaderInstanceMock.create_event_handler.returns({});
+    PluginLoaderInstanceMock.create_collector.reset();
+    PluginLoaderInstanceMock.create_collector.returns({});
 
     // Reset EventDispatcherMock
     EventDispatcherInstanceMock.load_event_handler.reset();
