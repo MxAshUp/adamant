@@ -8,17 +8,24 @@ const App = rewire('../libs/app');
 
 const PluginLoaderInstanceMock = {
   load_plugin: sinon.spy(),
-  load_plugin_models: null,
-  load_plugin_routes: null,
-  load_plugin_sockets: null,
-  create_collector: null,
-  create_event_handler: null,
+  // load_plugin_models: null,
+  // load_plugin_routes: null,
+  // load_plugin_sockets: null,
+  // create_collector: null,
+  create_event_handler: sinon.stub().returns({}),
 };
 const PluginLoaderMock = sinon.stub().returns(PluginLoaderInstanceMock);
+
+const EventDispatcherInstanceMock = {
+  load_event_handler: sinon.stub(),
+  run: sinon.stub(),
+};
+const EventDispatcherMock = sinon.stub().returns(EventDispatcherInstanceMock);
 
 console_log_spy = sinon.spy();
 App.__set__('console', { log: console_log_spy });
 App.__set__('PluginLoader', PluginLoaderMock);
+// App.__set__('EventDispatcher', EventDispatcherMock);
 
 describe('App', () => {
   it('Should construct an instance without throwing an error', () => {
