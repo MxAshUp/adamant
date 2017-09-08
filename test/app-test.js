@@ -40,7 +40,20 @@ describe('App', () => {
     return new App();
   });
 
-  describe('init', () => {});
+  describe('init', () => {
+    const app = new App({});
+    app._load_database = sinon.stub();
+    app._load_routes = sinon.stub();
+    app._load_sockets = sinon.stub();
+
+    it('Should return a promise that resolves and call three internal methods', () => {
+      app.init().then(() => {
+        expect(app._load_database.callCount).to.equal(1);
+        expect(app._load_routes.callCount).to.equal(1);
+        expect(app._load_sockets.callCount).to.equal(1);
+      });
+    });
+  });
 
   describe('load_plugins', () => {
     const app = new App({});
