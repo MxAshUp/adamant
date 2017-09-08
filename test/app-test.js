@@ -42,6 +42,8 @@ describe('App', () => {
 
   describe('init', () => {
     const app = new App({});
+
+    // stub app methods
     app._load_database = sinon.stub();
     app._load_routes = sinon.stub();
     app._load_sockets = sinon.stub();
@@ -111,10 +113,17 @@ describe('App', () => {
         port: y,
       },
     });
+
+    // stub/mock app props
     app.stop = sinon.stub();
     app.event_dispatcher_service = {
       start: sinon.stub().resolves(),
     };
+    app.server = {
+      listen: sinon.stub(),
+    };
+
+    // mock collector services
     app.collect_services = [];
     const n = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
     const serviceStartStub = sinon.stub().resolves();
@@ -122,9 +131,6 @@ describe('App', () => {
       const service = { start: serviceStartStub };
       app.collect_services.push(service);
     }
-    app.server = {
-      listen: sinon.stub(),
-    };
 
     app.run();
 
