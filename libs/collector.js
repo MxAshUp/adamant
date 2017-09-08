@@ -28,7 +28,6 @@ class Collector extends EventEmitter {
 
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
-    this.mongoose = undefined; // mongoose instance. Should be set after constructing and before run()
     this.args = {};
   }
 
