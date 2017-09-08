@@ -1,3 +1,1 @@
-module.exports = [
-  require('../../collector'),
-];
+module.exports = require('../../collector');

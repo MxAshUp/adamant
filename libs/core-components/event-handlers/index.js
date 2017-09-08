@@ -1,3 +1,1 @@
-module.exports = [
-  require('../../event-handler'),
-];
+module.exports = require('../../event-handler');
