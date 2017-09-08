@@ -86,12 +86,14 @@ class PluginLoader {
    * @memberOf PluginLoader
    */
   create_event_handler(handler_config) {
-    return this.get_plugin_by_name(handler_config.plugin_name).create_component(
-      'event_handlers',
-      handler_config.handler_name,
-      handler_config.config,
-      handler_config.version
-    );
+    return this.get_plugin_by_name(
+        handler_config.plugin_name
+      ).create_component(
+        'event_handlers',
+        handler_config.handler_name,
+        handler_config.config,
+        handler_config.version
+      );
   }
 
   /**
