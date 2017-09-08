@@ -64,7 +64,11 @@ describe('App', () => {
     const app = new App();
 
     it('Should create event handler and call event_dispatcher.load_event_handler with handler', () => {
-      const config = { event_name: 'z' };
+      const config = {
+        event_name: 'z',
+        defer_dispatch: true,
+        should_handle: true,
+      };
       app.load_event_handler(config);
 
       // PluginLoader
