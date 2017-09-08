@@ -41,7 +41,6 @@ describe('Event System - ', () => {
 
       this.event_name = 'test.event_1';
       this.supports_revert = true;
-      this.plugin_name = '_test';
     }
     dispatch() {
       test_1_dispatch_cb.apply(this, arguments);
@@ -61,7 +60,6 @@ describe('Event System - ', () => {
 
       this.event_name = 'test.event_2';
       this.supports_revert = true;
-      this.plugin_name = '_test';
     }
     dispatch() {
       test_2_dispatch_cb.apply(this, arguments);
@@ -81,7 +79,6 @@ describe('Event System - ', () => {
 
       this.event_name = 'test.event_2';
       this.supports_revert = true;
-      this.plugin_name = '_test';
     }
     dispatch() {
       test_3_dispatch_cb.apply(this, arguments);
@@ -95,7 +92,6 @@ describe('Event System - ', () => {
   const test_handler_2 = new test_2_handler_class();
   const test_handler_3 = new test_3_handler_class();
   const test_handler_4 = new test_3_handler_class();
-  const test_handler_5 = new test_3_handler_class();
 
   describe('Event Handler', () => {
     it('Should create two Event Handler instances', () => {
