@@ -112,15 +112,14 @@ class EventDispatcher extends EventEmitter {
           }
         })
         .then(handler.dispatch.bind(handler, event_obj.data))
-        .then((dispatchResult) => {
-          // enqueue event.complete event w/ result data
-          // Only enqueue it if the handler instructs us to, and if the event object isn't already a .complete event
+        .then(dispatchResult => {
+          // enqueue EventComplete event w/ result data
+          // Only enqueue it if the handler instructs us to, and if the event object isn't already an EventComplete event
           if(handler.enqueue_complete_event && !(event_obj instanceof EventComplete)) {
             this.enqueue_event(new EventComplete(event_obj, dispatchResult));
           }
-          return dispatchResult;
-        })
-        .then(dispatchResult => {
+
+          // Emit dispatched event
           this.emit('dispatched', event_obj, handler);
         })
         .catch(e => {
