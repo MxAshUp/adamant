@@ -14,6 +14,13 @@ describe('App', () => {
     return new app();
   });
 
+  describe('init', () => {});
+  describe('load_plugins', () => {});
+  describe('load_collector', () => {});
+  describe('load_event_handler', () => {});
+  describe('run', () => {});
+  describe('stop', () => {});
+
   it('Should never call console.log', () => {
     sinon.assert.neverCalledWith(console_log_spy);
   });
