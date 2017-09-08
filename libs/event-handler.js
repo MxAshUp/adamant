@@ -17,7 +17,8 @@ class EventHandler extends EventEmitter {
       event_name: '',
       supports_revert: false,
       instance_id: '',
-      should_handle: null,
+      should_handle: null, // Function
+      defer_dispatch: null, // {event_name: String, check_callback: Function}
       enqueue_complete_event: false,
     };
 
