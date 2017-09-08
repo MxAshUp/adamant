@@ -1,4 +1,4 @@
-const PluginLoader = require('./plugin-loader'),
+let PluginLoader = require('./plugin-loader'),
   mongoose = require('mongoose'),
   _ = require('lodash'),
   LoopService = require('./loop-service'),
