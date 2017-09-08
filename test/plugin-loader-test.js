@@ -103,6 +103,104 @@ describe('Plugin Loader', function() {
         `Error loading plugin: plugin_c - Invalid index.js contents.`
       );
     });
+
+    describe('load_plugin_*', () => {
+
+      var plugin_loader;
+
+      const mock_plugins = {
+        plugin_2_a: {
+          load_models: sinon.spy(),
+          load_routes: sinon.spy(),
+          map_events: sinon.spy(),
+        },
+        plugin_2_b: {
+          load_models: sinon.spy(),
+          load_routes: sinon.spy(),
+          map_events: sinon.spy(),
+        },
+        plugin_2_c: {
+          load_models: sinon.spy(),
+          load_routes: sinon.spy(),
+          map_events: sinon.spy(),
+        },
+      };
+
+      const mock_plugin_info = {
+        plugin_2_a: {
+          name: 'plugin_2_a',
+        },
+        plugin_2_b: {
+          name: 'plugin_2_b',
+        },
+        plugin_2_c: {
+          name: 'plugin_2_c',
+        },
+      };
+
+      // return plugin args for each mock plugin
+      for (var plugin_path in mock_plugins) {
+        require_stub.withArgs(plugin_path).returns(mock_plugins[plugin_path]);
+      }
+
+      // return plugin args for each mock plugin
+      for (var plugin_name in mock_plugin_info) {
+        PluginLoader.get_module_info.withArgs(plugin_name).returns(mock_plugin_info[plugin_name]);
+      }
+
+
+      beforeEach(() => {
+        plugin_loader = new PluginLoader();
+        plugin_loader.load_plugin('plugin_2_a');
+        plugin_loader.load_plugin('plugin_2_b');
+        plugin_loader.load_plugin('plugin_2_c');
+      });
+
+      describe('load_plugin_models', () => {
+
+        const mock_mongoose = Math.random();
+
+        beforeEach(() => {
+          plugin_loader.load_plugin_models(mock_mongoose);
+        });
+
+        it('Should call load_models on all plugins with mock mongoose', () => {
+          sinon.assert.calledWith(mock_plugins.plugin_2_a.load_models, mock_mongoose);
+          sinon.assert.calledWith(mock_plugins.plugin_2_b.load_models, mock_mongoose);
+          sinon.assert.calledWith(mock_plugins.plugin_2_c.load_models, mock_mongoose);
+        });
+      });
+
+      describe('load_plugin_routes', () => {
+        const mock_express = Math.random();
+
+        beforeEach(() => {
+          plugin_loader.load_plugin_routes(mock_express);
+        });
+
+        it('Should call load_routes on all plugins with mock express', () => {
+          sinon.assert.calledWith(mock_plugins.plugin_2_a.load_routes, mock_express);
+          sinon.assert.calledWith(mock_plugins.plugin_2_b.load_routes, mock_express);
+          sinon.assert.calledWith(mock_plugins.plugin_2_c.load_routes, mock_express);
+        });
+      });
+
+      describe('load_plugin_sockets', () => {
+        const mock_socket = Math.random();
+
+        beforeEach(() => {
+          plugin_loader.load_plugin_sockets(mock_socket);
+        });
+
+        it('Should call map_events on all plugins with mock socket', () => {
+          sinon.assert.calledWith(mock_plugins.plugin_2_a.map_events, mock_socket);
+          sinon.assert.calledWith(mock_plugins.plugin_2_b.map_events, mock_socket);
+          sinon.assert.calledWith(mock_plugins.plugin_2_c.map_events, mock_socket);
+        });
+
+      });
+    });
+
   });
 
   describe('Get plugin by name', () => {
