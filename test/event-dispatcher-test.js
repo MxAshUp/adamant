@@ -438,6 +438,70 @@ describe('Event System - ', () => {
         });
       })
     });
+
+    describe('should_handle', () => {
+      const test_event_name = 'test_event_2_b';
+      const test_handles = [
+        new test_1_handler_class(),
+        new test_1_handler_class(),
+        new test_1_handler_class(),
+      ];
+      test_handles.forEach(handler => {
+        handler.should_handle = sinon.stub();
+        handler.dispatch = sinon.stub();
+        handler.event_name = test_event_name;
+        dispatcher.load_event_handler(handler);
+      });
+      beforeEach(() => {
+        test_handles.forEach(handler => {
+          handler.should_handle.reset();
+          handler.dispatch.reset();
+        });
+      });
+      it('Should call should_handle with event object', () => {
+        const test_event = new Event(test_event_name, Math.random());
+        return dispatcher.dispatch_event(test_event).then(() => {
+          test_handles.forEach(handler => {
+            sinon.assert.calledWith(handler.should_handle, test_event);
+          });
+        });
+      });
+      it('Should handle all if should_handle returns true', () => {
+        test_handles.forEach(handler => {
+          handler.should_handle.returns(true);
+        });
+        const test_event = new Event(test_event_name, Math.random());
+        return dispatcher.dispatch_event(test_event).then(() => {
+          test_handles.forEach(handler => {
+            sinon.assert.calledWith(handler.dispatch, test_event.data);
+          });
+        });
+      });
+      it('Should not handle any if should_handle returns false', () => {
+        test_handles.forEach(handler => {
+          handler.should_handle.returns(false);
+        });
+        const test_event = new Event(test_event_name, Math.random());
+        return dispatcher.dispatch_event(test_event).then(() => {
+          test_handles.forEach(handler => {
+            sinon.assert.notCalled(handler.dispatch);
+          });
+        });
+      });
+      it('Should handle with one handler', () => {
+        test_handles.forEach(handler => {
+          handler.should_handle.returns(false);
+        });
+        test_handles[1].should_handle.returns(true);
+
+        const test_event = new Event(test_event_name, Math.random());
+        return dispatcher.dispatch_event(test_event).then(() => {
+          sinon.assert.calledWith(test_handles[1].dispatch, test_event.data);
+          sinon.assert.notCalled(test_handles[0].dispatch);
+          sinon.assert.notCalled(test_handles[2].dispatch);
+        });
+      });
+    });
   });
 
   it('Should never call console.log', () => {
