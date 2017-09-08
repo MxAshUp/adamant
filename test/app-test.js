@@ -6,8 +6,19 @@ const rewire = require('rewire');
 // components to test
 const app = rewire('../libs/app');
 
+const PluginLoaderLoadPluginSpy = sinon.spy();
+const PluginLoaderMock = sinon.stub().returns({
+  load_plugin: PluginLoaderLoadPluginSpy,
+  load_plugin_models: null,
+  load_plugin_routes: null,
+  load_plugin_sockets: null,
+  create_collector: null,
+  create_event_handler: null,
+});
+
 console_log_spy = sinon.spy();
 app.__set__('console', { log: console_log_spy });
+app.__set__('PluginLoader', PluginLoaderMock);
 
 describe('App', () => {
   it('Should construct an instance without throwing an error', () => {
