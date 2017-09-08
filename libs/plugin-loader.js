@@ -2,6 +2,8 @@ var Plugin = require('./plugin'),
   _ = require('lodash'),
   path = require('path');
 
+const core_module_info = require(`${__dirname}/../package.json`);
+
 class PluginLoader {
   /**
    * Creates a new PluginLoader object.
@@ -22,8 +24,16 @@ class PluginLoader {
    *
    */
   load_plugin(module_name, _config) {
+
+    let require_path = module_name;
+
+    // Special path for mp-core components
+    if(module_name == 'mp-core' || module_name == 'local-mp-core') {
+      require_path = `./core-components`;
+    }
+
     //Load in the plugin
-    let plugin_args = require(module_name);
+    let plugin_args = require(require_path);
 
     //Could not load it, or it's not a valid plugin_args
     if (typeof plugin_args !== 'object')
@@ -32,7 +42,7 @@ class PluginLoader {
       );
 
     // Get some module info
-    let plugin_info = PluginLoader.get_module_info(module_name);
+    const plugin_info = PluginLoader.get_module_info(module_name);
 
     // Plugin name is now the same as module
     plugin_args.name = plugin_info.name;
@@ -159,6 +169,12 @@ class PluginLoader {
    * @memberOf PluginLoader
    */
   static get_module_info(module_name) {
+
+    // Get mp-core package.json
+    if(module_name == 'mp-core' || module_name == 'local-mp-core') {
+      return core_module_info;
+    }
+
     let module_path = require.resolve(module_name);
     module_path = path.dirname(module_path);
 
