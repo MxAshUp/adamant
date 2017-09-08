@@ -4,7 +4,7 @@ const assert = chai.assert;
 const sinon = require('sinon');
 const rewire = require('rewire');
 // components to test
-const app = rewire('../libs/app');
+const App = rewire('../libs/app');
 
 const PluginLoaderLoadPluginSpy = sinon.spy();
 const PluginLoaderMock = sinon.stub().returns({
@@ -17,12 +17,12 @@ const PluginLoaderMock = sinon.stub().returns({
 });
 
 console_log_spy = sinon.spy();
-app.__set__('console', { log: console_log_spy });
-app.__set__('PluginLoader', PluginLoaderMock);
+App.__set__('console', { log: console_log_spy });
+App.__set__('PluginLoader', PluginLoaderMock);
 
 describe('App', () => {
   it('Should construct an instance without throwing an error', () => {
-    return new app();
+    return new App();
   });
 
   describe('init', () => {});
