@@ -81,11 +81,6 @@ class EventDispatcher extends EventEmitter {
   * @memberOf EventDispatcher
   */
   dispatch_event(event_obj, handler_id) {
-    // Loop through handlers listening to event
-    // Trigger each callback
-    // @todo: Maybe emit errors
-    // @todo: Maybe emit event Enqueues
-    // @todo: Emit event to confirm event was handled (ie, for updating db)
 
     // Create handler search args
     const search = { event_name: event_obj.event_name };
