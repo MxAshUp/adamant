@@ -60,12 +60,12 @@ class Plugin {
 	 *
 	 * @param {any} type collectors, event_handlers
 	 * @param {any} class_name Name of class of componenet to look for and construct
-	 * @param {any} args Passed to constructor of component
+	 * @param {any} params Passed to constructor of component
 	 * @returns
 	 *
 	 * @memberOf Plugin
 	 */
-  create_component(type, class_name, args, require_version = '') {
+  create_component(type, class_name, params, require_version = '') {
     let component, component_class;
 
     // Check if type exists in plugin
@@ -77,7 +77,7 @@ class Plugin {
     if (!component_class) throw new Error(`Component not found: ${class_name}`);
 
     // Create component instance
-    component = new component_class(args);
+    component = new component_class(params);
 
     // Check version
     if (require_version && !semver.satisfies(this.version, require_version)) {
