@@ -12,7 +12,7 @@ const // Test tools
   EventHandler = rewire('../libs/event-handler'),
   EventDispatcher = rewire('../libs/event-dispatcher'),
   Event = rewire('../libs/event'),
-  EventComplete = rewire('../libs/event-complete');
+  EventComplete = require('../libs/event-complete');
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -20,7 +20,6 @@ chai.use(chaiSubset);
 console_log_spy = sinon.stub().callsFake(console.log);
 EventHandler.__set__('console', { log: console_log_spy });
 EventDispatcher.__set__('console', { log: console_log_spy });
-EventComplete.__set__('console', { log: console_log_spy });
 Event.__set__('console', { log: console_log_spy });
 
 describe('Event System - ', () => {
