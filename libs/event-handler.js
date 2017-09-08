@@ -1,4 +1,4 @@
-const mongoose = EventEmitter = require('events');
+const EventEmitter = require('events');
 
 class EventHandler extends EventEmitter {
   /**
