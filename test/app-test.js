@@ -148,7 +148,47 @@ describe('App', () => {
     });
   });
 
-  describe('stop', () => {});
+  describe('stop', () => {
+    const app = new App({});
+
+    // stub app props
+    app.server = {
+      close: sinon.stub(),
+    };
+    app.event_dispatcher_service = {
+      stop: sinon.stub(),
+    };
+
+    // mock collector services
+    app.collect_services = [];
+    const n = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
+    const serviceStopStub = sinon.stub().resolves();
+    for (var i = 0; i < n; i++) {
+      const service = { stop: serviceStopStub };
+      app.collect_services.push(service);
+    }
+
+    // stub process.exit
+    process.exit = sinon.stub();
+
+    app.stop();
+
+    it('Should halt Express Server', () => {
+      expect(app.server.close.callCount).to.equal(1);
+    });
+
+    it('Should stop all collector services', () => {
+      expect(serviceStopStub.callCount).to.equal(n);
+    });
+
+    it('Should stop event dispatcher service', () => {
+      expect(app.event_dispatcher_service.stop.callCount).to.equal(1);
+    });
+
+    it('Should terminate app process', () => {
+      expect(process.exit.callCount).to.equal(1);
+    });
+  });
 
   it('Should never call console.log', () => {
     sinon.assert.neverCalledWith(console_log_spy);
