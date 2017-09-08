@@ -169,7 +169,9 @@ describe('App', () => {
     }
 
     // stub process.exit
-    process.exit = sinon.stub();
+    // process.exit = sinon.stub();
+    const processExitStub = sinon.stub(process, 'exit');
+    // processStub.exit.onCall(0).returns();
 
     app.stop();
 
@@ -186,8 +188,11 @@ describe('App', () => {
     });
 
     it('Should terminate app process', () => {
-      expect(process.exit.callCount).to.equal(1);
+      expect(processExitStub.callCount).to.equal(1);
     });
+
+    // reset process.exit()
+    process.exit.restore();
   });
 
   it('Should never call console.log', () => {
