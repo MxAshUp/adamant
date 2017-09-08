@@ -28,6 +28,13 @@ App.__set__('PluginLoader', PluginLoaderMock);
 // App.__set__('EventDispatcher', EventDispatcherMock);
 
 describe('App', () => {
+  beforeEach(() => {
+    PluginLoaderInstanceMock.load_plugin.reset();
+    PluginLoaderInstanceMock.create_event_handler.reset();
+    PluginLoaderInstanceMock.create_event_handler.returns({});
+    EventDispatcherInstanceMock.load_event_handler.reset();
+  });
+
   it('Should construct an instance without throwing an error', () => {
     return new App();
   });
