@@ -19,13 +19,14 @@ const PluginLoaderMock = sinon.stub().returns(PluginLoaderInstanceMock);
 const EventDispatcherInstanceMock = {
   load_event_handler: sinon.stub(),
   run: sinon.stub(),
+  on: sinon.stub(),
 };
 const EventDispatcherMock = sinon.stub().returns(EventDispatcherInstanceMock);
 
 console_log_spy = sinon.spy();
 App.__set__('console', { log: console_log_spy });
 App.__set__('PluginLoader', PluginLoaderMock);
-// App.__set__('EventDispatcher', EventDispatcherMock);
+App.__set__('EventDispatcher', EventDispatcherMock);
 
 describe('App', () => {
   beforeEach(() => {
@@ -59,7 +60,32 @@ describe('App', () => {
 
   describe('load_collector', () => {});
 
-  describe('load_event_handler', () => {});
+  describe('load_event_handler', () => {
+    const app = new App();
+
+    it('Should create event handler and call event_dispatcher.load_event_handler with handler', () => {
+      const config = { event_name: 'z' };
+      app.load_event_handler(config);
+
+      // PluginLoader
+      sinon.assert.calledWith(
+        PluginLoaderInstanceMock.create_event_handler,
+        config
+      );
+      expect(PluginLoaderInstanceMock.create_event_handler.callCount).to.equal(
+        1
+      );
+
+      // EventDispatcher
+      sinon.assert.calledWith(
+        EventDispatcherInstanceMock.load_event_handler,
+        config
+      );
+      expect(EventDispatcherInstanceMock.load_event_handler.callCount).to.equal(
+        1
+      );
+    });
+  });
 
   describe('run', () => {});
 
