@@ -176,13 +176,6 @@ describe('Event System - ', () => {
       expect(dispatcher.event_handlers).to.contain(test_handler_4);
     });
 
-    it('Should add event handler to dispatcher and override the event_name', () => {
-      const mock_event_name = 'override_event_name'+Math.random();
-      event_handler_id_5 = dispatcher.load_event_handler(test_handler_5, mock_event_name);
-      expect(dispatcher.event_handlers).to.contain(test_handler_5);
-      expect(dispatcher.get_event_handler(event_handler_id_5).event_name).to.equal(mock_event_name);
-    });
-
     it('Should remove event handler', () => {
       // Removed event handler, check if proper object returned
       expect(dispatcher.remove_event_handler(event_handler_id_4)).to.deep.equal(
