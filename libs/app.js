@@ -17,6 +17,7 @@ class App {
   constructor(config) {
     this._config = config;
     this.plugin_loader = new PluginLoader();
+    this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
 
     // Set up event dispatcher loop service
