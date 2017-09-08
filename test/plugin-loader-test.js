@@ -55,7 +55,7 @@ describe('Plugin Loader', function() {
 
   let plugin_a, plugin_b;
 
-  describe('Load plugin', function() {
+  describe('Load plugin', () => {
     // default behavior
     let require_stub = sinon.stub().throws();
     let get_module_info_stub = sinon.stub().throws();
@@ -66,7 +66,7 @@ describe('Plugin Loader', function() {
     }
 
     // Rewire require()
-    let revert_1 = PluginLoader.__set__('require', require_stub);
+    const revert_1 = PluginLoader.__set__('require', require_stub);
     sinon.stub(PluginLoader, 'get_module_info');
 
     PluginLoader.get_module_info
@@ -272,19 +272,22 @@ describe('Plugin Loader', function() {
   });
 
   describe('get_module_info', () => {
+
+    const mock_path_a = `/some/random/${Math.random()}/path_a/`;
+    let revert_1;
+
+    let require_stub = sinon.stub().throws();
+    let resolve_stub = sinon.stub().throws();
+    require_stub.resolve = resolve_stub;
+
     before(() => {
-      const mock_path_a = `/some/random/${Math.random()}/path_a/`;
-
-      // Rewire require()
-      let require_stub = sinon.stub().throws();
-      let resolve_stub = sinon.stub().throws();
-      require_stub.resolve = resolve_stub;
-      require_stub
-        .withArgs(`${mock_path_a}package.json`)
-        .returns(mock_plugin_a_pkg);
+      require_stub.withArgs(`${mock_path_a}package.json`).returns(mock_plugin_a_pkg);
       resolve_stub.withArgs('plugin_a').returns(`${mock_path_a}index.js`);
-
       revert_1 = PluginLoader.__set__('require', require_stub);
+    });
+
+    after(() => {
+      revert_1();
     });
 
     it('Should load contents from mock module a', () => {
