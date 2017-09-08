@@ -95,6 +95,7 @@ describe('Event System - ', () => {
   const test_handler_2 = new test_2_handler_class();
   const test_handler_3 = new test_3_handler_class();
   const test_handler_4 = new test_3_handler_class();
+  const test_handler_5 = new test_3_handler_class();
 
   describe('Event Handler', () => {
     it('Should create two Event Handler instances', () => {
@@ -173,6 +174,13 @@ describe('Event System - ', () => {
       expect(dispatcher.event_handlers).to.contain(test_handler_2);
       expect(dispatcher.event_handlers).to.contain(test_handler_3);
       expect(dispatcher.event_handlers).to.contain(test_handler_4);
+    });
+
+    it('Should add event handler to dispatcher and override the event_name', () => {
+      const mock_event_name = 'override_event_name'+Math.random();
+      event_handler_id_5 = dispatcher.load_event_handler(test_handler_5, mock_event_name);
+      expect(dispatcher.event_handlers).to.contain(test_handler_5);
+      expect(dispatcher.get_event_handler(event_handler_id_5).event_name).to.equal(mock_event_name);
     });
 
     it('Should remove event handler', () => {
