@@ -200,7 +200,30 @@ describe('Plugin Loader', function() {
 
       });
     });
+  });
 
+  describe('load core plugin components', () => {
+
+    const core_module_info = require(`${__dirname}/../package.json`);
+
+    it('Should load core as a plugin', () => {
+      const pl = new PluginLoader();
+      pl.load_plugin('mp-core');
+      const plugin = pl.get_plugin_by_name(core_module_info.name);
+      expect(plugin.name).to.equal(core_module_info.name);
+      expect(plugin.version).to.equal(core_module_info.version);
+      expect(plugin.description).to.equal(core_module_info.description);
+      expect(plugin.author).to.equal(core_module_info.author);
+      expect(plugin.license).to.equal(core_module_info.license);
+    });
+
+    it('Should return core package info for mp-core', () => {
+      expect(PluginLoader.get_module_info('mp-core')).to.deep.equal(core_module_info);
+    });
+
+    it('Should return core package info for local-mp-core', () => {
+      expect(PluginLoader.get_module_info('local-mp-core')).to.deep.equal(core_module_info);
+    });
   });
 
   describe('Get plugin by name', () => {
