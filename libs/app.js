@@ -138,6 +138,16 @@ class App {
    */
   load_event_handler(config) {
     const handler = this.plugin_loader.create_event_handler(config);
+
+    if (config.event_name)
+      handler.event_name = config.event_name;
+
+    if (config.defer)
+      handler.defer = config.defer;
+
+    if (config.should_handle)
+      handler.should_handle = config.should_handle;
+
     this.event_dispatcher.load_event_handler(handler);
   }
 
