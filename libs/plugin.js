@@ -58,8 +58,8 @@ class Plugin {
   /**
 	 * Abstract way to create a component from a plugin
 	 *
-	 * @param {any} type collectors, event_handlers
-	 * @param {any} class_name Name of class of componenet to look for and construct
+	 * @param {String} type 'collectors', 'event_handlers', etcc
+	 * @param {String} class_name Name of class of componenet to look for and construct
 	 * @param {any} params Passed to constructor of component
 	 * @returns
 	 *
