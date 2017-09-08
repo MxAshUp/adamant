@@ -6,15 +6,15 @@ const rewire = require('rewire');
 // components to test
 const App = rewire('../libs/app');
 
-const PluginLoaderLoadPluginSpy = sinon.spy();
-const PluginLoaderMock = sinon.stub().returns({
-  load_plugin: PluginLoaderLoadPluginSpy,
+const PluginLoaderInstanceMock = {
+  load_plugin: sinon.spy(),
   load_plugin_models: null,
   load_plugin_routes: null,
   load_plugin_sockets: null,
   create_collector: null,
   create_event_handler: null,
-});
+};
+const PluginLoaderMock = sinon.stub().returns(PluginLoaderInstanceMock);
 
 console_log_spy = sinon.spy();
 App.__set__('console', { log: console_log_spy });
@@ -38,8 +38,8 @@ describe('App', () => {
       }
 
       app.load_plugins(pluginDirPaths);
-      expect(PluginLoaderLoadPluginSpy).to.not.throw;
-      expect(PluginLoaderLoadPluginSpy.callCount).to.equal(n);
+      expect(PluginLoaderInstanceMock.load_plugin).to.not.throw;
+      expect(PluginLoaderInstanceMock.load_plugin.callCount).to.equal(n);
     });
   });
 
