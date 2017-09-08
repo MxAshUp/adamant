@@ -16,11 +16,19 @@ const // Test tools
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
+chai.should();
+
+const immmediatePromise = () => {
+  return new Promise(resolve => {
+    setImmediate(resolve);
+  })
+};
 
 console_log_spy = sinon.stub().callsFake(console.log);
 EventHandler.__set__('console', { log: console_log_spy });
 EventDispatcher.__set__('console', { log: console_log_spy });
 Event.__set__('console', { log: console_log_spy });
+
 
 describe('Event System - ', () => {
   // Need some spies and a mock handler for running tests
@@ -500,6 +508,148 @@ describe('Event System - ', () => {
           sinon.assert.notCalled(test_handles[0].dispatch);
           sinon.assert.notCalled(test_handles[2].dispatch);
         });
+      });
+    });
+
+    describe('defer_dispatch', () => {
+      const test_event_name = 'test_event_2_c';
+      const test_defer_event_name = 'test_defer'
+      const test_handles = [
+        new test_1_handler_class(),
+        new test_1_handler_class(),
+        new test_1_handler_class(),
+      ];
+      test_handles.forEach(handler => {
+        handler.defer_dispatch = {
+          event_name: test_defer_event_name,
+          check_callback: sinon.stub().returns(true),
+        }
+        handler.event_name = test_event_name;
+        handler.dispatch = sinon.stub();
+        dispatcher.load_event_handler(handler);
+      });
+      beforeEach(() => {
+        test_handles.forEach(handler => {
+          handler.defer_dispatch.check_callback.reset();
+          handler.defer_dispatch.check_callback.returns(true);
+          handler.dispatch.reset();
+        });
+      });
+
+      it('Should dispatch only after defer_dispatch resolves', () => {
+        const mock_dispatch_data = Math.random();
+        const mock_event_data = Math.random();
+
+        const promise = dispatcher.dispatch_event(new Event(test_event_name, mock_dispatch_data));
+
+        return Promise.resolve()
+          .then(() => {
+            // Shouldn't be dispatched yet
+            test_handles.forEach(handler => {
+              sinon.assert.notCalled(handler.dispatch);
+              sinon.assert.notCalled(handler.defer_dispatch.check_callback);
+            });
+            return immmediatePromise();
+          })
+          .then(() => {
+            // Triggering this event will allow defer_dispatch.check_callback to be checked
+            dispatcher.emit(test_defer_event_name, mock_event_data);
+            return immmediatePromise();
+          })
+          .then(() => {
+            // Should now be dispatched
+            test_handles.forEach(handler => {
+              sinon.assert.calledWith(handler.dispatch, mock_dispatch_data);
+              sinon.assert.calledWith(handler.defer_dispatch.check_callback, mock_event_data);
+            });
+
+            return promise;
+          });
+      });
+
+      it('Should dispatch 2 events at first, and then the last momentarily after', () => {
+        const mock_dispatch_data = Math.random();
+        const mock_event_data = Math.random();
+
+        const promise = dispatcher.dispatch_event(new Event(test_event_name, mock_dispatch_data));
+
+        test_handles[0].defer_dispatch.check_callback.returns(false);
+
+        return Promise.resolve()
+          .then(() => {
+            // Shouldn't be dispatched yet
+            test_handles.forEach(handler => {
+              sinon.assert.notCalled(handler.dispatch);
+              sinon.assert.notCalled(handler.defer_dispatch.check_callback);
+            });
+            return immmediatePromise();
+          })
+          .then(() => {
+            // Triggering this event will allow defer_dispatch.check_callback to be checked
+            dispatcher.emit(test_defer_event_name, mock_event_data);
+            return immmediatePromise();
+          })
+          .then(() => {
+            // Last two should be dispatched, but not 0
+            sinon.assert.notCalled(test_handles[0].dispatch);
+            sinon.assert.calledWith(test_handles[1].dispatch, mock_dispatch_data);
+            sinon.assert.calledWith(test_handles[2].dispatch, mock_dispatch_data);
+            // But all check_callbacks should have been called
+            test_handles.forEach(handler => {
+              sinon.assert.calledWith(handler.defer_dispatch.check_callback, mock_event_data);
+            });
+            return immmediatePromise();
+          })
+          .then(() => {
+            // Triggering this event will allow defer_dispatch.check_callback to be checked
+            test_handles[0].defer_dispatch.check_callback.returns(true);
+            dispatcher.emit(test_defer_event_name, mock_event_data);
+            return immmediatePromise();
+          })
+          .then(() => {
+            // Now all should now be dispatched
+            test_handles.forEach(handler => {
+              sinon.assert.calledWith(handler.dispatch, mock_dispatch_data);
+              sinon.assert.calledWith(handler.defer_dispatch.check_callback, mock_event_data);
+            });
+
+            return promise;
+          });
+      });
+
+      it('Should emit error if defer_dispatch.check_callback throws error', () => {
+        const mock_dispatch_data = Math.random();
+        const mock_event_data = Math.random();
+        const mock_error = new Error('Defer check fail ' + Math.random());
+        const emit_error_spy = sinon.spy();
+        const mock_event = new Event(test_event_name, mock_dispatch_data);
+        dispatcher.on('error', emit_error_spy);
+        test_handles[0].defer_dispatch.check_callback.throws(mock_error);
+
+        const promise = dispatcher.dispatch_event(mock_event);
+
+        return Promise.resolve()
+          .then(() => {
+            // Shouldn't be dispatched yet
+            test_handles.forEach(handler => {
+              sinon.assert.notCalled(handler.dispatch);
+              sinon.assert.notCalled(handler.defer_dispatch.check_callback);
+            });
+            return immmediatePromise();
+          })
+          .then(() => {
+            // Triggering this event will allow defer_dispatch.check_callback to be checked
+            dispatcher.emit(test_defer_event_name, mock_event_data);
+            return immmediatePromise();
+          })
+          .then(() => {
+            sinon.assert.called(emit_error_spy);
+            let error_thrown = emit_error_spy.lastCall.args[0];
+            expect(error_thrown).to.be.instanceof(EventHandleError);
+            expect(error_thrown.culprit).to.equal(mock_error);
+            expect(error_thrown.handler).to.equal(test_handles[0]);
+            expect(error_thrown.event).to.equal(mock_event);
+          });
       });
     });
   });
