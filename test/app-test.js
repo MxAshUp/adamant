@@ -49,8 +49,8 @@ describe('App', () => {
     PluginLoaderInstanceMock.load_plugin.reset();
     PluginLoaderInstanceMock.create_event_handler.reset();
     PluginLoaderInstanceMock.create_event_handler.returns({});
-    PluginLoaderInstanceMock.create_collector.reset();
-    PluginLoaderInstanceMock.create_collector.returns(CollectorInstanceMock);
+    // PluginLoaderInstanceMock.create_collector.resetHistory();
+    // PluginLoaderInstanceMock.create_collector.returns(CollectorInstanceMock);
 
     // Reset EventDispatcherMock
     EventDispatcherInstanceMock.load_event_handler.reset();
@@ -93,33 +93,41 @@ describe('App', () => {
     });
   });
 
-  // describe('load_collector', () => {
-  //   const app = new App({});
+  describe('load_collector', () => {
+    const app = new App({});
 
-  //   // stub app methods
-  //   app._bind_service_events = sinon.stub();
-  //   app._bind_model_events = sinon.stub();
+    // stub app methods
+    app._bind_service_events = sinon.stub();
+    app._bind_model_events = sinon.stub();
 
-  //   // call app.load_collector() w/ config obj
-  //   const config = {
-  //     retry_max_attempts: 1,
-  //     retry_time_between: 1,
-  //     run_min_time_between: 1,
-  //   };
-  //   app.load_collector(config);
+    LoopServiceMock.resetHistory();
 
-  //   // expect plugin.loader.create_collector to be called once w/ config obj
-  //   sinon.assert.calledWith(app.plugin_loader.create_collector, config);
-  //   expect(app.plugin_loader.create_collector.callCount).to.equal(1);
+    // call app.load_collector() w/ config obj
+    const config = {
+      retry_max_attempts: 1,
+      retry_time_between: 1,
+      run_min_time_between: 1,
+    };
+    app.load_collector(config);
 
-  //   // expect LoopServiceMock to be called (new'd) once w/ collector.run method
-  //   // expect config props (x3) to be inserted into service obj
-  //   // expect service.name to equal `${collector.model_name} collector`
-  //   // expect this._bind_service_events to be called once w/ service obj
-  //   // expect this._bind_model_events to be called once w/ collector obj
-  //   // expect service.on method to be called once w/ 'complete' & func as params
-  //   // expect service object to be added to this.collect_services
-  // });
+    // expect plugin.loader.create_collector to be called once w/ config obj
+    it('Should create collector instance with config', () => {
+      sinon.assert.calledWith(app.plugin_loader.create_collector, config);
+      expect(app.plugin_loader.create_collector.callCount).to.equal(1);
+    });
+
+    // // expect LoopServiceMock to be called (new'd) once w/ collector.run method
+    // it('Should create LoopService instance', () => {
+    //   expect(LoopServiceMock.callCount).to.equal(1);
+    // });
+
+    // expect config props (x3) to be inserted into service obj
+    // expect service.name to equal `${collector.model_name} collector`
+    // expect this._bind_service_events to be called once w/ service obj
+    // expect this._bind_model_events to be called once w/ collector obj
+    // expect service.on method to be called once w/ 'complete' & func as params
+    // expect service object to be added to this.collect_services
+  });
 
   describe('load_event_handler', () => {
     const app = new App();
