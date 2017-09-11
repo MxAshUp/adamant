@@ -104,8 +104,8 @@ describe('App', () => {
 
     // call app.load_collector() w/ config obj
     const config = {
-      retry_max_attempts: 1,
-      retry_time_between: 1,
+      service_retry_max_attempts: 1,
+      service_retry_time_between: 1,
       run_min_time_between: 1,
     };
     app.load_collector(config);
