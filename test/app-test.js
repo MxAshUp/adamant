@@ -60,6 +60,19 @@ describe('App', () => {
     return new App();
   });
 
+  it('Should construct an instance and use env MP_MONGODB_URL', () => {
+    process.env.MP_MONGODB_URL = Math.random();
+    let app = new App();
+    expect(app._config.mongodb_url).to.equal(process.env.MP_MONGODB_URL);
+    delete process.env.MP_MONGODB_URL;
+  });
+  it('Should construct an instance and use env MP_WEB_PORT', () => {
+    process.env.MP_WEB_PORT = Math.random();
+    let app = new App();
+    expect(app._config.web_port).to.equal(process.env.MP_WEB_PORT);
+    delete process.env.MP_WEB_PORT;
+  });
+
   describe('init', () => {
     const app = new App({});
 
@@ -67,13 +80,14 @@ describe('App', () => {
     app.plugin_loader.load_plugin_models = sinon.stub().resolves();
     app.plugin_loader.load_plugin_routes = sinon.stub();
 
-    it('Should return a promise that resolves and call three internal methods', () => {
+    it('Should return a promise that resolves and call plugin_loader.load_plugin_models and plugin_loader.load_plugin_routes', () => {
       return app.init().then(() => {
         sinon.assert.calledWith(app.plugin_loader.load_plugin_models, mongooseMock);
         sinon.assert.calledWith(app.plugin_loader.load_plugin_routes, app.express_app);
       });
     });
   });
+
 
   describe('load_plugins', () => {
     const app = new App({});
