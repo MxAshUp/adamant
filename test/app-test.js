@@ -3,6 +3,7 @@ const expect = chai.expect;
 const assert = chai.assert;
 const sinon = require('sinon');
 const rewire = require('rewire');
+const mongooseMock = require('mongoose-mock');
 // components to test
 const App = rewire('../libs/app');
 
@@ -42,6 +43,7 @@ console_log_spy = sinon.spy();
 App.__set__('PluginLoader', PluginLoaderMock);
 App.__set__('EventDispatcher', EventDispatcherMock);
 App.__set__('LoopService', LoopServiceMock);
+App.__set__('mongoose', mongooseMock);
 
 describe('App', () => {
   beforeEach(() => {
@@ -49,8 +51,6 @@ describe('App', () => {
     PluginLoaderInstanceMock.load_plugin.reset();
     PluginLoaderInstanceMock.create_event_handler.reset();
     PluginLoaderInstanceMock.create_event_handler.returns({});
-    // PluginLoaderInstanceMock.create_collector.resetHistory();
-    // PluginLoaderInstanceMock.create_collector.returns(CollectorInstanceMock);
 
     // Reset EventDispatcherMock
     EventDispatcherInstanceMock.load_event_handler.reset();
@@ -64,15 +64,13 @@ describe('App', () => {
     const app = new App({});
 
     // stub app methods
-    app._load_database = sinon.stub();
-    app._load_routes = sinon.stub();
-    app._load_sockets = sinon.stub();
+    app.plugin_loader.load_plugin_models = sinon.stub().resolves();
+    app.plugin_loader.load_plugin_routes = sinon.stub();
 
     it('Should return a promise that resolves and call three internal methods', () => {
-      app.init().then(() => {
-        expect(app._load_database.callCount).to.equal(1);
-        expect(app._load_routes.callCount).to.equal(1);
-        expect(app._load_sockets.callCount).to.equal(1);
+      return app.init().then(() => {
+        sinon.assert.calledWith(app.plugin_loader.load_plugin_models, mongooseMock);
+        sinon.assert.calledWith(app.plugin_loader.load_plugin_routes, app.express_app);
       });
     });
   });
@@ -163,9 +161,7 @@ describe('App', () => {
   describe('run', () => {
     const y = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
     const app = new App({
-      web: {
-        port: y,
-      },
+      web_port: y,
     });
 
     // stub/mock app props
