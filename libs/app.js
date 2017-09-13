@@ -26,8 +26,8 @@ class App {
     this.collect_services = [];
 
     // Load some some config from environment variables
-    this._config.mongodb_url = process.env.MP_MONGODB_URL;
-    this._config.web_port = process.env.MP_WEB_PORT;
+    this._config.mongodb_url = process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '';
+    this._config.web_port = process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '';
 
     // Override config from paramters
     Object.assign(this._config, config);
