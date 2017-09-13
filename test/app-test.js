@@ -89,15 +89,22 @@ describe('App', () => {
 
 
   describe('load_plugins', () => {
-    const app = new App({});
+
+    mock_config = {
+      custom_config_setting: Math.random()
+    };
+
+    const app = new App(mock_config);
 
     it('Should call load_plugin N times and not throw', () => {
-      const n = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
-      const pluginDirPaths = new Array(n);
-      pluginDirPaths.fill('z');
+      const n = Math.floor(Math.random() * 10 + 3); // random integer between 3-13
+      const pluginDirPaths = (new Array(n)).fill().map(() => Math.random());
 
       app.load_plugins(pluginDirPaths);
-      expect(PluginLoaderInstanceMock.load_plugin.callCount).to.equal(n);
+
+      pluginDirPaths.forEach((path) => {
+        sinon.assert.calledWith(PluginLoaderInstanceMock.load_plugin, path, sinon.match(mock_config));
+      });
     });
   });
 
