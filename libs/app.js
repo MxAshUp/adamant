@@ -6,19 +6,31 @@ let PluginLoader = require('./plugin-loader'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
   chalk = require('chalk'),
+  http = require('http'),
+  socketio = require('socket.io'),
   express = require('express');
 
 /**
- * A singleton class
+ * App class for connecting everything together
+ *
+ * @param {Object} config - App config. Example:
  *
  * @class App
  */
 class App {
   constructor(config) {
-    this._config = config;
+    // Establish some defaults
+    this._config = {};
     this.plugin_loader = new PluginLoader();
     this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
+
+    // Load some some config from environment variables
+    this._config.mongodb_url = process.env.MP_MONGODB_URL;
+    this._config.web_port = process.env.MP_WEB_PORT;
+
+    // Override config from paramters
+    Object.assign(this._config, config);
 
     // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
@@ -29,14 +41,14 @@ class App {
     this.event_dispatcher.on('error', console.log);
     this._bind_service_events(this.event_dispatcher_service);
     this.express_app = express();
-    this.server = require('http').createServer(this.express_app);
-    this.io = require('socket.io')(this.server);
+    this.server = http.createServer(this.express_app);
+    this.io = socketio(this.server);
   }
 
   /**
    * Runs app initialize functions
    *
-   * @returns
+   * @returns {Promise}
    * @memberof App
    */
   init() {
@@ -53,7 +65,7 @@ class App {
    */
   _load_database() {
     return Promise.resolve()
-    .then(mongoose.connect.bind(mongoose, this._config.mongodb.uri))
+    .then(mongoose.connect.bind(mongoose, this._config.mongodb_url))
     .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose));
   }
 
@@ -221,7 +233,7 @@ class App {
     _.each(this.collect_services, service =>
       service.start().catch(console.log)
     );
-    this.server.listen(this._config.web.port);
+    this.server.listen(this._config.web_port);
   }
 
   stop() {
