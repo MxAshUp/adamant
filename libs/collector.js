@@ -19,7 +19,6 @@ class Collector extends EventEmitter {
 
     //Default object properties
     const defaults = {
-      model_id_key: '',
       model_name: '',
     };
 
