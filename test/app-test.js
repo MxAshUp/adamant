@@ -4,14 +4,15 @@ const assert = chai.assert;
 const sinon = require('sinon');
 const rewire = require('rewire');
 const mongooseMock = require('mongoose-mock');
+const Collector = require('../libs/collector');
 // components to test
 const App = rewire('../libs/app');
 
 // Collector Instance Mock
-const CollectorInstanceMock = {
+const CollectorInstanceMock = new Collector({
   model_name: 'stub',
   run: sinon.stub(),
-};
+});
 
 // PluginLoader Mock
 const PluginLoaderInstanceMock = {
@@ -36,13 +37,11 @@ const EventDispatcherMock = sinon.stub().returns(EventDispatcherInstanceMock);
 const LoopServiceInstanceMock = {
   on: sinon.stub(),
 };
-const LoopServiceMock = sinon.stub().returns(LoopServiceInstanceMock);
 
 console_log_spy = sinon.spy();
 // App.__set__('console', { log: console_log_spy });
 App.__set__('PluginLoader', PluginLoaderMock);
 App.__set__('EventDispatcher', EventDispatcherMock);
-App.__set__('LoopService', LoopServiceMock);
 App.__set__('mongoose', mongooseMock);
 
 describe('App', () => {
@@ -93,26 +92,17 @@ describe('App', () => {
     const app = new App({});
 
     it('Should call load_plugin N times and not throw', () => {
-      const pluginDirPaths = [];
       const n = Math.floor(Math.random() * 10 + 1); // random integer between 1-10
-      for (var i = 0; i < n; i++) {
-        pluginDirPaths.push('z');
-      }
+      const pluginDirPaths = new Array(n);
+      pluginDirPaths.fill('z');
 
       app.load_plugins(pluginDirPaths);
-      expect(PluginLoaderInstanceMock.load_plugin).to.not.throw;
       expect(PluginLoaderInstanceMock.load_plugin.callCount).to.equal(n);
     });
   });
 
   describe('load_collector', () => {
     const app = new App({});
-
-    // stub app methods
-    app._bind_service_events = sinon.stub();
-    app._bind_model_events = sinon.stub();
-
-    LoopServiceMock.resetHistory();
 
     // call app.load_collector() w/ config obj
     const config = {
