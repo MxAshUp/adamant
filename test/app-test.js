@@ -5,32 +5,21 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 const mongooseMock = require('mongoose-mock');
 const Collector = require('../libs/collector');
+const EventDispatcher = require('../libs/event-dispatcher');
 // components to test
 const App = rewire('../libs/app');
 
 // Collector Instance Mock
-const CollectorInstanceMock = new Collector({
-  model_name: 'stub',
-  run: sinon.stub(),
-});
-
-// PluginLoader Mock
-const PluginLoaderInstanceMock = {
-  load_plugin: sinon.spy(),
-  // load_plugin_models: null,
-  // load_plugin_routes: null,
-  // load_plugin_sockets: null,
-  create_collector: sinon.stub().returns(CollectorInstanceMock),
-  create_event_handler: sinon.stub(),
-};
-const PluginLoaderMock = sinon.stub().returns(PluginLoaderInstanceMock);
+const CollectorInstanceMock = new Collector();
+CollectorInstanceMock.model_name = 'stub';
 
 // Event Dispatcher Mock
-const EventDispatcherInstanceMock = {
-  load_event_handler: sinon.stub(),
-  run: sinon.stub(),
-  on: sinon.stub(),
-};
+const EventDispatcherInstanceMock = new EventDispatcher();
+
+EventDispatcherInstanceMock.load_event_handler = sinon.stub();
+EventDispatcherInstanceMock.run = sinon.stub();
+EventDispatcherInstanceMock.on = sinon.stub();
+
 const EventDispatcherMock = sinon.stub().returns(EventDispatcherInstanceMock);
 
 // LoopService Mock
@@ -38,19 +27,13 @@ const LoopServiceInstanceMock = {
   on: sinon.stub(),
 };
 
-console_log_spy = sinon.spy();
-// App.__set__('console', { log: console_log_spy });
-App.__set__('PluginLoader', PluginLoaderMock);
+console_log_spy = sinon.stub().callsFake(console.log);
+App.__set__('console', { log: console_log_spy });
 App.__set__('EventDispatcher', EventDispatcherMock);
 App.__set__('mongoose', mongooseMock);
 
 describe('App', () => {
   beforeEach(() => {
-    // Reset PluginLoaderMock
-    PluginLoaderInstanceMock.load_plugin.reset();
-    PluginLoaderInstanceMock.create_event_handler.reset();
-    PluginLoaderInstanceMock.create_event_handler.returns({});
-
     // Reset EventDispatcherMock
     EventDispatcherInstanceMock.load_event_handler.reset();
   });
@@ -73,15 +56,22 @@ describe('App', () => {
   });
 
   describe('init', () => {
-    const app = new App({});
+    let app;
 
-    // stub app methods
-    app.plugin_loader.load_plugin_models = sinon.stub().resolves();
-    app.plugin_loader.load_plugin_routes = sinon.stub();
 
-    it('Should return a promise that resolves and call plugin_loader.load_plugin_models and plugin_loader.load_plugin_routes', () => {
+    beforeEach(() => {
+      app = new App({});
+    });
+
+    it('Should return a promise that resolves and call plugin_loader.load_plugin_models', () => {
+      app.plugin_loader.load_plugin_models = sinon.stub().resolves();
       return app.init().then(() => {
         sinon.assert.calledWith(app.plugin_loader.load_plugin_models, mongooseMock);
+      });
+    });
+    it('Should return a promise that resolves and call lugin_loader.load_plugin_routes', () => {
+      app.plugin_loader.load_plugin_routes = sinon.stub();
+      return app.init().then(() => {
         sinon.assert.calledWith(app.plugin_loader.load_plugin_routes, app.express_app);
       });
     });
@@ -90,56 +80,62 @@ describe('App', () => {
 
   describe('load_plugins', () => {
 
+    let app;
+
     mock_config = {
       custom_config_setting: Math.random()
     };
 
-    const app = new App(mock_config);
+    const n = Math.floor(Math.random() * 10 + 3); // random integer between 3-13
+    const pluginDirPaths = (new Array(n)).fill().map(() => Math.random());
 
-    it('Should call load_plugin N times and not throw', () => {
-      const n = Math.floor(Math.random() * 10 + 3); // random integer between 3-13
-      const pluginDirPaths = (new Array(n)).fill().map(() => Math.random());
-
+    beforeEach(() => {
+      app = new App(mock_config);
+      app.plugin_loader.load_plugin = sinon.spy();
       app.load_plugins(pluginDirPaths);
+    });
 
+    it('Should call load_plugin with path and mock_config', () => {
       pluginDirPaths.forEach((path) => {
-        sinon.assert.calledWith(PluginLoaderInstanceMock.load_plugin, path, sinon.match(mock_config));
+        sinon.assert.calledWith(app.plugin_loader.load_plugin, path, sinon.match(mock_config));
       });
     });
   });
 
   describe('load_collector', () => {
-    const app = new App({});
+    let app;
 
-    // call app.load_collector() w/ config obj
     const config = {
       service_retry_max_attempts: 1,
       service_retry_time_between: 1,
       run_min_time_between: 1,
     };
-    app.load_collector(config);
 
-    // expect plugin.loader.create_collector to be called once w/ config obj
-    it('Should create collector instance with config', () => {
-      sinon.assert.calledWith(app.plugin_loader.create_collector, config);
-      expect(app.plugin_loader.create_collector.callCount).to.equal(1);
+    beforeEach(() => {
+      app = new App();;
+      app.plugin_loader.create_collector = sinon.stub().returns(CollectorInstanceMock);
+      app.load_collector(config)
     });
 
-    // // expect LoopServiceMock to be called (new'd) once w/ collector.run method
-    // it('Should create LoopService instance', () => {
-    //   expect(LoopServiceMock.callCount).to.equal(1);
-    // });
+    it('Should call create_collector with config', () => {
+      sinon.assert.calledWith(app.plugin_loader.create_collector, config);
+    });
 
-    // expect config props (x3) to be inserted into service obj
-    // expect service.name to equal `${collector.model_name} collector`
-    // expect this._bind_service_events to be called once w/ service obj
-    // expect this._bind_model_events to be called once w/ collector obj
-    // expect service.on method to be called once w/ 'complete' & func as params
-    // expect service object to be added to this.collect_services
+    it('Should create a LoopService', () => {
+      loop_service = app.collect_services[0];
+      expect(loop_service.constructor.name).to.equal('LoopService');
+    });
+
+    it(`Loop Service should be named '${CollectorInstanceMock.model_name} collector'`, () => {
+      loop_service = app.collect_services[0];
+      expect(loop_service.name).to.equal(`${CollectorInstanceMock.model_name} collector`);
+    });
+
   });
 
   describe('load_event_handler', () => {
     const app = new App();
+    app.plugin_loader.create_event_handler = sinon.stub().returns({});
 
     it('Should create event handler and call event_dispatcher.load_event_handler with handler', () => {
       const config = {
@@ -151,10 +147,10 @@ describe('App', () => {
 
       // PluginLoader
       sinon.assert.calledWith(
-        PluginLoaderInstanceMock.create_event_handler,
+        app.plugin_loader.create_event_handler,
         config
       );
-      expect(PluginLoaderInstanceMock.create_event_handler.callCount).to.equal(
+      expect(app.plugin_loader.create_event_handler.callCount).to.equal(
         1
       );
 
