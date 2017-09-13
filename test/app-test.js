@@ -134,35 +134,52 @@ describe('App', () => {
   });
 
   describe('load_event_handler', () => {
-    const app = new App();
-    app.plugin_loader.create_event_handler = sinon.stub().returns({});
+    let app;
 
-    it('Should create event handler and call event_dispatcher.load_event_handler with handler', () => {
-      const config = {
-        event_name: 'z',
-        defer_dispatch: true,
-        should_handle: true,
-      };
-      app.load_event_handler(config);
+    const config = {
+      event_name: `${Math.random}`,
+      defer_dispatch: true,
+      should_handle: true,
+    };
 
-      // PluginLoader
-      sinon.assert.calledWith(
-        app.plugin_loader.create_event_handler,
-        config
-      );
-      expect(app.plugin_loader.create_event_handler.callCount).to.equal(
-        1
-      );
+    const config_other_vals = {
+      _unique: Math.random()
+    };
 
-      // EventDispatcher
-      sinon.assert.calledWith(
-        EventDispatcherInstanceMock.load_event_handler,
-        config
-      );
-      expect(EventDispatcherInstanceMock.load_event_handler.callCount).to.equal(
-        1
-      );
+    const mock_handler = {
+      _unique: Math.random()
+    };
+
+    beforeEach(() => {
+      app = new App();
+      app.plugin_loader.create_event_handler = sinon.stub().returns(mock_handler);
     });
+
+    it('Should call create_event_handler with config', () => {
+      app.load_event_handler(config_other_vals);
+      sinon.assert.calledWith(app.plugin_loader.create_event_handler, config_other_vals);
+    });
+
+    it('Should call load_event_handler on event Dispatcher', () => {
+      app.load_event_handler(config_other_vals);
+      sinon.assert.calledWith(EventDispatcherInstanceMock.load_event_handler, mock_handler);
+    });
+
+    it('Should set handler event_name', () => {
+      app.load_event_handler(config);
+      expect(EventDispatcherInstanceMock.load_event_handler.lastCall.args[0].event_name).to.equal(config.event_name);
+    });
+
+    it('Should set handler defer_dispatch', () => {
+      app.load_event_handler(config);
+      expect(EventDispatcherInstanceMock.load_event_handler.lastCall.args[0].defer_dispatch).to.equal(config.defer_dispatch);
+    });
+
+    it('Should set handler should_handle', () => {
+      app.load_event_handler(config);
+      expect(EventDispatcherInstanceMock.load_event_handler.lastCall.args[0].should_handle).to.equal(config.should_handle);
+    });
+
   });
 
   describe('run', () => {
