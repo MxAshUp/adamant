@@ -26,6 +26,19 @@ const defer_on_event = (event_name, defer_fn, event_emitter) => {
   });
 };
 
+class Counter {
+  constructor() {
+    this.counters = {};
+  }
+  increment(index) {
+    if(!(index in this.counters)) {
+      this.counters[index] = 0;
+    }
+    this.counters[index]++;
+  }
+};
+
 module.exports = {
   defer_on_event,
+  Counter
 };

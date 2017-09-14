@@ -3,6 +3,7 @@ var EventEmitter = require('events'),
   _ = require('lodash'),
   CollectorInitializeError = require('./errors').CollectorInitializeError,
   CollectorDatabaseError = require('./errors').CollectorDatabaseError,
+  Counter = require('./utility').Counter,
   util = require('util');
 
 class Collector extends EventEmitter {
@@ -28,6 +29,7 @@ class Collector extends EventEmitter {
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
     this.args = {};
+    this.run_results = {};
   }
 
   /**
@@ -115,22 +117,23 @@ class Collector extends EventEmitter {
         })
         // Collect data and insert it
         .then(this._do_collect.bind(this))
+        // Add to results
+        .then((counter) => this.run_results.collect = counter.counters)
         // Remove docs that may need to be removed
-        .then(() => {
-          return Promise.resolve(this.garbage(this.prepared_data,this.args)).then(to_remove => {
-            return Promise.all(_.map(to_remove,this._remove_data.bind(this)));
-          });
-        })
+        .then(this._do_garbage.bind(this))
+        // Add to results
+        .then((counter) => this.run_results.garbage = counter.counters)
         // collect is success, cleanup and return data
-        .then(data => {
+        .then(() => {
           this.initialize_flag = true;
-          return data;
         })
         // If any error occurs during sync, we need to initialize again next time around
         .catch(err => {
           this.initialize_flag = false;
+          this.emit('done');
           return Promise.reject(err); // We're not handling the error, throw it along
         })
+        .then(this.emit.bind(this, 'done', this.run_results))
     );
   }
 
@@ -156,6 +159,32 @@ class Collector extends EventEmitter {
     }, 'Collect as a generator is deprecated.');
   }
 
+  _do_garbage() {
+
+    const counter = new Counter();
+
+    // Create array of promises that represent all collects and inserts
+    const promises = [];
+
+    const remove_fn = (to_garbage) => {
+      promises.push(
+        Promise.resolve(to_garbage)
+        .then(this._remove_data.bind(this))
+        .then(counter.increment.bind(counter,'success'))
+        .catch(e => {
+          counter.increment('fail');
+          return Promise.reject(e);
+        })
+        .catch(this._handle_collect_error.bind(this))
+      );
+    };
+
+    return Promise.resolve()
+      .then(this.garbage.bind(this, this.prepared_data,this.args))
+      .then(to_remove => Promise.all(_.map(to_remove, remove_fn)))
+      .then(() => counter);
+  }
+
   /**
    * Runs this.collect and facilitates inserting data
    *
@@ -163,6 +192,8 @@ class Collector extends EventEmitter {
    * @memberof Collector
    */
   _do_collect() {
+
+    const counter = new Counter();
 
     // If this.collect is a generator, need to polyfill it
     const collect_fn = this.collect.constructor.name === "GeneratorFunction" ?
@@ -178,6 +209,11 @@ class Collector extends EventEmitter {
         promises.push(
           Promise.resolve(to_collect)
           .then(this._insert_data.bind(this))
+          .then(counter.increment.bind(counter,'success'))
+          .catch(e => {
+            counter.increment('fail');
+            return Promise.reject(e);
+          })
           .catch(this._handle_collect_error.bind(this))
         );
       });
@@ -198,7 +234,7 @@ class Collector extends EventEmitter {
     .then(() => {
       this.removeAllListeners('data');
       return Promise.all(promises);
-    });
+    }).then(() => counter);
   }
 
   /**
@@ -269,13 +305,15 @@ class Collector extends EventEmitter {
 	 */
   _remove_data(lookup) {
     // Find doc by lookup and remove it
-    return this.model.findOneAndRemove(lookup).then(res => {
-      // res is defined if something was found and deleted
-      if (!_.isNull(res)) {
-        this.emit('remove', res); // Execute remove event function
-      }
-      return Promise.resolve(!_.isNull(res));
-    });
+    return this.model.findOneAndRemove(lookup)
+      .then(res => {
+        // res is defined if something was found and deleted
+        if (!_.isNull(res)) {
+          this.emit('remove', res); // Execute remove event function
+        }
+        return Promise.resolve(!_.isNull(res));
+      })
+      .catch(err => Promise.reject(new CollectorDatabaseError(err)));
   }
 }
 

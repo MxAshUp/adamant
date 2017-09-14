@@ -41,7 +41,6 @@ describe('Collector Class', () => {
       super();
 
       // Collector properties
-      this.plugin_name = '_Test';
       this.model_name = 'test.test_model';
     }
   }
@@ -93,9 +92,11 @@ describe('Collector Class', () => {
 
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
+      let done_handler = sinon.spy();
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('done', done_handler);
 
       it('Should call initialize()', () => {
         return ret_promise.then(() => {
@@ -121,6 +122,16 @@ describe('Collector Class', () => {
         return ret_promise.then(() => {
           sinon.assert.notCalled(update_handler);
           sinon.assert.notCalled(create_handler);
+        });
+      });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with empty object parameters', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledWith(done_handler, sinon.match({collect: {}, garbage: {}}));
         });
       });
     });
@@ -394,11 +405,13 @@ describe('Collector Class', () => {
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
       let remove_handler = sinon.spy();
+      let done_handler = sinon.spy();
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
       test_collector_instance.on('error', error_handle);
       test_collector_instance.on('remove', remove_handler);
+      test_collector_instance.on('done', done_handler);
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
@@ -412,6 +425,107 @@ describe('Collector Class', () => {
           sinon.assert.calledTwice(remove_handler);
         });
       });
+      it('Should not emit error', () => {
+        return ret_promise.then(() => {
+          sinon.assert.notCalled(error_handle);
+        });
+      });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with correct counter parameter', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledWith(done_handler, sinon.match({
+            collect: {},
+            garbage: {
+              success: 3,
+            }
+          }));
+        });
+      });
+    });
+    describe('Removing documents with database error', () => {
+      // Data to put in database
+      let remove_data = [{ _id: '29', foo: 'bar' }, { _id: '31', foo: 'rab' }];
+
+      let test_collector_instance = new TestCollectorClass();
+      test_collector_instance.initialize = sinon.spy();
+      test_collector_instance.prepare = sinon.stub().resolves({});
+      test_collector_instance.collect = sinon.stub().returns([]);
+      test_collector_instance.garbage = sinon
+        .stub()
+        .resolves([
+          { _id: remove_data[0]._id },
+          { _id: remove_data[1]._id },
+          { _id: 'notfound' },
+        ]);
+
+      const mock_error = new Error(Math.random);
+
+      testModel.findOneAndRemove
+        .withArgs({ _id: remove_data[0]._id })
+        .returns(Promise.resolve(remove_data[0]));
+      testModel.findOneAndRemove
+        .withArgs({ _id: remove_data[1]._id })
+        .returns(Promise.reject(mock_error));
+      testModel.findOneAndRemove
+        .withArgs({ _id: 'notfound' })
+        .returns(Promise.resolve(null));
+
+      let error_spy = sinon.spy();
+
+      let error_handle = sinon.spy();
+      let update_handler = sinon.spy();
+      let create_handler = sinon.spy();
+      let remove_handler = sinon.spy();
+      let done_handler = sinon.spy();
+
+      test_collector_instance.on('update', update_handler);
+      test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('error', error_handle);
+      test_collector_instance.on('remove', remove_handler);
+      test_collector_instance.on('done', done_handler);
+
+      let ret_promise = test_collector_instance.run().catch(error_spy);
+
+      it('Should call garbage', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(test_collector_instance.garbage);
+        });
+      });
+      it('Should emit only 1 remove event', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(remove_handler);
+        });
+      });
+      it('Should emit error with CollectorDatabaseError', () => {
+        return ret_promise.then(() => {
+          expect(error_handle.lastCall.args[0]).to.be.instanceOf(CollectorDatabaseError);
+        });
+      });
+      it('Should emit error with culprit of mock_error', () => {
+        return ret_promise.then(() => {
+          expect(error_handle.lastCall.args[0].culprit).to.equal(mock_error);
+        });
+      });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with correct counter parameter', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledWith(done_handler, sinon.match({
+            collect: {},
+            garbage: {
+              fail: 1,
+              success: 2,
+            }
+          }));
+        });
+      });
     });
     describe('With error thrown in initialize()', () => {
       let test_collector_instance = new TestCollectorClass();
@@ -422,9 +536,11 @@ describe('Collector Class', () => {
 
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
+      let done_handler = sinon.spy();
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('done', done_handler);
 
       let error_spy = sinon.spy();
 
@@ -456,6 +572,16 @@ describe('Collector Class', () => {
           sinon.assert.notCalled(test_collector_instance.garbage);
         });
       });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with undefined counter parameter', () => {
+        return ret_promise.then(() => {
+          expect(done_handler.lastCall.args[0]).to.be.undefined;
+        });
+      });
     });
     describe('with error thrown in prepare()', () => {
       let test_collector_instance = new TestCollectorClass();
@@ -468,9 +594,11 @@ describe('Collector Class', () => {
 
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
+      let done_handler = sinon.spy();
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('done', done_handler);
 
       let error_spy = sinon.spy();
 
@@ -496,6 +624,16 @@ describe('Collector Class', () => {
       it('Should set initialize_flag to false', () => {
         return ret_promise.then(() => {
           expect(test_collector_instance.initialize_flag).to.be.equal(false);
+        });
+      });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with undefined counter parameter', () => {
+        return ret_promise.then(() => {
+          expect(done_handler.lastCall.args[0]).to.be.undefined;
         });
       });
     });
@@ -548,10 +686,13 @@ describe('Collector Class', () => {
       let error_handle = sinon.spy();
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
+      let done_handler = sinon.spy();
+
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
       test_collector_instance.on('error', error_handle);
+      test_collector_instance.on('done', done_handler);
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
@@ -580,6 +721,22 @@ describe('Collector Class', () => {
           expect(test_collector_instance.initialize_flag).to.be.equal(true);
         });
       });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with correct counter parameter', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledWith(done_handler, sinon.match({
+            collect: {
+              success: 2,
+              fail: 1
+            },
+            garbage: {}
+          }));
+        });
+      });
     });
     describe('with error thrown in collect', () => {
       let test_collector_instance = new TestCollectorClass();
@@ -593,10 +750,12 @@ describe('Collector Class', () => {
       let error_handle = sinon.spy();
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
+      let done_handler = sinon.spy();
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
       test_collector_instance.on('error', error_handle);
+      test_collector_instance.on('done', done_handler);
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
@@ -630,6 +789,16 @@ describe('Collector Class', () => {
       it('Should reject run with Error', () => {
         return ret_promise.then(() => {
           sinon.assert.calledOnce(error_spy);
+        });
+      });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with correct counter parameter', () => {
+        return ret_promise.then(() => {
+          expect(done_handler.lastCall.args[0]).to.be.undefined;
         });
       });
     });
@@ -709,10 +878,12 @@ describe('Collector Class', () => {
       let error_handle = sinon.spy();
       let update_handler = sinon.spy();
       let create_handler = sinon.spy();
+      let done_handler = sinon.spy();
 
       test_collector_instance.on('update', update_handler);
       test_collector_instance.on('create', create_handler);
       test_collector_instance.on('error', error_handle);
+      test_collector_instance.on('done', done_handler);
 
       let ret_promise = test_collector_instance.run().catch(error_spy);
 
@@ -753,6 +924,22 @@ describe('Collector Class', () => {
       it('Should not set initialize_flag to false', () => {
         return ret_promise.then(() => {
           expect(test_collector_instance.initialize_flag).to.be.equal(true);
+        });
+      });
+      it('Should emit done', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledOnce(done_handler);
+        });
+      });
+      it('Should emit done with correct counter parameter', () => {
+        return ret_promise.then(() => {
+          sinon.assert.calledWith(done_handler, sinon.match({
+            collect: {
+              success: 1,
+              fail: 1
+            },
+            garbage: {}
+          }));
         });
       });
     });
