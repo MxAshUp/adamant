@@ -75,12 +75,6 @@ class App {
    * @memberof App
    */
   _load_routes() {
-
-    // Default endpoints
-    this.express_app.get('/', (req, res) => {
-      res.send('Metric platform!');
-    });
-
     this.plugin_loader.load_plugin_routes(this.express_app);
   }
 
@@ -90,14 +84,7 @@ class App {
    * @memberof App
    */
   _load_sockets() {
-    this.io.on('connection', socket => {
-
-      socket.on('disconnect', () => {
-        // @todo - perform disconnect routine here
-      });
-
-      this.plugin_loader.load_plugin_sockets(socket);
-    });
+    this.io.on('connection', this.plugin_loader.load_plugin_sockets.bind(this.plugin_loader));
   }
 
   /**
@@ -136,9 +123,7 @@ class App {
     service.name = `${collector.model_name} collector`;
     this._bind_service_events(service);
     this._bind_model_events(collector);
-    service.on('complete', () =>
-      this.event_dispatcher.emit(`complete.${collector.model_name}`)
-    );
+    service.on('complete', this.event_dispatcher.emit.bind(this.event_dispatcher, `complete.${collector.model_name}`));
     this.collect_services.push(service);
   }
 
@@ -174,19 +159,9 @@ class App {
   _bind_model_events(collector) {
     //Add event handling
     _.each(['create', 'update', 'remove'], event => {
-      collector.on(event, data => {
-        this.event_dispatcher.enqueue_event(
-          new Event(`${collector.model_name}.${event}`, data)
-        );
-      });
+      collector.on(event, this.handle_collector_event.bind(this, collector));
     });
-
-    collector.on('error', err => {
-      console.log(`${chalk.red('error')}: ${chalk.grey(err.stack)}`);
-      if (err.culprit) {
-        console.log(`${chalk.red('error details')}: ${chalk.grey(err.culprit)}`);
-      }
-    });
+    collector.on('error', this.handle_collector_error.bind(this, collector));
   }
 
   /**
@@ -197,26 +172,33 @@ class App {
    * @memberOf App
    */
   _bind_service_events(service) {
-    service.on('error', e => {
-      console.log(
-        `${chalk.bgCyan(service.name)} service ${chalk.red(
-          'error'
-        )}: ${chalk.grey(e.stack)}`
-      );
-      if (e.culprit) {
-        console.log(`${chalk.red('error details')}: ${chalk.grey(e.culprit)}`);
-      }
-    });
-    service.on('start', () =>
-      console.log(
-        `${chalk.bgCyan(service.name)} service ${chalk.bold('started')}.`
-      )
+
+    service.on('error', this.handle_service_error.bind(this, service));
+    service.on('start', this.debug_message.bind(this, `${service.name} service`, 'started'));
+    service.on('stop', this.debug_message.bind(this, `${service.name} service`, 'stopped'));
+  }
+
+  handle_collector_event(collector, data) {
+    this.event_dispatcher.enqueue_event(
+      new Event(`${collector.model_name}.${event}`, data)
     );
-    service.on('stop', () =>
-      console.log(
-        `${chalk.bgCyan(service.name)} service ${chalk.bold('stopped')}.`
-      )
+  }
+
+  handle_collector_error(collector, error) {
+    debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
+  }
+
+  handle_service_error(service, error) {
+    debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
+  }
+
+  debug_message(name, message, details) {
+    console.log(
+      `[${name}] ${message}.`
     );
+    if (details) {
+      console.log(`Details: ${details}`);
+    }
   }
 
   /**
@@ -229,10 +211,8 @@ class App {
     // graceful shutdown
     process.on('SIGTERM', this.stop.bind(this));
 
-    this.event_dispatcher_service.start().catch(console.log);
-    _.each(this.collect_services, service =>
-      service.start().catch(console.log)
-    );
+    this.event_dispatcher_service.start();
+    _.each(this.collect_services, service => service.start());
     this.server.listen(this._config.web_port);
   }
 
