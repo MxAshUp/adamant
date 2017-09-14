@@ -30,7 +30,7 @@
     "node": true
   },
   "engines": {
-    "node" : ">=7.0.0"
+    "node": ">=7.0.0"
   },
   "license": "UNLICENSED",
   "main": "index.js",
