@@ -24,6 +24,7 @@ class App {
     this.plugin_loader = new PluginLoader();
     this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
+    this.collectors = [];
 
     // Load some some config from environment variables
     this._config.mongodb_url = process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '';
@@ -123,8 +124,8 @@ class App {
     service.name = `${collector.model_name} collector`;
     this._bind_service_events(service);
     this._bind_model_events(collector);
-    service.on('complete', this.event_dispatcher.emit.bind(this.event_dispatcher, `complete.${collector.model_name}`));
     this.collect_services.push(service);
+    this.collectors.push(collector);
   }
 
   /**
@@ -162,6 +163,7 @@ class App {
       collector.on(event, this.handle_collector_event.bind(this, collector));
     });
     collector.on('error', this.handle_collector_error.bind(this, collector));
+    collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
   }
 
   /**
@@ -172,7 +174,6 @@ class App {
    * @memberOf App
    */
   _bind_service_events(service) {
-
     service.on('error', this.handle_service_error.bind(this, service));
     service.on('start', this.debug_message.bind(this, `${service.name} service`, 'started'));
     service.on('stop', this.debug_message.bind(this, `${service.name} service`, 'stopped'));
@@ -185,11 +186,11 @@ class App {
   }
 
   handle_collector_error(collector, error) {
-    debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
+    this.debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
   }
 
   handle_service_error(service, error) {
-    debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
+    this.debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
   }
 
   debug_message(name, message, details) {
