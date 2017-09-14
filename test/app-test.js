@@ -5,6 +5,7 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 const mongooseMock = require('mongoose-mock');
 const Collector = require('../libs/collector');
+const EventHandler = require('../libs/event-handler');
 const EventDispatcher = require('../libs/event-dispatcher');
 // components to test
 const App = rewire('../libs/app');
@@ -13,6 +14,9 @@ const App = rewire('../libs/app');
 const CollectorInstanceMock = new Collector();
 CollectorInstanceMock.model_name = 'stub';
 
+// Event Handler Instance Mock
+const EventHandlerInstanceMock = new EventHandler();
+
 // Event Dispatcher Mock
 const EventDispatcherInstanceMock = new EventDispatcher();
 
@@ -20,7 +24,6 @@ EventDispatcherInstanceMock.load_event_handler = sinon.stub();
 EventDispatcherInstanceMock.run = sinon.stub();
 EventDispatcherInstanceMock.on = sinon.stub();
 
-const EventDispatcherMock = sinon.stub().returns(EventDispatcherInstanceMock);
 
 // LoopService Mock
 const LoopServiceInstanceMock = {
@@ -29,14 +32,10 @@ const LoopServiceInstanceMock = {
 
 console_log_spy = sinon.stub().callsFake(console.log);
 App.__set__('console', { log: console_log_spy });
-App.__set__('EventDispatcher', EventDispatcherMock);
 App.__set__('mongoose', mongooseMock);
 
 describe('App', () => {
-  beforeEach(() => {
-    // Reset EventDispatcherMock
-    EventDispatcherInstanceMock.load_event_handler.reset();
-  });
+
 
   it('Should construct an instance without throwing an error', () => {
     return new App();
@@ -111,24 +110,46 @@ describe('App', () => {
       run_min_time_between: 1,
     };
 
+    const config_other_vals = {
+      _unique: Math.random()
+    };
+
     beforeEach(() => {
       app = new App();;
       app.plugin_loader.create_collector = sinon.stub().returns(CollectorInstanceMock);
-      app.load_collector(config)
     });
 
     it('Should call create_collector with config', () => {
-      sinon.assert.calledWith(app.plugin_loader.create_collector, config);
+      app.load_collector(config_other_vals)
+      sinon.assert.calledWith(app.plugin_loader.create_collector, config_other_vals);
     });
 
     it('Should create a LoopService', () => {
+      app.load_collector(config_other_vals)
       loop_service = app.collect_services[0];
       expect(loop_service.constructor.name).to.equal('LoopService');
     });
 
     it(`Loop Service should be named '${CollectorInstanceMock.model_name} collector'`, () => {
+      app.load_collector(config_other_vals)
       loop_service = app.collect_services[0];
       expect(loop_service.name).to.equal(`${CollectorInstanceMock.model_name} collector`);
+    });
+
+
+    it('Should set handler service_retry_max_attempts', () => {
+      app.load_collector(config);
+      expect(app.collect_services[0].retry_max_attempts).to.equal(config.service_retry_max_attempts);
+    });
+
+    it('Should set handler service_retry_time_between', () => {
+      app.load_collector(config);
+      expect(app.collect_services[0].retry_time_between).to.equal(config.service_retry_time_between);
+    });
+
+    it('Should set handler run_min_time_between', () => {
+      app.load_collector(config);
+      expect(app.collect_services[0].run_min_time_between).to.equal(config.run_min_time_between);
     });
 
   });
@@ -146,13 +167,10 @@ describe('App', () => {
       _unique: Math.random()
     };
 
-    const mock_handler = {
-      _unique: Math.random()
-    };
-
     beforeEach(() => {
       app = new App();
-      app.plugin_loader.create_event_handler = sinon.stub().returns(mock_handler);
+      app.plugin_loader.create_event_handler = sinon.stub().returns(EventHandlerInstanceMock);
+      app.event_dispatcher = EventDispatcherInstanceMock;
     });
 
     it('Should call create_event_handler with config', () => {
@@ -162,7 +180,7 @@ describe('App', () => {
 
     it('Should call load_event_handler on event Dispatcher', () => {
       app.load_event_handler(config_other_vals);
-      sinon.assert.calledWith(EventDispatcherInstanceMock.load_event_handler, mock_handler);
+      sinon.assert.calledWith(EventDispatcherInstanceMock.load_event_handler, EventHandlerInstanceMock);
     });
 
     it('Should set handler event_name', () => {
