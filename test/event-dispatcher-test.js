@@ -247,7 +247,7 @@ describe('Event System - ', () => {
       const spy_handler = sinon.spy();
       const test_event = new Event('test.event_1', test_event_data);
 
-      dispatcher.on('dispatched', spy_handler);
+      dispatcher.on('dispatch', spy_handler);
 
       return dispatcher.dispatch_event(test_event).then(() => {
         // Event handler dispatch should have been called with correct args

@@ -115,7 +115,7 @@ class EventDispatcher extends EventEmitter {
           }
 
           // Emit dispatched event
-          this.emit('dispatched', event_obj, handler);
+          this.emit('dispatch', event_obj, handler);
         })
         .catch(e => {
           this.emit('error', new EventHandleError(e, event_obj, handler));
