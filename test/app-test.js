@@ -10,27 +10,12 @@ const EventDispatcher = require('../libs/event-dispatcher');
 // components to test
 const App = rewire('../libs/app');
 
-// Event Handler Instance Mock
-const EventHandlerInstanceMock = new EventHandler();
 
-// Event Dispatcher Mock
-const EventDispatcherInstanceMock = new EventDispatcher();
-
-EventDispatcherInstanceMock.load_event_handler = sinon.stub();
-EventDispatcherInstanceMock.run = sinon.stub();
-EventDispatcherInstanceMock.on = sinon.stub();
-
-
-// LoopService Mock
-const LoopServiceInstanceMock = {
-  on: sinon.stub(),
-};
-
-console_log_spy = sinon.stub().callsFake(console.log);
-App.__set__('console', { log: console_log_spy });
-App.__set__('mongoose', mongooseMock);
 
 describe('App', () => {
+
+  // Overrides mongoose, and reverts it on after
+  after(App.__set__('mongoose', mongooseMock));
 
   it('Should construct an instance without throwing an error', () => {
     return new App();
@@ -39,14 +24,14 @@ describe('App', () => {
   it('Should construct an instance and use env MP_MONGODB_URL', () => {
     process.env.MP_MONGODB_URL = Math.random();
     let app = new App();
-    expect(app._config.mongodb_url).to.equal(process.env.MP_MONGODB_URL);
+    expect(app.config.mongodb_url).to.equal(process.env.MP_MONGODB_URL);
     delete process.env.MP_MONGODB_URL;
   });
 
   it('Should construct an instance and use env MP_WEB_PORT', () => {
     process.env.MP_WEB_PORT = Math.random();
     let app = new App();
-    expect(app._config.web_port).to.equal(process.env.MP_WEB_PORT);
+    expect(app.config.web_port).to.equal(process.env.MP_WEB_PORT);
     delete process.env.MP_WEB_PORT;
   });
 
@@ -54,7 +39,7 @@ describe('App', () => {
     let app;
 
     beforeEach(() => {
-      app = new App({});
+      app = new App();
     });
 
     it('Should return a promise that resolves and call plugin_loader.load_plugin_models', () => {
@@ -71,7 +56,6 @@ describe('App', () => {
       });
     });
   });
-
 
   describe('load_plugins', () => {
 
@@ -100,7 +84,7 @@ describe('App', () => {
   describe('load_collector', () => {
     let app;
     let collectorInstanceMock;
-    const model_mock_name = 'stub' + Math.random();
+    const model_mock_name = 'mockdel' + Math.random();
 
     const config = {
       service_retry_max_attempts: 1,
@@ -217,6 +201,8 @@ describe('App', () => {
 
   describe('load_event_handler', () => {
     let app;
+    let eventDispatcherInstanceMock
+    let eventHandlerInstanceMock;
 
     const config = {
       event_name: `${Math.random}`,
@@ -230,8 +216,16 @@ describe('App', () => {
 
     beforeEach(() => {
       app = new App();
-      app.plugin_loader.create_event_handler = sinon.stub().returns(EventHandlerInstanceMock);
-      app.event_dispatcher = EventDispatcherInstanceMock;
+
+      // Event Dispatcher Mock
+      eventDispatcherInstanceMock = new EventDispatcher();
+      eventDispatcherInstanceMock.load_event_handler = sinon.stub();
+
+      // Event handler mock
+      eventHandlerInstanceMock = new EventHandler();
+
+      app.plugin_loader.create_event_handler = sinon.stub().returns(eventHandlerInstanceMock);
+      app.event_dispatcher = eventDispatcherInstanceMock;
     });
 
     it('Should call create_event_handler with config', () => {
@@ -241,22 +235,22 @@ describe('App', () => {
 
     it('Should call load_event_handler on event Dispatcher', () => {
       app.load_event_handler(config_other_vals);
-      sinon.assert.calledWith(EventDispatcherInstanceMock.load_event_handler, EventHandlerInstanceMock);
+      sinon.assert.calledWith(eventDispatcherInstanceMock.load_event_handler, eventHandlerInstanceMock);
     });
 
     it('Should set handler event_name', () => {
       app.load_event_handler(config);
-      expect(EventDispatcherInstanceMock.load_event_handler.lastCall.args[0].event_name).to.equal(config.event_name);
+      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].event_name).to.equal(config.event_name);
     });
 
     it('Should set handler defer_dispatch', () => {
       app.load_event_handler(config);
-      expect(EventDispatcherInstanceMock.load_event_handler.lastCall.args[0].defer_dispatch).to.equal(config.defer_dispatch);
+      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].defer_dispatch).to.equal(config.defer_dispatch);
     });
 
     it('Should set handler should_handle', () => {
       app.load_event_handler(config);
-      expect(EventDispatcherInstanceMock.load_event_handler.lastCall.args[0].should_handle).to.equal(config.should_handle);
+      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].should_handle).to.equal(config.should_handle);
     });
 
   });
@@ -302,7 +296,7 @@ describe('App', () => {
   });
 
   describe('stop', () => {
-    const app = new App({});
+    const app = new App();
 
     // stub app props
     app.server = {
@@ -348,7 +342,121 @@ describe('App', () => {
     process.exit.restore();
   });
 
-  it('Should never call console.log', () => {
-    sinon.assert.neverCalledWith(console_log_spy);
+  describe('handle_collector_event', () => {
+    let app;
+
+    const model_mock_name = 'mockdel' + Math.random();
+
+    beforeEach(() => {
+      app = new App();
+
+      // Event dispatcher mock
+      eventDispatcherInstanceMock = new EventDispatcher();
+      eventDispatcherInstanceMock.enqueue_event = sinon.stub();
+
+      // Mock collector
+      collectorInstanceMock = new Collector();
+      collectorInstanceMock.model_name = model_mock_name;
+
+      app.event_dispatcher = eventDispatcherInstanceMock;
+    });
+
+    it('Should enqueue event in event dispatcher', () => {
+      const mock_event_data = Math.random();
+      const mock_event_name = 'event' + Math.random();
+      app.handle_collector_event(collectorInstanceMock, mock_event_name, mock_event_data);
+      const event = eventDispatcherInstanceMock.enqueue_event.lastCall.args[0];
+      expect(event.constructor.name).to.equal('Event');
+      expect(event.data).to.equal(mock_event_data);
+      expect(event.event_name).to.equal(`${model_mock_name}.${mock_event_name}`);
+    })
+  });
+
+  describe('handle_collector_error', () => {
+    let app;
+    let collectorInstanceMock;
+
+    const model_mock_name = 'mockdel' + Math.random();
+
+    beforeEach(() => {
+      app = new App();
+
+      // Mock collector
+      collectorInstanceMock = new Collector();
+      collectorInstanceMock.model_name = model_mock_name;
+
+      sinon.stub(app, 'debug_message');
+    });
+
+    it('Should call debug_message with collector name and error stack', () => {
+      const mock_error = new Error(Math.random());
+      app.handle_collector_error(collectorInstanceMock, mock_error);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.stack}`);
+    });
+
+    it('Should call debug_message with cuplrit as details', () => {
+      const mock_error = new Error(Math.random());
+      mock_error.culprit = new Error('Culprit error!');
+      app.handle_collector_error(collectorInstanceMock, mock_error);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.stack}`, `${mock_error.culprit.stack}`);
+    });
+  });
+
+  describe('handle_service_error', () => {
+    let app;
+    let serviceInstanceMock;
+
+    const model_mock_name = 'mockdel' + Math.random();
+
+    beforeEach(() => {
+      app = new App();
+
+      // Mock collector
+      serviceInstanceMock = {};
+      serviceInstanceMock.name = model_mock_name;
+
+      sinon.stub(app, 'debug_message');
+    });
+
+    it('Should call debug_message with collector name and error stack', () => {
+      const mock_error = new Error(Math.random());
+      app.handle_service_error(serviceInstanceMock, mock_error);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.stack}`);
+    });
+
+    it('Should call debug_message with cuplrit as details', () => {
+      const mock_error = new Error(Math.random());
+      mock_error.culprit = new Error('Culprit error!');
+      app.handle_service_error(serviceInstanceMock, mock_error);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.stack}`, `${mock_error.culprit.stack}`);
+    });
+  });
+
+  describe('debug_message', () => {
+    let app;
+
+    const console_log = sinon.spy();
+
+    // Overrides console.log and reverts in After
+    after(App.__set__('console', { log: console_log }));
+
+    beforeEach(() => {
+      app = new App();
+    });
+
+    it('Should call console log with message', () => {
+      const mock_name = 'mock_name' + Math.random();
+      const mock_message = 'mock_message' + Math.random();
+      app.debug_message(mock_name, mock_message);
+      sinon.assert.calledWith(console_log, `[${mock_name}] ${mock_message}`);
+    });
+
+    it('Should call console log with message and details', () => {
+      const mock_name = 'mock_name' + Math.random();
+      const mock_message = 'mock_message' + Math.random();
+      const mock_details = 'mock_details' + Math.random();
+      app.debug_message(mock_name, mock_message, mock_details);
+      sinon.assert.calledWith(console_log, `More Details: ${mock_details}`);
+    });
   });
 });
