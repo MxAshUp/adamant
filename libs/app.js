@@ -20,18 +20,18 @@ let PluginLoader = require('./plugin-loader'),
 class App {
   constructor(config) {
     // Establish some defaults
-    this._config = {};
+    this.config = {};
     this.plugin_loader = new PluginLoader();
     this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
     this.collectors = [];
 
     // Load some some config from environment variables
-    this._config.mongodb_url = process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '';
-    this._config.web_port = process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '';
+    this.config.mongodb_url = process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '';
+    this.config.web_port = process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '';
 
     // Override config from paramters
-    Object.assign(this._config, config);
+    Object.assign(this.config, config);
 
     // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
@@ -66,7 +66,7 @@ class App {
    */
   _load_database() {
     return Promise.resolve()
-    .then(mongoose.connect.bind(mongoose, this._config.mongodb_url))
+    .then(mongoose.connect.bind(mongoose, this.config.mongodb_url))
     .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose));
   }
 
@@ -97,7 +97,7 @@ class App {
    */
   load_plugins(plugin_dirs) {
     _.forEach(plugin_dirs, plugin_path => {
-      this.plugin_loader.load_plugin(plugin_path, this._config);
+      this.plugin_loader.load_plugin(plugin_path, this.config);
     });
   }
 
@@ -160,7 +160,7 @@ class App {
   _bind_model_events(collector) {
     //Add event handling
     _.each(['create', 'update', 'remove'], event => {
-      collector.on(event, this.handle_collector_event.bind(this, collector));
+      collector.on(event, this.handle_collector_event.bind(this, collector, event));
     });
     collector.on('error', this.handle_collector_error.bind(this, collector));
     collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
@@ -179,26 +179,24 @@ class App {
     service.on('stop', this.debug_message.bind(this, `${service.name} service`, 'stopped'));
   }
 
-  handle_collector_event(collector, data) {
+  handle_collector_event(collector, event_name, data) {
     this.event_dispatcher.enqueue_event(
-      new Event(`${collector.model_name}.${event}`, data)
+      new Event(`${collector.model_name}.${event_name}`, data)
     );
   }
 
   handle_collector_error(collector, error) {
-    this.debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
+    this.debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
   }
 
   handle_service_error(service, error) {
-    this.debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit ? error.culprit : '');
+    this.debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
   }
 
   debug_message(name, message, details) {
-    console.log(
-      `[${name}] ${message}.`
-    );
+    console.log(`[${name}] ${message}`);
     if (details) {
-      console.log(`Details: ${details}`);
+      console.log(`More Details: ${details}`);
     }
   }
 
@@ -214,7 +212,7 @@ class App {
 
     this.event_dispatcher_service.start();
     _.each(this.collect_services, service => service.start());
-    this.server.listen(this._config.web_port);
+    this.server.listen(this.config.web_port);
   }
 
   stop() {
