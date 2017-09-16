@@ -130,8 +130,18 @@ describe('Event System - ', () => {
 
     describe('Default behaviors of overridable methods', () => {
       let instance = new EventHandler();
-      it('Dispatch() should return nothing', () => {
+      it('Dispatch() should return nothing if nothing passed', () => {
         expect(instance.dispatch()).to.be.undefined;
+      });
+      it('Dispatch() should return data if data passed', () => {
+        const mock_data = Math.random();
+        expect(instance.dispatch(mock_data)).to.equal(mock_data);
+      });
+      it('Dispatch() should return translated data if data passed and transform_function set', () => {
+        const mock_data = Math.random();
+        const mock_data_2 = Math.random();
+        instance.transform_function = sinon.stub().withArgs(mock_data).returns(mock_data_2);
+        expect(instance.dispatch(mock_data)).to.equal(mock_data_2);
       });
       it('Revert() should return nothing if support_revert = true', () => {
         instance.supports_revert = true;

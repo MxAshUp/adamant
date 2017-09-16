@@ -20,6 +20,7 @@ class EventHandler extends EventEmitter {
       should_handle: null, // Function
       defer_dispatch: null, // {event_name: String, check_function: Function}
       enqueue_complete_event: false,
+      transform_function: null,
     };
 
     // Merge config and assign properties to this
@@ -33,7 +34,9 @@ class EventHandler extends EventEmitter {
   *
   * @memberOf EventHandler
   */
-  dispatch(data) {}
+  dispatch(data) {
+    return typeof this.transform_function === 'function' ? this.transform_function(data) : data;
+  }
 
   /**
   * Method that reverts actions performed in dispatch
