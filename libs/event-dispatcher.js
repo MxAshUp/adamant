@@ -101,7 +101,7 @@ class EventDispatcher extends EventEmitter {
           if (handler.defer_dispatch) {
             return utility.defer_on_event(
               handler.defer_dispatch.event_name,
-              handler.defer_dispatch.check_callback,
+              handler.defer_dispatch.check_function,
               this
             );
           }
