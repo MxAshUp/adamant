@@ -147,6 +147,9 @@ class App {
     if (config.should_handle)
       handler.should_handle = config.should_handle;
 
+    if (config.transform_function)
+      handler.transform_function = config.transform_function;
+
     this.event_dispatcher.load_event_handler(handler);
   }
 

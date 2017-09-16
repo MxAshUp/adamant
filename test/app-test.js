@@ -208,6 +208,7 @@ describe('App', () => {
       event_name: `${Math.random}`,
       defer_dispatch: true,
       should_handle: true,
+      transform_function: sinon.stub(),
     };
 
     const config_other_vals = {
@@ -251,6 +252,11 @@ describe('App', () => {
     it('Should set handler should_handle', () => {
       app.load_event_handler(config);
       expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].should_handle).to.equal(config.should_handle);
+    });
+
+    it('Should set handler transform_function', () => {
+      app.load_event_handler(config);
+      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].transform_function).to.equal(config.transform_function);
     });
 
   });
