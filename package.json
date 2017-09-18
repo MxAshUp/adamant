@@ -8,10 +8,10 @@
     "url": "proqsolutions.com"
   },
   "dependencies": {
-    "express": "^4.15.2",
+    "express": "^4.15.4",
     "glob": "^7.1.2",
     "lodash": "^4.16.4",
-    "mongoose": "^4.8.3",
+    "mongoose": "^4.11.12",
     "socket.io": "^1.7.3"
   },
   "devDependencies": {
@@ -21,7 +21,7 @@
     "mongoose-mock": "^0.4.0",
     "nyc": "^10.2.0",
     "rewire": "^2.5.2",
-    "sinon": "^2.1.0"
+    "sinon": "^2.4.1"
   },
   "jshintConfig": {
     "devel": true,
