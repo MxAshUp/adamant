@@ -38,7 +38,31 @@ class Counter {
   }
 };
 
+/**
+ * Gets the inheritance chain for a Component starting with Component
+ *
+ * @param {Component} obj
+ * @returns
+ */
+const get_component_inheritance = (obj) => {
+  var chain = [obj];
+
+  var prototype = obj;
+  while (prototype = Object.getPrototypeOf(prototype)) {
+    chain.push(prototype);
+  }
+
+  // Remove first constructor (it's a duplicate)
+  chain.shift();
+
+  // Remove inheritance after Component
+  while(chain.pop().constructor.name !== 'Component');
+
+  return chain.map(d => d.constructor);
+};
+
 module.exports = {
   defer_on_event,
-  Counter
+  Counter,
+  get_component_inheritance
 };

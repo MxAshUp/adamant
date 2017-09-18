@@ -253,16 +253,15 @@ describe('Plugin Loader', function() {
       plugin_b.create_component = sinon.stub().returns(success_return);
       const collector_config = {
         plugin_name: 'plugin_b',
-        collector_name: Math.random(),
+        name: `${Math.random()}`,
         config: Math.random(),
         version: Math.random(),
       };
-      let ret = pl.create_collector(collector_config);
+      let ret = pl.create_component(collector_config);
       expect(ret).to.equal(success_return);
       sinon.assert.calledWith(
         plugin_b.create_component,
-        'collectors',
-        collector_config.collector_name,
+        collector_config.name,
         collector_config.config,
         collector_config.version
       );
@@ -275,16 +274,15 @@ describe('Plugin Loader', function() {
       plugin_b.create_component = sinon.stub().returns(success_return);
       const handler_config = {
         plugin_name: 'plugin_b',
-        handler_name: Math.random(),
+        name: `${Math.random()}`,
         config: Math.random(),
         version: Math.random(),
       };
-      let ret = pl.create_event_handler(handler_config);
+      let ret = pl.create_component(handler_config);
       expect(ret).to.equal(success_return);
       sinon.assert.calledWith(
         plugin_b.create_component,
-        'event_handlers',
-        handler_config.handler_name,
+        handler_config.name,
         handler_config.config,
         handler_config.version
       );

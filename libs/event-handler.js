@@ -1,6 +1,6 @@
-const EventEmitter = require('events');
+const Component = require('./component');
 
-class EventHandler extends EventEmitter {
+class EventHandler extends Component {
   /**
   * Creates an instance of EventHandler.
   *

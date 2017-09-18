@@ -23,7 +23,7 @@ class PluginLoader {
    * @param {Object} config - Configuration to pass to plugin on load
    *
    */
-  load_plugin(module_name, _config) {
+  load_plugin(module_name, config) {
 
     let require_path = module_name;
 
@@ -65,7 +65,7 @@ class PluginLoader {
     //If all went well loading it...
     plugin.enabled = true;
 
-    plugin.on_load(_config);
+    plugin.on_load(config);
 
     //Add plugin to array
     this.plugins.push(plugin);
@@ -73,40 +73,27 @@ class PluginLoader {
     return plugin;
   }
 
-
   /**
-   * After plugins are loaded into memeory, a collector service can be initialized.
+   * Creates a component of name,
    *
-   * @param {any} collector_config - Configuration used for initializing collector instance
-   * @returns {Collector}
+   * @param {Object} {name, plugin_name, version, config}
+   * @returns {any} - Component instance created
+   * @memberof PluginLoader
    */
-  create_collector(collector_config) {
-    return this.get_plugin_by_name(
-      collector_config.plugin_name
-    ).create_component(
-      'collectors',
-      collector_config.collector_name,
-      collector_config.config,
-      collector_config.version
-    );
-  }
+  create_component({name, plugin_name, version, config}) {
 
-  /**
-   * Creates an event handler instance. First looks up plugin, then event handler class by name
-   *
-   * @param {object} handler_config
-   * @returns {EventHandler}
-   *
-   * @memberOf PluginLoader
-   */
-  create_event_handler(handler_config) {
-    return this.get_plugin_by_name(
-        handler_config.plugin_name
-      ).create_component(
-        'event_handlers',
-        handler_config.handler_name,
-        handler_config.config,
-        handler_config.version
+    // This allows config to specify plugin and component name in single argument. Example: 'mp-core/EventHandler'
+    if(name.indexOf('/') !== -1) {
+      const parsed_component_name = name.split('/');
+      plugin_name = parsed_component_name.shift();
+      name = parsed_component_name.shift();
+    }
+
+    return this.get_plugin_by_name(plugin_name)
+      .create_component(
+        name,
+        config,
+        version
       );
   }
 

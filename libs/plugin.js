@@ -14,8 +14,7 @@ class Plugin {
 
     //Default object properties
     const defaults = {
-      collectors: [],
-      event_handlers: [],
+      components: [],
       models: [],
       enabled: false,
       name: '',
@@ -65,19 +64,12 @@ class Plugin {
 	 *
 	 * @memberOf Plugin
 	 */
-  create_component(type, class_name, params, require_version = '') {
-    let component, component_class;
-
-    // Check if type exists in plugin
-    if (typeof this[type] !== 'object')
-      throw new Error(`${this.name} does not have component of type: ${type}.`);
+  create_component(class_name, params, require_version = '') {
+    let component, component_constructor;
 
     // Find component in plugin
-    component_class = _.find(this[type], { name: class_name });
-    if (!component_class) throw new Error(`Component not found: ${class_name}`);
-
-    // Create component instance
-    component = new component_class(params);
+    component_constructor = _.find(this.components, { name: class_name });
+    if (!component_constructor) throw new Error(`Component not found: ${class_name}`);
 
     // Check version
     if (require_version && !semver.satisfies(this.version, require_version)) {
@@ -86,6 +78,9 @@ class Plugin {
           .version} Semver requirement: ${require_version}.`
       );
     }
+
+    // Create component instance
+    component = new component_constructor(params);
 
     return component;
   }

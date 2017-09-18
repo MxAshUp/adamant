@@ -1,4 +1,4 @@
-var EventEmitter = require('events'),
+var Component = require('./component'),
   mongoose = require('mongoose'),
   _ = require('lodash'),
   CollectorInitializeError = require('./errors').CollectorInitializeError,
@@ -6,7 +6,7 @@ var EventEmitter = require('events'),
   Counter = require('./utility').Counter,
   util = require('util');
 
-class Collector extends EventEmitter {
+class Collector extends Component {
   /**
 	 * Creates an instance of Collector.
 	 *

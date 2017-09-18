@@ -1,6 +1,7 @@
 let PluginLoader = require('./plugin-loader'),
   mongoose = require('mongoose'),
   _ = require('lodash'),
+  get_component_inheritance = require('./utility').get_component_inheritance,
   LoopService = require('./loop-service'),
   EventDispatcher = require('./event-dispatcher'),
   EventHandler = require('./event-handler'),
@@ -24,12 +25,13 @@ class App {
     this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
     this.collectors = [];
+    this.component_hooks = [];
 
     // Load some some config from environment variables
     this.config.mongodb_url = process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '';
     this.config.web_port = process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '';
 
-    // Override config from paramters
+    // Override config from parameters
     Object.assign(this.config, config);
 
     // Set up event dispatcher loop service
@@ -43,6 +45,10 @@ class App {
     this.express_app = express();
     this.server = http.createServer(this.express_app);
     this.io = socketio(this.server);
+
+    // Set component hooks
+    this.add_component_hook('Collector', this.load_collector.bind(this));
+    this.add_component_hook('EventHandler', this.load_event_handler.bind(this));
   }
 
   /**
@@ -100,25 +106,51 @@ class App {
     });
   }
 
+  load_component({name, plugin_name, version, parameters = {}}) {
+
+    const component = this.plugin_loader.create_component.apply(this.plugin_loader, arguments);
+    const constructors = get_component_inheritance(component);
+    const base_constructor_name = constructors.pop().name;
+
+    _.filter(this.component_hooks, {constructor_name: base_constructor_name}).forEach(component_hook => {
+      component_hook.callback(component, parameters);
+    });
+
+    return component;
+  }
+
   /**
-   * Loads a collector from config, creates a service
+   * Registers a callback function that will be run everytime a component of type 'constructor_name' is loaded in the app.
    *
-   * @param {object} config
-   *
-   * @memberOf App
+   * @param {String} constructor_name
+   * @param {function} callback
+   * @memberof App
    */
-  load_collector(config) {
-    const collector = this.plugin_loader.create_collector(config);
+  add_component_hook(constructor_name, callback) {
+    this.component_hooks.push({
+      constructor_name,
+      callback
+    });
+  }
+
+  /**
+   * Loads a collector instance into the app
+   *
+   * @param {Collector} collector - The instance to load
+   * @param {Object} parameters - Parameters to user for loading
+   * @memberof App
+   */
+  load_collector(collector, parameters) {
     const service = new LoopService(collector.run.bind(collector));
 
-    if (config.service_retry_max_attempts)
-      service.retry_max_attempts = config.service_retry_max_attempts;
+    if (parameters.service_retry_max_attempts)
+      service.retry_max_attempts = parameters.service_retry_max_attempts;
 
-    if (config.service_retry_time_between)
-      service.retry_time_between = config.service_retry_time_between;
+    if (parameters.service_retry_time_between)
+      service.retry_time_between = parameters.service_retry_time_between;
 
-    if (config.run_min_time_between)
-      service.run_min_time_between = config.run_min_time_between;
+    if (parameters.service_run_min_time_between)
+      service.service_run_min_time_between = parameters.service_run_min_time_between;
 
     service.name = `${collector.model_name} collector`;
     this._bind_service_events(service);
@@ -128,26 +160,24 @@ class App {
   }
 
   /**
-   * Loads an event handler instance into event dispatcher
+   * Loads a event handler instance into the app
    *
-   * @param {object} config
-   *
-   * @memberOf App
+   * @param {EventHandler} event_handler - The instance to load
+   * @param {Object} parameters - Parameters to user for loading
+   * @memberof App
    */
-  load_event_handler(config) {
-    const handler = this.plugin_loader.create_event_handler(config);
+  load_event_handler(handler, parameters) {
+    if (parameters.event_name)
+      handler.event_name = parameters.event_name;
 
-    if (config.event_name)
-      handler.event_name = config.event_name;
+    if (parameters.defer_dispatch)
+      handler.defer_dispatch = parameters.defer_dispatch;
 
-    if (config.defer_dispatch)
-      handler.defer_dispatch = config.defer_dispatch;
+    if (parameters.should_handle)
+      handler.should_handle = parameters.should_handle;
 
-    if (config.should_handle)
-      handler.should_handle = config.should_handle;
-
-    if (config.transform_function)
-      handler.transform_function = config.transform_function;
+    if (parameters.transform_function)
+      handler.transform_function = parameters.transform_function;
 
     this.event_dispatcher.load_event_handler(handler);
   }
