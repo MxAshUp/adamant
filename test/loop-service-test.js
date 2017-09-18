@@ -6,9 +6,6 @@ const sinon = require('sinon'),
   // Modules to test
   LoopService = rewire('../libs/loop-service');
 
-console_log_spy = sinon.stub().callsFake(console.log);
-LoopService.__set__('console', { log: console_log_spy });
-
 describe('Loop Service', () => {
   function async_fn_spy_wrapper(timeout) {
     return sinon.stub().callsFake(() => {
@@ -252,9 +249,5 @@ describe('Loop Service', () => {
       sinon.assert.callCount(error_spy, 2);
       expect(loopy_mc_loopface.retry_attempts).to.equal(0);
     });
-  });
-
-  it('Should never call console.log', () => {
-    sinon.assert.neverCalledWith(console_log_spy);
   });
 });

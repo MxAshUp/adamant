@@ -24,12 +24,6 @@ const immmediatePromise = () => {
   })
 };
 
-console_log_spy = sinon.stub().callsFake(console.log);
-EventHandler.__set__('console', { log: console_log_spy });
-EventDispatcher.__set__('console', { log: console_log_spy });
-Event.__set__('console', { log: console_log_spy });
-
-
 describe('Event System - ', () => {
   // Need some spies and a mock handler for running tests
   const test_1_dispatch_cb = sinon.spy();
@@ -662,9 +656,5 @@ describe('Event System - ', () => {
           });
       });
     });
-  });
-
-  it('Should never call console.log', () => {
-    sinon.assert.neverCalledWith(console_log_spy);
   });
 });

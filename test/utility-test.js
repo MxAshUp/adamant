@@ -11,9 +11,6 @@ const chai = require('chai'),
 chai.use(chaiAsPromised);
 chai.should();
 
-console_log_spy = sinon.stub().callsFake(console.log);
-utility.__set__('console', { log: console_log_spy });
-
 const immmediatePromise = () => {
   return new Promise(resolve => {
     setImmediate(resolve);
@@ -161,10 +158,5 @@ describe('Utilities', () => {
         expect(event_emitter.listenerCount(event_name_test)).to.equal(0);
       });
     });
-
-  });
-
-  it('Should never call console.log', () => {
-    sinon.assert.neverCalledWith(console_log_spy);
   });
 });

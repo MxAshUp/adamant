@@ -7,9 +7,6 @@ const rewire = require('rewire'),
   Plugin = require('../libs/plugin'),
   PluginLoader = rewire('../libs/plugin-loader');
 
-console_log_spy = sinon.stub().callsFake(console.log);
-PluginLoader.__set__('console', { log: console_log_spy });
-
 describe('Plugin Loader', function() {
   let pl;
 
@@ -317,9 +314,5 @@ describe('Plugin Loader', function() {
       let module_info = PluginLoader.get_module_info('plugin_a');
       expect(module_info).to.deep.equal(mock_plugin_a_pkg);
     });
-  });
-
-  it('Should never call console.log', () => {
-    sinon.assert.neverCalledWith(console_log_spy);
   });
 });

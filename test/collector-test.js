@@ -20,9 +20,6 @@ let get_model_by_name_stub = sinon.stub();
 // Rewire database stuff
 Collector.__set__('mongoose', mongooseMock);
 
-console_log_spy = sinon.stub().callsFake(console.log);
-Collector.__set__("console", {log: console_log_spy});
-
 var schema = mongooseMock.Schema({ _id: String });
 var testModel = mongooseMock.model('test.test_model', schema);
 
@@ -943,9 +940,5 @@ describe('Collector Class', () => {
         });
       });
     });
-  });
-
-  it('Should never call console.log', () => {
-    expect(console_log_spy.callCount).to.equal(0);
   });
 });

@@ -7,9 +7,6 @@ const rewire = require('rewire'),
   // components to test
   Plugin = rewire('../libs/plugin');
 
-console_log_spy = sinon.stub().callsFake(console.log);
-Plugin.__set__('console', { log: console_log_spy });;
-
 describe('Abstract Plugin', () => {
   it('Should construct without throwing error', () => {
     expect(
@@ -440,9 +437,5 @@ describe('Abstract Plugin', () => {
       expect(pl.models[0].schema).to.deep.equal(mock_expected_schema);
 
     });
-  });
-
-  it('Should never call console.log', () => {
-    sinon.assert.neverCalledWith(console_log_spy);
   });
 });
