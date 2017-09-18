@@ -5,7 +5,6 @@ let PluginLoader = require('./plugin-loader'),
   EventDispatcher = require('./event-dispatcher'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
-  chalk = require('chalk'),
   http = require('http'),
   socketio = require('socket.io'),
   express = require('express');
