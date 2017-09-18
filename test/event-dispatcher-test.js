@@ -2,8 +2,6 @@ const // Test tools
   chai = require('chai'),
   expect = chai.expect,
   assert = chai.assert,
-  chaiSubset = require('chai-subset'),
-  chaiAsPromised = require('chai-as-promised'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   _ = require('lodash'),
@@ -13,10 +11,6 @@ const // Test tools
   EventDispatcher = rewire('../libs/event-dispatcher'),
   Event = rewire('../libs/event'),
   EventComplete = require('../libs/event-complete');
-
-chai.use(chaiAsPromised);
-chai.use(chaiSubset);
-chai.should();
 
 const immmediatePromise = () => {
   return new Promise(resolve => {

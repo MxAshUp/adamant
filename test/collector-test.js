@@ -15,18 +15,11 @@ const // Test tools
 chai.use(chaiAsPromised);
 chai.should();
 
-let get_model_by_name_stub = sinon.stub();
-
 // Rewire database stuff
 Collector.__set__('mongoose', mongooseMock);
 
 var schema = mongooseMock.Schema({ _id: String });
 var testModel = mongooseMock.model('test.test_model', schema);
-
-get_model_by_name_stub.withArgs('test.test_model').returns({
-  name: 'test.test_model',
-  schema: schema,
-});
 
 describe('Collector Class', () => {
   testModel.findOneAndUpdate.returns(Promise.resolve());
@@ -44,7 +37,7 @@ describe('Collector Class', () => {
 
 
   it('Should construct an instance', () => {
-    expect(() => new TestCollectorClass()).to.not.throw();
+    new TestCollectorClass();
   });
 
   describe('Default behavior of override functions', () => {
