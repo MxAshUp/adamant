@@ -6,6 +6,7 @@ let PluginLoader = require('./plugin-loader'),
   EventDispatcher = require('./event-dispatcher'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
+  EventEmitter = require('events'),
   http = require('http'),
   socketio = require('socket.io'),
   express = require('express');
@@ -17,8 +18,9 @@ let PluginLoader = require('./plugin-loader'),
  *
  * @class App
  */
-class App {
+class App extends EventEmitter {
   constructor(config) {
+    super();
     // Establish some defaults
     this.config = {};
     this.plugin_loader = new PluginLoader();
@@ -47,9 +49,9 @@ class App {
     this.io = socketio(this.server);
 
     // Set component hooks
-    this.add_component_hook('Collector', this.load_collector.bind(this));
-    this.add_component_hook('EventHandler', this.load_event_handler.bind(this));
-    this.add_component_hook('Component', this.hook_load_component.bind(this));
+    this.on('Collector.load', this.handle_load_collector.bind(this));
+    this.on('EventHandler.load', this.handle_load_event_handler.bind(this));
+    this.on('Component.load', this.handle_load_component.bind(this));
   }
 
   /**
@@ -144,36 +146,20 @@ class App {
     // Apply component hooks to created component
     // These hooks are added with add_component_hook
     component_constructors.forEach(constructor_name => {
-      _.filter(this.component_hooks, {constructor_name}).forEach(component_hook => {
-        component_hook.callback(component, parameters);
-      });
+      this.emit(`${constructor_name}.load`, component, parameters);
     });
 
     return component;
   }
 
   /**
-   * Registers a callback function that will be run everytime a component of type 'constructor_name' is loaded in the app.
-   *
-   * @param {String} constructor_name
-   * @param {function} callback
-   * @memberof App
-   */
-  add_component_hook(constructor_name, callback) {
-    this.component_hooks.push({
-      constructor_name,
-      callback
-    });
-  }
-
-  /**
    * Loads a collector instance into the app
    *
-   * @param {Collector} collector - The instance to load
-   * @param {Object} parameters - Parameters to user for loading
+   * @param {Collector} collector - The instance loaded
+   * @param {Object} parameters - Parameters used for loading
    * @memberof App
    */
-  load_collector(collector, parameters) {
+  handle_load_collector(collector, parameters) {
     const service = new LoopService(collector.run.bind(collector));
 
     if (parameters.service_retry_max_attempts)
@@ -187,7 +173,10 @@ class App {
 
     service.name = `${collector.model_name} collector`;
     this._bind_service_events(service);
-    this._bind_model_events(collector);
+
+    // Bind events
+    collector.on('error', this.handle_collector_error.bind(this, collector));
+    collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
 
     // Add event handling for collector
     _.each(['create', 'update', 'remove'], event => {
@@ -200,11 +189,11 @@ class App {
   /**
    * Loads a event handler instance into the app
    *
-   * @param {EventHandler} event_handler - The instance to load
-   * @param {Object} parameters - Parameters to user for loading
+   * @param {EventHandler} event_handler - The instance loaded
+   * @param {Object} parameters - Parameters used for loading
    * @memberof App
    */
-  load_event_handler(handler, parameters) {
+  handle_load_event_handler(handler, parameters) {
     if (parameters.event_name)
       handler.event_name = parameters.event_name;
 
@@ -221,27 +210,15 @@ class App {
   }
 
   /**
-   * Loads a component instance into the app
+   * Handles loading a component instance into the app
    *
-   * @param {Component} component - The instance to load
-   * @param {Object} parameters - Parameters to user for loading
+   * @param {Component} component - The instance loaded
+   * @param {Object} parameters - Parameters used for loading
    * @memberof App
    */
-  hook_load_component(component, parameters) {
+  handle_load_component(component, parameters) {
     // Add component to internal array
     this.components.push(component);
-  }
-
-  /**
-   * Binds model data events in collector to event dispatcher queue
-   *
-   *  @param {Collector} collector
-   *
-   * @memberOf App
-   */
-  _bind_model_events(collector) {
-    collector.on('error', this.handle_collector_error.bind(this, collector));
-    collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
   }
 
   /**
