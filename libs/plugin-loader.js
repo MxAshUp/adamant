@@ -83,6 +83,10 @@ class PluginLoader {
    */
   get_plugin_by_name(plugin_name, exclude_disabled = true) {
     // Find plugin
+
+    // Set plugin name if core
+    if(plugin_name == 'mp-core') plugin_name = core_module_info.name;
+
     const find = { name: plugin_name };
     if (exclude_disabled) {
       find.enabled = true;

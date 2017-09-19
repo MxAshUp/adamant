@@ -160,7 +160,8 @@ class App extends EventEmitter {
    * @memberof App
    */
   handle_load_collector(collector, parameters) {
-    const service = new LoopService(collector.run.bind(collector));
+
+    const service = this.load_component('LoopService', '', collector.run.bind(collector));
 
     if (parameters.service_retry_max_attempts)
       service.retry_max_attempts = parameters.service_retry_max_attempts;

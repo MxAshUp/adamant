@@ -1,6 +1,6 @@
-const EventEmitter = require('events');
+const Component = require('./component');
 
-class LoopService extends EventEmitter {
+class LoopService extends Component {
   /**
 	 * Creates a LoopService object
 	 * A LoopService object will run a function continuously when start() is triggered.
