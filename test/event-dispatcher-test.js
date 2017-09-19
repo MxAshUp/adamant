@@ -29,7 +29,7 @@ describe('Event System - ', () => {
 
   class test_1_handler_class extends EventHandler {
     constructor(args) {
-      super();
+      super(args);
       this.default_args = {};
 
       // Merges args with default args
@@ -48,7 +48,7 @@ describe('Event System - ', () => {
 
   class test_2_handler_class extends EventHandler {
     constructor(args) {
-      super();
+      super(args);
       this.default_args = {};
 
       // Merges args with default args
@@ -67,7 +67,7 @@ describe('Event System - ', () => {
 
   class test_3_handler_class extends EventHandler {
     constructor(args) {
-      super();
+      super(args);
       this.default_args = {};
 
       // Merges args with default args
@@ -117,25 +117,88 @@ describe('Event System - ', () => {
     });
 
     describe('Default behaviors of overridable methods', () => {
+
       let instance = new EventHandler();
+
+      it('Should set event_name by default to \'\'', () => {
+        expect(instance.event_name).to.equal('');
+      });
+
+      it('Should set should_handle by default to null', () => {
+        expect(instance.should_handle).to.equal(null);
+      });
+
+      it('Should set defer_dispatch by default to null', () => {
+        expect(instance.defer_dispatch).to.equal(null);
+      });
+
+      it('Should set enqueue_complete_event by default to false', () => {
+        expect(instance.enqueue_complete_event).to.equal(false);
+      });
+
+      it('Should set transform_function by default to null', () => {
+        expect(instance.transform_function).to.equal(null);
+      });
+
       it('Dispatch() should return nothing if nothing passed', () => {
         expect(instance.dispatch()).to.be.undefined;
       });
+
       it('Dispatch() should return data if data passed', () => {
         const mock_data = Math.random();
         expect(instance.dispatch(mock_data)).to.equal(mock_data);
       });
+
       it('Dispatch() should return translated data if data passed and transform_function set', () => {
         const mock_data = Math.random();
         const mock_data_2 = Math.random();
         instance.transform_function = sinon.stub().withArgs(mock_data).returns(mock_data_2);
         expect(instance.dispatch(mock_data)).to.equal(mock_data_2);
       });
+
       it('Revert() should return nothing if support_revert = true', () => {
         instance.supports_revert = true;
         expect(instance.revert()).to.be.undefined;
         expect(instance.revert.bind(instance)).to.not.throw();
       });
+
+    });
+
+    describe('Settable properties', () => {
+
+      it('Should set event_name to mock value', () => {
+        mock_event_name = `event_name_${Math.random()}`;
+        const instance = new EventHandler({event_name: mock_event_name});
+        expect(instance.event_name).to.equal(mock_event_name);
+      });
+
+      it('Should set should_handle to mock value', () => {
+        mock_should_handle = sinon.stub().returns(true);
+        const instance = new EventHandler({should_handle: mock_should_handle});
+        expect(instance.should_handle).to.equal(mock_should_handle);
+      });
+
+      it('Should set defer_dispatch to mock value', () => {
+        mock_defer_dispatch = {
+          event_name: `event_${Math.random()}`,
+          check_function: sinon.stub().resolves(true),
+        };
+        const instance = new EventHandler({defer_dispatch: mock_defer_dispatch});
+        expect(instance.defer_dispatch).to.equal(mock_defer_dispatch);
+      });
+
+      it('Should set enqueue_complete_event to mock value', () => {
+        mock_enqueue_complete_event = true;
+        const instance = new EventHandler({enqueue_complete_event: mock_enqueue_complete_event});
+        expect(instance.enqueue_complete_event).to.equal(mock_enqueue_complete_event);
+      });
+
+      it('Should set transform_function to mock value', () => {
+        mock_transform_function = sinon.stub().returns();
+        const instance = new EventHandler({transform_function: mock_transform_function});
+        expect(instance.transform_function).to.equal(mock_transform_function);
+      });
+
     });
   });
 

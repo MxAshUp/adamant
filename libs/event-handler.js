@@ -7,20 +7,26 @@ class EventHandler extends Component {
   *
   * @memberOf EventHandler
   */
-  constructor() {
+  constructor({
+    event_name = '',
+    should_handle = null,
+    defer_dispatch = null,
+    enqueue_complete_event = false,
+    transform_function = null,
+  } = {}) {
     super();
 
     //Default object properties
     const defaults = {
       default_args: {},
       args: {},
-      event_name: '',
+      event_name: event_name,
       supports_revert: false,
       instance_id: '',
-      should_handle: null, // Function
-      defer_dispatch: null, // {event_name: String, check_function: Function}
-      enqueue_complete_event: false,
-      transform_function: null,
+      should_handle: should_handle,
+      defer_dispatch: defer_dispatch,
+      enqueue_complete_event: enqueue_complete_event,
+      transform_function: transform_function,
     };
 
     // Merge config and assign properties to this

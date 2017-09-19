@@ -288,26 +288,6 @@ describe('App', () => {
       sinon.assert.calledWith(eventDispatcherInstanceMock.load_event_handler, eventHandlerInstanceMock);
     });
 
-    it('Should set handler event_name', () => {
-      app.load_component(config.name, config.parameters, config.version);
-      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].event_name).to.equal(config.parameters.event_name);
-    });
-
-    it('Should set handler defer_dispatch', () => {
-      app.load_component(config.name, config.parameters, config.version);
-      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].defer_dispatch).to.equal(config.parameters.defer_dispatch);
-    });
-
-    it('Should set handler should_handle', () => {
-      app.load_component(config.name, config.parameters, config.version);
-      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].should_handle).to.equal(config.parameters.should_handle);
-    });
-
-    it('Should set handler transform_function', () => {
-      app.load_component(config.name, config.parameters, config.version);
-      expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].transform_function).to.equal(config.parameters.transform_function);
-    });
-
   });
 
   describe('run', () => {

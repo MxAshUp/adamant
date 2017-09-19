@@ -194,20 +194,9 @@ class App extends EventEmitter {
    * @param {Object} parameters - Parameters used for loading
    * @memberof App
    */
-  handle_load_event_handler(handler, parameters) {
-    if (parameters.event_name)
-      handler.event_name = parameters.event_name;
-
-    if (parameters.defer_dispatch)
-      handler.defer_dispatch = parameters.defer_dispatch;
-
-    if (parameters.should_handle)
-      handler.should_handle = parameters.should_handle;
-
-    if (parameters.transform_function)
-      handler.transform_function = parameters.transform_function;
-
-    this.event_dispatcher.load_event_handler(handler);
+  handle_load_event_handler(event_handler, parameters) {
+    // Add event handler to event dispatcher
+    this.event_dispatcher.load_event_handler(event_handler);
   }
 
   /**
