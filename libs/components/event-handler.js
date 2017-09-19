@@ -10,7 +10,7 @@ class EventHandler extends Component {
   constructor({
     event_name = '',
     should_handle = null,
-    defer_dispatch = null,
+    defer_dispatch = null, // {event_name = '', check_function = ()}
     enqueue_complete_event = false,
     transform_function = null,
   } = {}) {
