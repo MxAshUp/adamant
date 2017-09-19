@@ -7,6 +7,7 @@ const mongooseMock = require('mongoose-mock');
 const Collector = require('../libs/collector');
 const EventHandler = require('../libs/event-handler');
 const EventDispatcher = require('../libs/event-dispatcher');
+const Plugin = require('../libs/plugin');
 // components to test
 const App = rewire('../libs/app');
 
@@ -87,6 +88,9 @@ describe('App', () => {
     const model_mock_name = 'mockdel' + Math.random();
 
     const config = {
+      name: 'testComponent',
+      plugin_name: 'test',
+      version: '',
       parameters: {
         service_retry_max_attempts: 1,
         service_retry_time_between: 1,
@@ -95,20 +99,28 @@ describe('App', () => {
     };
 
     const config_other_vals = {
-      _unique: Math.random()
+      name: 'testComponent',
+      plugin_name: 'test',
+      version: '',
+      parameters: {
+        _unique: Math.random()
+      }
     };
+
+    const mockPlugin = new Plugin({name: 'mock_plugin'});
 
     beforeEach(() => {
       app = new App();
       // Collector Instance Mock
       collectorInstanceMock = new Collector();
       collectorInstanceMock.model_name = model_mock_name;
-      app.plugin_loader.create_component = sinon.stub().returns(collectorInstanceMock);
+      app.plugin_loader.get_plugin_by_name = sinon.stub().returns(mockPlugin);
+      mockPlugin.create_component = sinon.stub().returns(collectorInstanceMock);
     });
 
     it('Should call create_component with config', () => {
       app.load_component(config_other_vals)
-      sinon.assert.calledWith(app.plugin_loader.create_component, config_other_vals);
+      sinon.assert.calledWith(mockPlugin.create_component, config_other_vals.name, config_other_vals.parameters, config_other_vals.version);
     });
 
     it('Should create a LoopService', () => {
@@ -207,6 +219,9 @@ describe('App', () => {
     let eventHandlerInstanceMock;
 
     const config = {
+      name: 'testComponent',
+      plugin_name: 'test',
+      version: '',
       parameters: {
         event_name: `${Math.random()}`,
         defer_dispatch: true,
@@ -216,8 +231,15 @@ describe('App', () => {
     };
 
     const config_other_vals = {
-      _unique: Math.random()
+      name: 'testComponent',
+      plugin_name: 'test',
+      version: '',
+      parameters: {
+        _unique: Math.random()
+      }
     };
+
+    const mockPlugin = new Plugin({name: 'mock_plugin'});
 
     beforeEach(() => {
       app = new App();
@@ -229,13 +251,14 @@ describe('App', () => {
       // Event handler mock
       eventHandlerInstanceMock = new EventHandler();
 
-      app.plugin_loader.create_component = sinon.stub().returns(eventHandlerInstanceMock);
       app.event_dispatcher = eventDispatcherInstanceMock;
+      app.plugin_loader.get_plugin_by_name = sinon.stub().returns(mockPlugin);
+      mockPlugin.create_component = sinon.stub().returns(eventHandlerInstanceMock);
     });
 
     it('Should call create_component with config', () => {
       app.load_component(config_other_vals);
-      sinon.assert.calledWith(app.plugin_loader.create_component, config_other_vals);
+      sinon.assert.calledWith(mockPlugin.create_component, config_other_vals.name, config_other_vals.parameters, config_other_vals.version);
     });
 
     it('Should call load_event_handler on event Dispatcher', () => {

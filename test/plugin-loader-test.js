@@ -247,48 +247,6 @@ describe('Plugin Loader', function() {
     });
   });
 
-  describe('Create collector from plugin', () => {
-    it('Should call create_component on Plugin B with correct parameters', () => {
-      const success_return = Math.random();
-      plugin_b.create_component = sinon.stub().returns(success_return);
-      const collector_config = {
-        plugin_name: 'plugin_b',
-        name: `${Math.random()}`,
-        config: Math.random(),
-        version: Math.random(),
-      };
-      let ret = pl.create_component(collector_config);
-      expect(ret).to.equal(success_return);
-      sinon.assert.calledWith(
-        plugin_b.create_component,
-        collector_config.name,
-        collector_config.config,
-        collector_config.version
-      );
-    });
-  });
-
-  describe('Create event_handler from plugin', () => {
-    it('Should call create_component on Plugin B with correct parameters', () => {
-      const success_return = Math.random();
-      plugin_b.create_component = sinon.stub().returns(success_return);
-      const handler_config = {
-        plugin_name: 'plugin_b',
-        name: `${Math.random()}`,
-        config: Math.random(),
-        version: Math.random(),
-      };
-      let ret = pl.create_component(handler_config);
-      expect(ret).to.equal(success_return);
-      sinon.assert.calledWith(
-        plugin_b.create_component,
-        handler_config.name,
-        handler_config.config,
-        handler_config.version
-      );
-    });
-  });
-
   describe('get_module_info', () => {
 
     const mock_path_a = `/some/random/${Math.random()}/path_a/`;

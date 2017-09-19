@@ -108,7 +108,15 @@ class App {
 
   load_component({name, plugin_name, version, parameters = {}}) {
 
-    const component = this.plugin_loader.create_component.apply(this.plugin_loader, arguments);
+    // This allows config to specify plugin and component name in single argument. Example: 'mp-core/EventHandler'
+    if(name && name.indexOf('/') !== -1) {
+      const parsed_component_name = name.split('/');
+      plugin_name = parsed_component_name.shift();
+      name = parsed_component_name.shift();
+    }
+
+    const component = this.plugin_loader.get_plugin_by_name(plugin_name).create_component(name, parameters, version);
+
     const constructors = get_component_inheritance(component);
     const base_constructor_name = constructors.pop().name;
 

@@ -74,30 +74,6 @@ class PluginLoader {
   }
 
   /**
-   * Creates a component of name,
-   *
-   * @param {Object} {name, plugin_name, version, config}
-   * @returns {any} - Component instance created
-   * @memberof PluginLoader
-   */
-  create_component({name, plugin_name, version, config}) {
-
-    // This allows config to specify plugin and component name in single argument. Example: 'mp-core/EventHandler'
-    if(name.indexOf('/') !== -1) {
-      const parsed_component_name = name.split('/');
-      plugin_name = parsed_component_name.shift();
-      name = parsed_component_name.shift();
-    }
-
-    return this.get_plugin_by_name(plugin_name)
-      .create_component(
-        name,
-        config,
-        version
-      );
-  }
-
-  /**
    * Looks up plugin by plugin name, returns plugin instance
    *
    * @param {String} plugin_name - Name of plugin, same name in package.json file
