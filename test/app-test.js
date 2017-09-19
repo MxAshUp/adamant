@@ -5,6 +5,7 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 const mongooseMock = require('mongoose-mock');
 const Collector = require('../libs/collector');
+const Component = require('../libs/component');
 const EventHandler = require('../libs/event-handler');
 const EventDispatcher = require('../libs/event-dispatcher');
 const Plugin = require('../libs/plugin');
@@ -79,6 +80,25 @@ describe('App', () => {
       pluginDirPaths.forEach((path) => {
         sinon.assert.calledWith(app.plugin_loader.load_plugin, path, sinon.match(mock_config));
       });
+    });
+  });
+
+  describe('load_component', () => {
+    let app;
+    let componentInstanceMock;
+    const mock_plugin_name = `mock_plugin${Math.random()}`;
+    const mockPlugin = new Plugin({name: mock_plugin_name});
+
+    beforeEach(() => {
+      app = new App();
+      componentInstanceMock = new Component();
+      app.plugin_loader.get_plugin_by_name = sinon.stub().returns(mockPlugin);
+      mockPlugin.create_component = sinon.stub().returns(componentInstanceMock);
+    });
+
+    it('Should parse plugin name from component name', () => {
+      app.load_component(`${mock_plugin_name}/testComponent`);
+      sinon.assert.calledWith(app.plugin_loader.get_plugin_by_name, mock_plugin_name);
     });
   });
 

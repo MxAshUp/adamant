@@ -49,6 +49,7 @@ class App {
     // Set component hooks
     this.add_component_hook('Collector', this.load_collector.bind(this));
     this.add_component_hook('EventHandler', this.load_event_handler.bind(this));
+    this.add_component_hook('Component', this.hook_load_component.bind(this));
   }
 
   /**
@@ -138,17 +139,15 @@ class App {
     const component = plugin.create_component(component_name, parameters, version);
 
     // Find out what kind of component this is
-    const component_constructors = get_component_inheritance(component);
-    const base_constructor_name = component_constructors.pop().name;
+    const component_constructors = get_component_inheritance(component).map(c => c.name);
 
     // Apply component hooks to created component
     // These hooks are added with add_component_hook
-    _.filter(this.component_hooks, {constructor_name: base_constructor_name}).forEach(component_hook => {
-      component_hook.callback(component, parameters);
+    component_constructors.forEach(constructor_name => {
+      _.filter(this.component_hooks, {constructor_name}).forEach(component_hook => {
+        component_hook.callback(component, parameters);
+      });
     });
-
-    // Add component to internal array
-    this.components.push(component);
 
     return component;
   }
@@ -219,6 +218,18 @@ class App {
       handler.transform_function = parameters.transform_function;
 
     this.event_dispatcher.load_event_handler(handler);
+  }
+
+  /**
+   * Loads a component instance into the app
+   *
+   * @param {Component} component - The instance to load
+   * @param {Object} parameters - Parameters to user for loading
+   * @memberof App
+   */
+  hook_load_component(component, parameters) {
+    // Add component to internal array
+    this.components.push(component);
   }
 
   /**
