@@ -109,7 +109,7 @@ class App {
   load_component({name, plugin_name, version, parameters = {}}) {
 
     // This allows config to specify plugin and component name in single argument. Example: 'mp-core/EventHandler'
-    if(name && name.indexOf('/') !== -1) {
+    if(name.indexOf('/') !== -1) {
       const parsed_component_name = name.split('/');
       plugin_name = parsed_component_name.shift();
       name = parsed_component_name.shift();
