@@ -29,7 +29,7 @@ class PluginLoader {
 
     // Special path for mp-core components
     if(module_name == 'mp-core' || module_name == 'local-mp-core') {
-      require_path = `./core-components`;
+      require_path = `./components`;
     }
 
     //Load in the plugin

@@ -7,7 +7,7 @@ const // Test tools
   _ = require('lodash'),
   // Modules to test
   EventHandleError = require('../libs/errors').EventHandleError,
-  EventHandler = rewire('../libs/event-handler'),
+  EventHandler = rewire('../libs/components/event-handler'),
   EventDispatcher = rewire('../libs/event-dispatcher'),
   Event = rewire('../libs/event'),
   EventComplete = require('../libs/event-complete');

@@ -4,9 +4,9 @@ const assert = chai.assert;
 const sinon = require('sinon');
 const rewire = require('rewire');
 const mongooseMock = require('mongoose-mock');
-const Collector = require('../libs/collector');
-const Component = require('../libs/component');
-const EventHandler = require('../libs/event-handler');
+const Collector = require('../libs/components/collector');
+const Component = require('../libs/components/component');
+const EventHandler = require('../libs/components/event-handler');
 const EventDispatcher = require('../libs/event-dispatcher');
 const Plugin = require('../libs/plugin');
 // components to test

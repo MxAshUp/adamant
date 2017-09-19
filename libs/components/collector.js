@@ -1,9 +1,9 @@
 var Component = require('./component'),
   mongoose = require('mongoose'),
   _ = require('lodash'),
-  CollectorInitializeError = require('./errors').CollectorInitializeError,
-  CollectorDatabaseError = require('./errors').CollectorDatabaseError,
-  Counter = require('./utility').Counter,
+  CollectorInitializeError = require('../errors').CollectorInitializeError,
+  CollectorDatabaseError = require('../errors').CollectorDatabaseError,
+  Counter = require('../utility').Counter,
   util = require('util');
 
 class Collector extends Component {

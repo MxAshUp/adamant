@@ -4,7 +4,7 @@ const sinon = require('sinon'),
   assert = chai.assert,
   rewire = require('rewire'),
   // Modules to test
-  LoopService = rewire('../libs/loop-service');
+  LoopService = rewire('../libs/components/loop-service');
 
 describe('Loop Service', () => {
   function async_fn_spy_wrapper(timeout) {

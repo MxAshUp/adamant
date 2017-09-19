@@ -10,7 +10,7 @@ const // Test tools
   mongooseMock = require('mongoose-mock'),
   // Modules to test
   CollectorDatabaseError = require('../libs/errors').CollectorDatabaseError,
-  Collector = rewire('../libs/collector');
+  Collector = rewire('../libs/components/collector');
 
 chai.use(chaiAsPromised);
 chai.should();
