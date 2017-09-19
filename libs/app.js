@@ -107,32 +107,47 @@ class App {
   }
 
 
-  load_component(name, version, parameters = {}) {
+  /**
+   * Loads a component into app
+   *
+   * @param {String} component_name - The name of the component (class name), including the plugin namespace. Example: 'mp-core/EventHandler'. If no plugin name is specified, mp-core is assumed.
+   * @param {String} version - Semver format of the version required. Plugin.create_component will throw error if version requirements not met.
+   * @param {Object} parameters - These are the parameters passed to the constructor of the component
+   * @returns {Component} - The component created
+   * @memberof App
+   */
+  load_component(component_name, version, parameters = {}) {
     let plugin_name = 'mp-core';
 
-    // This allows config to specify plugin and component name in single argument. Example: 'mp-core/EventHandler'
-    if(name.indexOf('/') !== -1) {
-      const parsed_component_name = name.split('/');
+    // This allows config to specify plugin and component name in single argument.
+    if(component_name.indexOf('/') !== -1) {
+      // Split name up by /
+      const parsed_component_name = component_name.split('/');
+
+      // Plugin name is the first element
       plugin_name = parsed_component_name.shift();
-      name = parsed_component_name.shift();
+
+      // Component name is the last element
+      component_name = parsed_component_name.pop();
     }
 
     // Find the plugin
     const plugin = this.plugin_loader.get_plugin_by_name(plugin_name);
 
     // Create the component
-    const component = plugin.create_component(name, parameters, version);
+    const component = plugin.create_component(component_name, parameters, version);
 
     // Find out what kind of component this is
     const component_constructors = get_component_inheritance(component);
     const base_constructor_name = component_constructors.pop().name;
 
-    // Use component hooks on components
+    // Apply component hooks to created component
+    // These hooks are added with add_component_hook
     _.filter(this.component_hooks, {constructor_name: base_constructor_name}).forEach(component_hook => {
       component_hook.callback(component, parameters);
     });
 
-    // Add component to array
+    // Add component to internal array
     this.components.push(component);
 
     return component;
