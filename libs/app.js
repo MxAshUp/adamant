@@ -189,6 +189,12 @@ class App {
     service.name = `${collector.model_name} collector`;
     this._bind_service_events(service);
     this._bind_model_events(collector);
+
+    // Add event handling for collector
+    _.each(['create', 'update', 'remove'], event => {
+      collector.on(event, this.handle_collector_event.bind(this, collector, event));
+    });
+
     this.collect_services.push(service);
   }
 
@@ -223,10 +229,6 @@ class App {
    * @memberOf App
    */
   _bind_model_events(collector) {
-    //Add event handling
-    _.each(['create', 'update', 'remove'], event => {
-      collector.on(event, this.handle_collector_event.bind(this, collector, event));
-    });
     collector.on('error', this.handle_collector_error.bind(this, collector));
     collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
   }
