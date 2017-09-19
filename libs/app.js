@@ -106,7 +106,9 @@ class App {
     });
   }
 
-  load_component({name, plugin_name, version, parameters = {}}) {
+
+  load_component(name, version, parameters = {}) {
+    let plugin_name = 'mp-core';
 
     // This allows config to specify plugin and component name in single argument. Example: 'mp-core/EventHandler'
     if(name.indexOf('/') !== -1) {
