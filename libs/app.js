@@ -37,7 +37,7 @@ class App extends EventEmitter {
 
     // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
-    this.event_dispatcher_service = this.load_component('LoopService', '', {
+    this.event_dispatcher_service = this.load_component('LoopService', {
       run_callback: this.event_dispatcher.run.bind(this.event_dispatcher),
       name: 'Event dispatcher service'
     });
@@ -113,12 +113,12 @@ class App extends EventEmitter {
    * Loads a component into app
    *
    * @param {String} component_name - The name of the component (class name), including the plugin namespace. Example: 'mp-core/EventHandler'. If no plugin name is specified, mp-core is assumed.
-   * @param {String} version - Semver format of the version required. Plugin.create_component will throw error if version requirements not met.
    * @param {Object} parameters - These are the parameters passed to the constructor of the component
+   * @param {String} version - Semver format of the version required. Plugin.create_component will throw error if version requirements not met.
    * @returns {Component} - The component created
    * @memberof App
    */
-  load_component(component_name, version, parameters = {}) {
+  load_component(component_name, parameters = {}, version = '') {
     let plugin_name = 'mp-core';
 
     // This allows config to specify plugin and component name in single argument.
@@ -173,7 +173,7 @@ class App extends EventEmitter {
     if (parameters.service_run_min_time_between)
       service_config.run_min_time_between = parameters.service_run_min_time_between;
 
-    const service = this.load_component('LoopService', '', service_config);
+    const service = this.load_component('LoopService', service_config);
 
     // Bind events
     collector.on('error', this.handle_collector_error.bind(this, collector));

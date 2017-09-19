@@ -143,38 +143,38 @@ describe('App', () => {
     });
 
     it('Should call create_component with config', () => {
-      app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters)
+      app.load_component(config_other_vals.name, config_other_vals.parameters, config_other_vals.version)
       sinon.assert.calledWith(mockPlugin.create_component, component_name, config_other_vals.parameters, config_other_vals.version);
     });
 
     it('Should create a LoopService', () => {
-      app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters)
+      app.load_component(config_other_vals.name, config_other_vals.parameters, config_other_vals.version)
       expect(app.collect_services[0].constructor.name).to.equal('LoopService');
     });
 
     it(`Loop Service should be named '${model_mock_name} collector'`, () => {
-      app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters)
+      app.load_component(config_other_vals.name, config_other_vals.parameters, config_other_vals.version)
       expect(app.collect_services[0].name).to.equal(`${collectorInstanceMock.model_name} collector`);
     });
 
     it('Should set handler service_retry_max_attempts', () => {
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       expect(app.collect_services[0].retry_max_attempts).to.equal(config.parameters.service_retry_max_attempts);
     });
 
     it('Should set handler service_retry_time_between', () => {
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       expect(app.collect_services[0].retry_time_between).to.equal(config.parameters.service_retry_time_between);
     });
 
     it('Should set handler service_run_min_time_between', () => {
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       expect(app.collect_services[0].run_min_time_between).to.equal(config.parameters.service_run_min_time_between);
     });
 
     it('Should add listener to service error that calls handle_service_error', () => {
       sinon.stub(app, 'handle_service_error');
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       const mock_param = new Error(Math.random());
       const service = app.collect_services[0];
       expect(service.listenerCount('error')).to.equal(1);
@@ -185,7 +185,7 @@ describe('App', () => {
 
     it('Should add listener to service start that calls debug_message', () => {
       sinon.stub(app, 'debug_message');
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       const service = app.collect_services[0];
       expect(service.listenerCount('start')).to.equal(1);
       service.listeners('start')[0]();
@@ -194,7 +194,7 @@ describe('App', () => {
 
     it('Should add listener to service stop that calls debug_message', () => {
       sinon.stub(app, 'debug_message');
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       const service = app.collect_services[0];
       expect(service.listenerCount('stop')).to.equal(1);
       service.listeners('stop')[0]();
@@ -203,7 +203,7 @@ describe('App', () => {
 
     it('Should add listener to collector error that calls handle_collector_error', () => {
       sinon.stub(app, 'handle_collector_error');
-      const collector = app.load_component(config.name, config.version, config.parameters);
+      const collector = app.load_component(config.name, config.parameters, config.version);
       const mock_param = new Error(Math.random());
       expect(collector.listenerCount('error')).to.equal(1);
       collector.listeners('error')[0](mock_param);
@@ -214,7 +214,7 @@ describe('App', () => {
     ['create', 'update', 'remove'].forEach((event) => {
       it(`Should add listener to collector ${event} that calls handle_collector_event`, () => {
         sinon.stub(app, 'handle_collector_event');
-        const collector = app.load_component(config.name, config.version, config.parameters);
+        const collector = app.load_component(config.name, config.parameters, config.version);
         expect(collector.listenerCount(event)).to.equal(1);
         collector.listeners(event)[0]();
         sinon.assert.calledWith(app.handle_collector_event, collector);
@@ -224,7 +224,7 @@ describe('App', () => {
 
     it(`Should add listener to collector done that calls dispatcher ${model_mock_name}.done`, () => {
       sinon.stub(app.event_dispatcher, 'emit');
-      const collector = app.load_component(config.name, config.version, config.parameters);
+      const collector = app.load_component(config.name, config.parameters, config.version);
       const mock_data = Math.random();
       expect(collector.listenerCount('done')).to.equal(1);
       collector.listeners('done')[0](mock_data);
@@ -279,32 +279,32 @@ describe('App', () => {
     });
 
     it('Should call create_component with config', () => {
-      app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters);
+      app.load_component(config_other_vals.name, config_other_vals.parameters, config_other_vals.version);
       sinon.assert.calledWith(mockPlugin.create_component, mock_handler_name, config_other_vals.parameters, config_other_vals.version);
     });
 
     it('Should call load_event_handler on event Dispatcher', () => {
-      app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters);
+      app.load_component(config_other_vals.name, config_other_vals.parameters, config_other_vals.version);
       sinon.assert.calledWith(eventDispatcherInstanceMock.load_event_handler, eventHandlerInstanceMock);
     });
 
     it('Should set handler event_name', () => {
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].event_name).to.equal(config.parameters.event_name);
     });
 
     it('Should set handler defer_dispatch', () => {
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].defer_dispatch).to.equal(config.parameters.defer_dispatch);
     });
 
     it('Should set handler should_handle', () => {
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].should_handle).to.equal(config.parameters.should_handle);
     });
 
     it('Should set handler transform_function', () => {
-      app.load_component(config.name, config.version, config.parameters);
+      app.load_component(config.name, config.parameters, config.version);
       expect(eventDispatcherInstanceMock.load_event_handler.lastCall.args[0].transform_function).to.equal(config.parameters.transform_function);
     });
 
