@@ -52,11 +52,11 @@ const get_component_inheritance = (obj) => {
     chain.push(prototype);
   }
 
+  // Remove inheritance after Component
+  while(chain[chain.length - 1].constructor.name !== 'Component') chain.pop();
+
   // Remove first constructor (it's a duplicate)
   chain.shift();
-
-  // Remove inheritance after Component
-  while(chain.pop().constructor.name !== 'Component');
 
   return chain.map(d => d.constructor);
 };
