@@ -2,7 +2,6 @@ let PluginLoader = require('./plugin-loader'),
   mongoose = require('mongoose'),
   _ = require('lodash'),
   get_component_inheritance = require('./utility').get_component_inheritance,
-  LoopService = require('./loop-service'),
   EventDispatcher = require('./event-dispatcher'),
   EventHandler = require('./event-handler'),
   Event = require('./event'),
@@ -27,9 +26,9 @@ class App extends EventEmitter {
     this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
     this.components = [];
-    this.component_hooks = [];
 
     // Load some some config from environment variables
+    // @todo - abstract this feature out, eg config_from_env
     this.config.mongodb_url = process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '';
     this.config.web_port = process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '';
 
@@ -38,12 +37,11 @@ class App extends EventEmitter {
 
     // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
-    this.event_dispatcher_service = new LoopService(
-      this.event_dispatcher.run.bind(this.event_dispatcher)
-    );
-    this.event_dispatcher_service.name = 'Event dispatcher';
+    this.event_dispatcher_service = this.load_component('LoopService', '', {
+      run_callback: this.event_dispatcher.run.bind(this.event_dispatcher),
+      name: 'Event dispatcher service'
+    });
     this.event_dispatcher.on('error', console.log);
-    this._bind_service_events(this.event_dispatcher_service);
     this.express_app = express();
     this.server = http.createServer(this.express_app);
     this.io = socketio(this.server);
@@ -52,6 +50,7 @@ class App extends EventEmitter {
     this.on('Collector.load', this.handle_load_collector.bind(this));
     this.on('EventHandler.load', this.handle_load_event_handler.bind(this));
     this.on('Component.load', this.handle_load_component.bind(this));
+    this.on('LoopService.load', this.handle_load_loop_service.bind(this));
   }
 
   /**
@@ -161,19 +160,20 @@ class App extends EventEmitter {
    */
   handle_load_collector(collector, parameters) {
 
-    const service = this.load_component('LoopService', '', collector.run.bind(collector));
+    const service_config = {};
+    service_config.run_callback = collector.run.bind(collector);
+    service_config.name = `${collector.model_name} collector`;
 
     if (parameters.service_retry_max_attempts)
-      service.retry_max_attempts = parameters.service_retry_max_attempts;
+      service_config.retry_max_attempts = parameters.service_retry_max_attempts;
 
     if (parameters.service_retry_time_between)
-      service.retry_time_between = parameters.service_retry_time_between;
+      service_config.retry_time_between = parameters.service_retry_time_between;
 
     if (parameters.service_run_min_time_between)
-      service.service_run_min_time_between = parameters.service_run_min_time_between;
+      service_config.run_min_time_between = parameters.service_run_min_time_between;
 
-    service.name = `${collector.model_name} collector`;
-    this._bind_service_events(service);
+    const service = this.load_component('LoopService', '', service_config);
 
     // Bind events
     collector.on('error', this.handle_collector_error.bind(this, collector));
@@ -229,7 +229,7 @@ class App extends EventEmitter {
    *
    * @memberOf App
    */
-  _bind_service_events(service) {
+  handle_load_loop_service(service) {
     service.on('error', this.handle_service_error.bind(this, service));
     service.on('start', this.debug_message.bind(this, `${service.name} service`, 'started'));
     service.on('stop', this.debug_message.bind(this, `${service.name} service`, 'stopped'));

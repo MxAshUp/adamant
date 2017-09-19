@@ -8,21 +8,32 @@ class LoopService extends Component {
 	 *
 	 * @param {function} run_callback - The function to run continuously. Can be a Promise-returning function.
 	 */
-  constructor(run_callback) {
+  constructor({
+      run_callback,
+      run_min_time_between = 0,
+      retry_attempts = 0,
+      retry_max_attempts = 0,
+      retry_time_between = 0,
+      errors_only_retry_on = [],
+      errors_dont_retry_on = [],
+      name = ''
+    }) {
+
     super();
 
     //Set initial variables
     this.run_status = false;
-    this.run_callback = run_callback;
-    this.run_min_time_between = 0;
     this.run_count = 0;
     this.stop_on_run = 0;
 
-    this.retry_attempts = 0;
-    this.retry_max_attempts = 0;
-    this.retry_time_between = 0;
-    this.errors_only_retry_on = [];
-    this.errors_dont_retry_on = [];
+    this.run_callback = run_callback;
+    this.run_min_time_between = run_min_time_between;
+    this.retry_attempts = retry_attempts;
+    this.retry_max_attempts = retry_max_attempts;
+    this.retry_time_between = retry_time_between;
+    this.errors_only_retry_on = errors_only_retry_on;
+    this.errors_dont_retry_on = errors_dont_retry_on;
+    this.name = name;
 
     this.loop_function_timeout_id = 0;
     this.loop_function_resolve_cb = null;

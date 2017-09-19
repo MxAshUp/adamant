@@ -92,7 +92,8 @@ describe('App', () => {
     beforeEach(() => {
       app = new App();
       componentInstanceMock = new Component();
-      app.plugin_loader.get_plugin_by_name = sinon.stub().returns(mockPlugin);
+      app.plugin_loader.get_plugin_by_name = sinon.stub().callsFake(app.plugin_loader.get_plugin_by_name);
+      app.plugin_loader.get_plugin_by_name.withArgs('mock_plugin').withArgs(mock_plugin_name).returns(mockPlugin);
       mockPlugin.create_component = sinon.stub().returns(componentInstanceMock);
     });
 
@@ -107,18 +108,20 @@ describe('App', () => {
     let collectorInstanceMock;
     const model_mock_name = 'mockdel' + Math.random();
 
+    const component_name = 'MockCollector';
+
     const config = {
-      name: 'testComponent',
+      name: `mock_plugin/${component_name}`,
       version: '',
       parameters: {
-        service_retry_max_attempts: 1,
-        service_retry_time_between: 1,
-        service_run_min_time_between: 1,
+        service_retry_max_attempts: Math.floor(Math.random()*10000),
+        service_retry_time_between: Math.floor(Math.random()*10000),
+        service_run_min_time_between: Math.floor(Math.random()*10000),
       }
     };
 
     const config_other_vals = {
-      name: 'testComponent',
+      name: `mock_plugin/${component_name}`,
       version: '',
       parameters: {
         _unique: Math.random()
@@ -132,25 +135,26 @@ describe('App', () => {
       // Collector Instance Mock
       collectorInstanceMock = new Collector();
       collectorInstanceMock.model_name = model_mock_name;
-      app.plugin_loader.get_plugin_by_name = sinon.stub().returns(mockPlugin);
+      const mp_core_plugin = app.plugin_loader.get_plugin_by_name('mp-core');
+      sinon.stub(app.plugin_loader, 'get_plugin_by_name');
+      app.plugin_loader.get_plugin_by_name.returns(mp_core_plugin);
+      app.plugin_loader.get_plugin_by_name.withArgs('mock_plugin').returns(mockPlugin);
       mockPlugin.create_component = sinon.stub().returns(collectorInstanceMock);
     });
 
     it('Should call create_component with config', () => {
       app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters)
-      sinon.assert.calledWith(mockPlugin.create_component, config_other_vals.name, config_other_vals.parameters, config_other_vals.version);
+      sinon.assert.calledWith(mockPlugin.create_component, component_name, config_other_vals.parameters, config_other_vals.version);
     });
 
     it('Should create a LoopService', () => {
       app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters)
-      loop_service = app.collect_services[0];
-      expect(loop_service.constructor.name).to.equal('LoopService');
+      expect(app.collect_services[0].constructor.name).to.equal('LoopService');
     });
 
     it(`Loop Service should be named '${model_mock_name} collector'`, () => {
       app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters)
-      loop_service = app.collect_services[0];
-      expect(loop_service.name).to.equal(`${collectorInstanceMock.model_name} collector`);
+      expect(app.collect_services[0].name).to.equal(`${collectorInstanceMock.model_name} collector`);
     });
 
     it('Should set handler service_retry_max_attempts', () => {
@@ -165,7 +169,7 @@ describe('App', () => {
 
     it('Should set handler service_run_min_time_between', () => {
       app.load_component(config.name, config.version, config.parameters);
-      expect(app.collect_services[0].service_run_min_time_between).to.equal(config.parameters.service_run_min_time_between);
+      expect(app.collect_services[0].run_min_time_between).to.equal(config.parameters.service_run_min_time_between);
     });
 
     it('Should add listener to service error that calls handle_service_error', () => {
@@ -199,9 +203,8 @@ describe('App', () => {
 
     it('Should add listener to collector error that calls handle_collector_error', () => {
       sinon.stub(app, 'handle_collector_error');
-      app.load_component(config.name, config.version, config.parameters);
+      const collector = app.load_component(config.name, config.version, config.parameters);
       const mock_param = new Error(Math.random());
-      const collector = app.components[0];
       expect(collector.listenerCount('error')).to.equal(1);
       collector.listeners('error')[0](mock_param);
       sinon.assert.calledWith(app.handle_collector_error, collector, mock_param);
@@ -211,8 +214,7 @@ describe('App', () => {
     ['create', 'update', 'remove'].forEach((event) => {
       it(`Should add listener to collector ${event} that calls handle_collector_event`, () => {
         sinon.stub(app, 'handle_collector_event');
-        app.load_component(config.name, config.version, config.parameters);
-        const collector = app.components[0];
+        const collector = app.load_component(config.name, config.version, config.parameters);
         expect(collector.listenerCount(event)).to.equal(1);
         collector.listeners(event)[0]();
         sinon.assert.calledWith(app.handle_collector_event, collector);
@@ -222,9 +224,8 @@ describe('App', () => {
 
     it(`Should add listener to collector done that calls dispatcher ${model_mock_name}.done`, () => {
       sinon.stub(app.event_dispatcher, 'emit');
-      app.load_component(config.name, config.version, config.parameters);
+      const collector = app.load_component(config.name, config.version, config.parameters);
       const mock_data = Math.random();
-      const collector = app.components[0];
       expect(collector.listenerCount('done')).to.equal(1);
       collector.listeners('done')[0](mock_data);
       sinon.assert.calledWith(app.event_dispatcher.emit, `${model_mock_name}.done`, mock_data);
@@ -235,9 +236,10 @@ describe('App', () => {
     let app;
     let eventDispatcherInstanceMock
     let eventHandlerInstanceMock;
+    const mock_handler_name = 'testHandler';
 
     const config = {
-      name: 'testComponent',
+      name: `mock_plugin/${mock_handler_name}`,
       version: '',
       parameters: {
         event_name: `${Math.random()}`,
@@ -248,7 +250,7 @@ describe('App', () => {
     };
 
     const config_other_vals = {
-      name: 'testComponent',
+      name: `mock_plugin/${mock_handler_name}`,
       version: '',
       parameters: {
         _unique: Math.random()
@@ -267,14 +269,18 @@ describe('App', () => {
       // Event handler mock
       eventHandlerInstanceMock = new EventHandler();
 
+      const mp_core_plugin = app.plugin_loader.get_plugin_by_name('mp-core');
+
       app.event_dispatcher = eventDispatcherInstanceMock;
-      app.plugin_loader.get_plugin_by_name = sinon.stub().returns(mockPlugin);
+      sinon.stub(app.plugin_loader, 'get_plugin_by_name');
+      app.plugin_loader.get_plugin_by_name.returns(mp_core_plugin);
+      app.plugin_loader.get_plugin_by_name.withArgs('mock_plugin').returns(mockPlugin);
       mockPlugin.create_component = sinon.stub().returns(eventHandlerInstanceMock);
     });
 
     it('Should call create_component with config', () => {
       app.load_component(config_other_vals.name, config_other_vals.version, config_other_vals.parameters);
-      sinon.assert.calledWith(mockPlugin.create_component, config_other_vals.name, config_other_vals.parameters, config_other_vals.version);
+      sinon.assert.calledWith(mockPlugin.create_component, mock_handler_name, config_other_vals.parameters, config_other_vals.version);
     });
 
     it('Should call load_event_handler on event Dispatcher', () => {

@@ -19,13 +19,13 @@ describe('Loop Service', () => {
 
   it('Should create instance with run and stop callback', () => {
     let cb = () => Math.random();
-    let loopy_mc_loopface = new LoopService(cb);
+    let loopy_mc_loopface = new LoopService({run_callback: cb});
     expect(loopy_mc_loopface.run_callback).to.deep.equal(cb);
   });
 
   it('Should not run if run_count > stop_on_run', () => {
     let cb = () => Math.random();
-    let loopy_mc_loopface = new LoopService(cb);
+    let loopy_mc_loopface = new LoopService({run_callback: cb});
     loopy_mc_loopface.run_count = 5;
     loopy_mc_loopface.stop_on_run = 3;
     expect(loopy_mc_loopface._should_stop).to.equal(true);
@@ -39,7 +39,7 @@ describe('Loop Service', () => {
 
   it('Should run function once', () => {
     let cb = async_fn_spy_wrapper();
-    let loopy_mc_loopface = new LoopService(cb);
+    let loopy_mc_loopface = new LoopService({run_callback: cb});
     return loopy_mc_loopface.start(true).then(() => {
       sinon.assert.callCount(cb, 1);
     });
@@ -47,7 +47,7 @@ describe('Loop Service', () => {
 
   it('Should run function with proper this context', () => {
     let cb = async_fn_spy_wrapper();
-    let loopy_mc_loopface = new LoopService(cb.bind(cb));
+    let loopy_mc_loopface = new LoopService({run_callback: cb.bind(cb)});
     return loopy_mc_loopface.start(true).then(() => {
       sinon.assert.calledOn(cb, cb);
       sinon.assert.callCount(cb, 1);
@@ -56,7 +56,7 @@ describe('Loop Service', () => {
 
   it('Should interrupt after 290ms (3 times)', () => {
     let cb = async_fn_spy_wrapper(100);
-    let loopy_mc_loopface = new LoopService(cb);
+    let loopy_mc_loopface = new LoopService({run_callback: cb});
     setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 300); // Just enough time for 3 runs
 
     return loopy_mc_loopface.start().then(() => {
@@ -66,7 +66,7 @@ describe('Loop Service', () => {
 
   it('Should by async even if run fn is not', done => {
     let cb = sinon.spy();
-    let loopy_mc_loopface = new LoopService(cb);
+    let loopy_mc_loopface = new LoopService({run_callback: cb});
     loopy_mc_loopface
       .start()
       .then(() => {
@@ -110,7 +110,7 @@ describe('Loop Service', () => {
 
   it('Should interrupt in the middle of a long time_between_runs', () => {
     let cb = sinon.spy();
-    let loopy_mc_loopface = new LoopService(cb);
+    let loopy_mc_loopface = new LoopService({run_callback: cb});
     loopy_mc_loopface.run_min_time_between = 10000; // Wait 10 seconds before 2nd run;
 
     setTimeout(loopy_mc_loopface.stop.bind(loopy_mc_loopface), 50);
@@ -123,7 +123,7 @@ describe('Loop Service', () => {
 
   it('Should reject if already running', () => {
     let cb = sinon.spy();
-    let loopy_mc_loopface = new LoopService(cb);
+    let loopy_mc_loopface = new LoopService({run_callback: cb});
     loopy_mc_loopface.run_min_time_between = 10000; // Wait 10 seconds before 2nd run;
 
     // Initial start
@@ -144,7 +144,7 @@ describe('Loop Service', () => {
   it('Should emit error event', () => {
     const event_spy = sinon.spy();
     const spy_thrower = sinon.stub().throws();
-    let loopy_mc_loopface = new LoopService(spy_thrower);
+    let loopy_mc_loopface = new LoopService({run_callback: spy_thrower});
 
     loopy_mc_loopface.on('error', event_spy);
 
@@ -154,9 +154,11 @@ describe('Loop Service', () => {
   });
 
   it('Should retry 3 times', () => {
-    let loopy_mc_loopface = new LoopService(sinon.stub().throws());
+    let loopy_mc_loopface = new LoopService({
+      run_callback: sinon.stub().throws(),
+      retry_max_attempts: 3
+    });
     loopy_mc_loopface.on('error', sinon.stub());
-    loopy_mc_loopface.retry_max_attempts = 3;
 
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(loopy_mc_loopface.run_callback, 4);
@@ -164,12 +166,14 @@ describe('Loop Service', () => {
   });
 
   it('Should emit new retry event on each retry attempt', () => {
-    let loopy_mc_loopface = new LoopService(sinon.stub().throws());
+    let loopy_mc_loopface = new LoopService({
+      run_callback: sinon.stub().throws(),
+      retry_max_attempts: 3
+    });
     const error_event_spy = sinon.spy();
     const retry_event_spy = sinon.spy();
     loopy_mc_loopface.on('error', error_event_spy);
     loopy_mc_loopface.on('retry', retry_event_spy);
-    loopy_mc_loopface.retry_max_attempts = 3;
 
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(error_event_spy, loopy_mc_loopface.retry_max_attempts + 2);
@@ -184,10 +188,12 @@ describe('Loop Service', () => {
   });
 
   it('Should retry on any error if retry_errors array is empty', () => {
-    let loopy_mc_loopface = new LoopService(sinon.stub().throws());
+    let loopy_mc_loopface = new LoopService({
+      run_callback: sinon.stub().throws(),
+      retry_max_attempts: 2,
+      retry_errors: [],
+    });
     loopy_mc_loopface.on('error', sinon.spy());
-    loopy_mc_loopface.retry_max_attempts = 2;
-    loopy_mc_loopface.retry_errors = [];
 
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(
@@ -198,10 +204,12 @@ describe('Loop Service', () => {
   });
 
   it('Should not retry because Error is not in errors_only_retry_on array', () => {
-    let loopy_mc_loopface = new LoopService(sinon.stub().throws());
+    let loopy_mc_loopface = new LoopService({
+      run_callback: sinon.stub().throws(),
+      retry_max_attempts: 2,
+      errors_only_retry_on: ['foo', 'bar'],
+    });
     loopy_mc_loopface.on('error', sinon.spy());
-    loopy_mc_loopface.retry_max_attempts = 2;
-    loopy_mc_loopface.errors_only_retry_on = ['foo', 'bar'];
 
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(loopy_mc_loopface.run_callback, 1);
@@ -210,12 +218,12 @@ describe('Loop Service', () => {
 
   it('Should not retry because Error is in errors_dont_retry_on array', () => {
     class CustomError extends Error {}
-    let loopy_mc_loopface = new LoopService(
-      sinon.stub().throws(new CustomError())
-    );
+    let loopy_mc_loopface = new LoopService({
+      run_callback: sinon.stub().throws(new CustomError()),
+      errors_dont_retry_on: ['foo', 'CustomError'],
+      retry_max_attempts: 2,
+    });
     loopy_mc_loopface.on('error', sinon.spy());
-    loopy_mc_loopface.retry_max_attempts = 2;
-    loopy_mc_loopface.errors_dont_retry_on = ['foo', 'CustomError'];
 
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(loopy_mc_loopface.run_callback, 1);
@@ -223,9 +231,11 @@ describe('Loop Service', () => {
   });
 
   it('Should reset retry_attempts after retries are exhausted', () => {
-    let loopy_mc_loopface = new LoopService(sinon.stub().throws());
+    let loopy_mc_loopface = new LoopService({
+      run_callback: sinon.stub().throws(),
+      retry_max_attempts: 3,
+    });
     loopy_mc_loopface.on('error', sinon.spy());
-    loopy_mc_loopface.retry_max_attempts = 3;
 
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(
@@ -240,10 +250,12 @@ describe('Loop Service', () => {
     let throwthowpass_stub = sinon.stub().resolves();
     throwthowpass_stub.onFirstCall().throws();
     throwthowpass_stub.onSecondCall().throws();
-    let loopy_mc_loopface = new LoopService(throwthowpass_stub);
+    let loopy_mc_loopface = new LoopService({
+      run_callback: throwthowpass_stub,
+      retry_max_attempts: 3,
+    });
     let error_spy = sinon.spy();
     loopy_mc_loopface.on('error', error_spy);
-    loopy_mc_loopface.retry_max_attempts = 3;
     loopy_mc_loopface.stop_on_run = 3;
     return loopy_mc_loopface.start().then(() => {
       sinon.assert.callCount(error_spy, 2);
