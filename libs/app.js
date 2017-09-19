@@ -24,7 +24,7 @@ class App {
     this.plugin_loader = new PluginLoader();
     this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
-    this.collectors = [];
+    this.components = [];
     this.component_hooks = [];
 
     // Load some some config from environment variables
@@ -115,14 +115,23 @@ class App {
       name = parsed_component_name.shift();
     }
 
-    const component = this.plugin_loader.get_plugin_by_name(plugin_name).create_component(name, parameters, version);
+    // Find the plugin
+    const plugin = this.plugin_loader.get_plugin_by_name(plugin_name);
 
-    const constructors = get_component_inheritance(component);
-    const base_constructor_name = constructors.pop().name;
+    // Create the component
+    const component = plugin.create_component(name, parameters, version);
 
+    // Find out what kind of component this is
+    const component_constructors = get_component_inheritance(component);
+    const base_constructor_name = component_constructors.pop().name;
+
+    // Use component hooks on components
     _.filter(this.component_hooks, {constructor_name: base_constructor_name}).forEach(component_hook => {
       component_hook.callback(component, parameters);
     });
+
+    // Add component to array
+    this.components.push(component);
 
     return component;
   }
@@ -164,7 +173,6 @@ class App {
     this._bind_service_events(service);
     this._bind_model_events(collector);
     this.collect_services.push(service);
-    this.collectors.push(collector);
   }
 
   /**

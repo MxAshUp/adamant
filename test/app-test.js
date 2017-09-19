@@ -183,7 +183,7 @@ describe('App', () => {
       sinon.stub(app, 'handle_collector_error');
       app.load_component(config);
       const mock_param = new Error(Math.random());
-      const collector = app.collectors[0];
+      const collector = app.components[0];
       expect(collector.listenerCount('error')).to.equal(1);
       collector.listeners('error')[0](mock_param);
       sinon.assert.calledWith(app.handle_collector_error, collector, mock_param);
@@ -194,7 +194,7 @@ describe('App', () => {
       it(`Should add listener to collector ${event} that calls handle_collector_event`, () => {
         sinon.stub(app, 'handle_collector_event');
         app.load_component(config);
-        const collector = app.collectors[0];
+        const collector = app.components[0];
         expect(collector.listenerCount(event)).to.equal(1);
         collector.listeners(event)[0]();
         sinon.assert.calledWith(app.handle_collector_event, collector);
@@ -206,7 +206,7 @@ describe('App', () => {
       sinon.stub(app.event_dispatcher, 'emit');
       app.load_component(config);
       const mock_data = Math.random();
-      const collector = app.collectors[0];
+      const collector = app.components[0];
       expect(collector.listenerCount('done')).to.equal(1);
       collector.listeners('done')[0](mock_data);
       sinon.assert.calledWith(app.event_dispatcher.emit, `${model_mock_name}.done`, mock_data);
