@@ -2,12 +2,23 @@ const Component = require('./component');
 
 class LoopService extends Component {
   /**
+   *
 	 * Creates a LoopService object
 	 * A LoopService object will run a function continuously when start() is triggered.
 	 * It will stop when stop() is called, an error is caught, or has reached a run limit.
-	 *
-	 * @param {function} run_callback - The function to run continuously. Can be a Promise-returning function.
-	 */
+   *
+   * @param {Object} {
+   *       run_callback,
+   *       run_min_time_between = 0,
+   *       retry_attempts = 0,
+   *       retry_max_attempts = 0,
+   *       retry_time_between = 0,
+   *       errors_only_retry_on = [],
+   *       errors_dont_retry_on = [],
+   *       name = ''
+   *     }
+   * @memberof LoopService
+   */
   constructor({
       run_callback,
       run_min_time_between = 0,
