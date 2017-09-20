@@ -172,15 +172,15 @@ describe('App', () => {
       expect(app.collect_services[0].run_min_time_between).to.equal(config.parameters.service_run_min_time_between);
     });
 
-    it('Should add listener to service error that calls handle_service_error', () => {
-      sinon.stub(app, 'handle_service_error');
+    it('Should add listener to service error that calls _handle_service_error', () => {
+      sinon.stub(app, '_handle_service_error');
       app.load_component(config.name, config.parameters, config.version);
       const mock_param = new Error(Math.random());
       const service = app.collect_services[0];
       expect(service.listenerCount('error')).to.equal(1);
       service.listeners('error')[0](mock_param);
-      sinon.assert.calledWith(app.handle_service_error, service, mock_param);
-      app.handle_service_error.restore();
+      sinon.assert.calledWith(app._handle_service_error, service, mock_param);
+      app._handle_service_error.restore();
     });
 
     it('Should add listener to service start that calls debug_message', () => {
@@ -201,24 +201,24 @@ describe('App', () => {
       sinon.assert.calledWith(app.debug_message, `${service.name} service`, 'stopped');
     });
 
-    it('Should add listener to collector error that calls handle_collector_error', () => {
-      sinon.stub(app, 'handle_collector_error');
+    it('Should add listener to collector error that calls _handle_collector_error', () => {
+      sinon.stub(app, '_handle_collector_error');
       const collector = app.load_component(config.name, config.parameters, config.version);
       const mock_param = new Error(Math.random());
       expect(collector.listenerCount('error')).to.equal(1);
       collector.listeners('error')[0](mock_param);
-      sinon.assert.calledWith(app.handle_collector_error, collector, mock_param);
-      app.handle_collector_error.restore();
+      sinon.assert.calledWith(app._handle_collector_error, collector, mock_param);
+      app._handle_collector_error.restore();
     });
 
     ['create', 'update', 'remove'].forEach((event) => {
-      it(`Should add listener to collector ${event} that calls handle_collector_event`, () => {
-        sinon.stub(app, 'handle_collector_event');
+      it(`Should add listener to collector ${event} that calls _handle_collector_event`, () => {
+        sinon.stub(app, '_handle_collector_event');
         const collector = app.load_component(config.name, config.parameters, config.version);
         expect(collector.listenerCount(event)).to.equal(1);
         collector.listeners(event)[0]();
-        sinon.assert.calledWith(app.handle_collector_event, collector);
-        app.handle_collector_event.restore();
+        sinon.assert.calledWith(app._handle_collector_event, collector);
+        app._handle_collector_event.restore();
       });
     });
 
@@ -377,7 +377,7 @@ describe('App', () => {
     process.exit.restore();
   });
 
-  describe('handle_collector_event', () => {
+  describe('_handle_collector_event', () => {
     let app;
 
     const model_mock_name = 'mockdel' + Math.random();
@@ -399,7 +399,7 @@ describe('App', () => {
     it('Should enqueue event in event dispatcher', () => {
       const mock_event_data = Math.random();
       const mock_event_name = 'event' + Math.random();
-      app.handle_collector_event(collectorInstanceMock, mock_event_name, mock_event_data);
+      app._handle_collector_event(collectorInstanceMock, mock_event_name, mock_event_data);
       const event = eventDispatcherInstanceMock.enqueue_event.lastCall.args[0];
       expect(event.constructor.name).to.equal('Event');
       expect(event.data).to.equal(mock_event_data);
@@ -407,7 +407,7 @@ describe('App', () => {
     })
   });
 
-  describe('handle_collector_error', () => {
+  describe('_handle_collector_error', () => {
     let app;
     let collectorInstanceMock;
 
@@ -425,19 +425,19 @@ describe('App', () => {
 
     it('Should call debug_message with collector name and error stack', () => {
       const mock_error = new Error(Math.random());
-      app.handle_collector_error(collectorInstanceMock, mock_error);
+      app._handle_collector_error(collectorInstanceMock, mock_error);
       sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.stack}`);
     });
 
     it('Should call debug_message with cuplrit as details', () => {
       const mock_error = new Error(Math.random());
       mock_error.culprit = new Error('Culprit error!');
-      app.handle_collector_error(collectorInstanceMock, mock_error);
+      app._handle_collector_error(collectorInstanceMock, mock_error);
       sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.stack}`, `${mock_error.culprit.stack}`);
     });
   });
 
-  describe('handle_service_error', () => {
+  describe('_handle_service_error', () => {
     let app;
     let serviceInstanceMock;
 
@@ -455,14 +455,14 @@ describe('App', () => {
 
     it('Should call debug_message with collector name and error stack', () => {
       const mock_error = new Error(Math.random());
-      app.handle_service_error(serviceInstanceMock, mock_error);
+      app._handle_service_error(serviceInstanceMock, mock_error);
       sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.stack}`);
     });
 
     it('Should call debug_message with cuplrit as details', () => {
       const mock_error = new Error(Math.random());
       mock_error.culprit = new Error('Culprit error!');
-      app.handle_service_error(serviceInstanceMock, mock_error);
+      app._handle_service_error(serviceInstanceMock, mock_error);
       sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.stack}`, `${mock_error.culprit.stack}`);
     });
   });

@@ -46,10 +46,10 @@ class App extends EventEmitter {
     this.io = socketio(this.server);
 
     // Set component hooks
-    this.on('Collector.load', this.handle_load_collector.bind(this));
-    this.on('EventHandler.load', this.handle_load_event_handler.bind(this));
-    this.on('Component.load', this.handle_load_component.bind(this));
-    this.on('LoopService.load', this.handle_load_loop_service.bind(this));
+    this.on('Collector.load', this._handle_load_collector);
+    this.on('EventHandler.load', this._handle_load_event_handler);
+    this.on('Component.load', this._handle_load_component);
+    this.on('LoopService.load', this._handle_load_loop_service);
   }
 
   /**
@@ -157,7 +157,7 @@ class App extends EventEmitter {
    * @param {Object} parameters - Parameters used for loading
    * @memberof App
    */
-  handle_load_collector(collector, parameters) {
+  _handle_load_collector(collector, parameters) {
 
     const service_config = {};
     service_config.run_callback = collector.run.bind(collector);
@@ -175,12 +175,12 @@ class App extends EventEmitter {
     const service = this.load_component('LoopService', service_config);
 
     // Bind events
-    collector.on('error', this.handle_collector_error.bind(this, collector));
+    collector.on('error', this._handle_collector_error.bind(this, collector));
     collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
 
     // Add event handling for collector
     _.each(['create', 'update', 'remove'], event => {
-      collector.on(event, this.handle_collector_event.bind(this, collector, event));
+      collector.on(event, this._handle_collector_event.bind(this, collector, event));
     });
 
     this.collect_services.push(service);
@@ -193,7 +193,7 @@ class App extends EventEmitter {
    * @param {Object} parameters - Parameters used for loading
    * @memberof App
    */
-  handle_load_event_handler(event_handler, parameters) {
+  _handle_load_event_handler(event_handler, parameters) {
     // Add event handler to event dispatcher
     this.event_dispatcher.load_event_handler(event_handler);
   }
@@ -205,7 +205,7 @@ class App extends EventEmitter {
    * @param {Object} parameters - Parameters used for loading
    * @memberof App
    */
-  handle_load_component(component, parameters) {
+  _handle_load_component(component, parameters) {
     // Add component to internal array
     this.components.push(component);
   }
@@ -217,23 +217,23 @@ class App extends EventEmitter {
    *
    * @memberOf App
    */
-  handle_load_loop_service(service) {
-    service.on('error', this.handle_service_error.bind(this, service));
+  _handle_load_loop_service(service) {
+    service.on('error', this._handle_service_error.bind(this, service));
     service.on('start', this.debug_message.bind(this, `${service.name} service`, 'started'));
     service.on('stop', this.debug_message.bind(this, `${service.name} service`, 'stopped'));
   }
 
-  handle_collector_event(collector, event_name, data) {
+  _handle_collector_event(collector, event_name, data) {
     this.event_dispatcher.enqueue_event(
       new Event(`${collector.model_name}.${event_name}`, data)
     );
   }
 
-  handle_collector_error(collector, error) {
+  _handle_collector_error(collector, error) {
     this.debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
   }
 
-  handle_service_error(service, error) {
+  _handle_service_error(service, error) {
     this.debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
   }
 
