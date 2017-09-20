@@ -2,11 +2,16 @@ const Component = require('./component');
 
 class EventHandler extends Component {
   /**
-  * Creates an instance of EventHandler.
-  *
-  *
-  * @memberOf EventHandler
-  */
+   * Creates an instance of EventHandler.
+   * @param {Object} [{
+   *     event_name = '',
+   *     should_handle = null,
+   *     defer_dispatch = null, // {event_name = '', check_function = ()}
+   *     enqueue_complete_event = false,
+   *     transform_function = null,
+   *   }]
+   * @memberof EventHandler
+   */
   constructor({
     event_name = '',
     should_handle = null,
