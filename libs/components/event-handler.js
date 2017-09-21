@@ -46,7 +46,7 @@ class EventHandler extends Component {
   * @memberOf EventHandler
   */
   dispatch(data) {
-    return typeof this.transform_function === 'function' ? this.transform_function(data) : data;
+    return data;
   }
 
   /**

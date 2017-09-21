@@ -20,12 +20,12 @@ const immmediatePromise = () => {
 
 describe('Event System - ', () => {
   // Need some spies and a mock handler for running tests
-  const test_1_dispatch_cb = sinon.spy();
-  const test_1_revert_cb = sinon.spy();
-  const test_2_dispatch_cb = sinon.spy();
-  const test_2_revert_cb = sinon.spy();
-  const test_3_dispatch_cb = sinon.spy();
-  const test_3_revert_cb = sinon.spy();
+  const test_1_dispatch_cb = sinon.stub();
+  const test_1_revert_cb = sinon.stub();
+  const test_2_dispatch_cb = sinon.stub();
+  const test_2_revert_cb = sinon.stub();
+  const test_3_dispatch_cb = sinon.stub();
+  const test_3_revert_cb = sinon.stub();
 
   class test_1_handler_class extends EventHandler {
     constructor(args) {
@@ -39,10 +39,10 @@ describe('Event System - ', () => {
       this.supports_revert = true;
     }
     dispatch() {
-      test_1_dispatch_cb.apply(this, arguments);
+      return test_1_dispatch_cb.apply(this, arguments);
     }
     revert() {
-      test_1_revert_cb.apply(this, arguments);
+      return test_1_revert_cb.apply(this, arguments);
     }
   }
 
@@ -58,10 +58,10 @@ describe('Event System - ', () => {
       this.supports_revert = true;
     }
     dispatch() {
-      test_2_dispatch_cb.apply(this, arguments);
+      return test_2_dispatch_cb.apply(this, arguments);
     }
     revert() {
-      test_2_revert_cb.apply(this, arguments);
+      return test_2_revert_cb.apply(this, arguments);
     }
   }
 
@@ -77,10 +77,10 @@ describe('Event System - ', () => {
       this.supports_revert = true;
     }
     dispatch() {
-      test_3_dispatch_cb.apply(this, arguments);
+      return test_3_dispatch_cb.apply(this, arguments);
     }
     revert() {
-      test_3_revert_cb.apply(this, arguments);
+      return test_3_revert_cb.apply(this, arguments);
     }
   }
 
@@ -147,13 +147,6 @@ describe('Event System - ', () => {
       it('Dispatch() should return data if data passed', () => {
         const mock_data = Math.random();
         expect(instance.dispatch(mock_data)).to.equal(mock_data);
-      });
-
-      it('Dispatch() should return translated data if data passed and transform_function set', () => {
-        const mock_data = Math.random();
-        const mock_data_2 = Math.random();
-        instance.transform_function = sinon.stub().withArgs(mock_data).returns(mock_data_2);
-        expect(instance.dispatch(mock_data)).to.equal(mock_data_2);
       });
 
       it('Revert() should return nothing if support_revert = true', () => {
@@ -290,7 +283,7 @@ describe('Event System - ', () => {
       expect(dispatcher.event_queue_count).to.equal(2);
     });
 
-    it('Should dispatch event with one handler', () => {
+    it('Should dispatch event and transform data with transform_function', () => {
       const test_event_data = Math.random();
       return dispatcher
         .dispatch_event(new Event('test.event_1', test_event_data))
@@ -506,6 +499,32 @@ describe('Event System - ', () => {
           expect(dispatcher.shift_event()).to.be.undefined;
         });
       })
+    });
+
+    it('Should dispatch event with transform_function, and transform the data for EventComplete', () => {
+
+      const mock_data = Math.random();
+      const mock_data_2 = Math.random();
+
+      test_1_dispatch_cb.resolves(mock_data);
+
+      test_handler_1.transform_function = sinon.stub().withArgs(mock_data).returns(mock_data_2);
+      test_handler_1.enqueue_complete_event = true;
+
+      return dispatcher
+        .dispatch_event(new Event('test.event_1', mock_data))
+        .then(() => {
+
+          const event_remaining = dispatcher.shift_event();
+          expect(event_remaining).to.be.instanceof(EventComplete);
+          expect(event_remaining.event_name).to.equal('test.event_1.complete');
+          expect(event_remaining.data).to.equal(mock_data_2);
+
+          return dispatcher.run().then(() => {
+            // When dispatching the complete event, should not enqueue another event
+            expect(dispatcher.shift_event()).to.be.undefined;
+          });
+        });
     });
 
     describe('should_handle', () => {
