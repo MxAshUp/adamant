@@ -103,8 +103,7 @@ class Workflow extends EventHandler {
     return Promise.resolve()
       .then(() => original_transform_function(data))
       .then((new_data) => {
-        const transition_event = new Event(event_name, new_data);
-        this.emit('enqueue_event', transition_event);
+        this.emit('enqueue_event', event_name, new_data);
         return new_data;
       });
   }

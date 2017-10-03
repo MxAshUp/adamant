@@ -187,22 +187,31 @@ describe('Event System', () => {
         mock_events.length = 5+Math.floor(Math.random()*5); // Random number of handlers between 5 and 10
 
         for(let index = 0; index < mock_events.length; index++) {
-          mock_events[index] = new Event(`test.event_${index}.random.${Math.random()}`, Math.random());
+          mock_events[index] = [`test.event_${index}.random.${Math.random()}`, Math.random()];
         }
       });
 
       // *** Events ***
       it('Should enqueue all events', () => {
         mock_events.forEach(event => {
-          dispatcher.enqueue_event(event);
+          dispatcher.enqueue_event(event[0], event[1]);
         });
 
         expect(dispatcher.event_queue_count).to.equal(mock_events.length);
       });
 
+      it('Should enqueue events and return new Event object with matching name and data', () => {
+        mock_events.forEach(event => {
+          const event_object = dispatcher.enqueue_event(event[0], event[1]);
+          expect(event_object.event_name).to.equal(event[0]);
+          expect(event_object.data).to.equal(event[1]);
+          expect(event_object.constructor.name).to.equal('Event');
+        });
+      });
+
       it('All events should have have unique ID', () => {
         mock_events.forEach(event => {
-          dispatcher.enqueue_event(event);
+          dispatcher.enqueue_event(event[0], event[1]);
         });
 
         expect(dispatcher.event_queue.length).to.equal(
@@ -211,8 +220,11 @@ describe('Event System', () => {
       });
 
       it('Should shift first event from queue', () => {
-        dispatcher.enqueue_event(mock_events[0]);
-        expect(dispatcher.shift_event()).to.deep.equal(mock_events[0]);
+        dispatcher.enqueue_event(mock_events[0][0], mock_events[0][1]);
+        const event = dispatcher.shift_event()
+        expect(event.constructor.name).to.equal('Event');
+        expect(event.event_name).to.equal(mock_events[0][0]);
+        expect(event.data).to.equal(mock_events[0][1]);
         expect(dispatcher.event_queue_count).to.equal(0);
       });
     });
@@ -274,12 +286,8 @@ describe('Event System', () => {
         }
 
         for(let index = 0; index < mock_events.length; index++) {
-          mock_events[index] = new Event(generate_event_name_for_event(index), Math.random());
+          mock_events[index] = dispatcher.enqueue_event(generate_event_name_for_event(index), Math.random());
         }
-        // Add all events to dispatcher
-        mock_events.forEach(event => {
-          dispatcher.enqueue_event(event);
-        });
       });
 
       describe('error_on_unhandled_events = true', () => {
@@ -339,10 +347,9 @@ describe('Event System', () => {
           it('Should enqueue an event while being dispatched', () => {
             const mock_event_data = Math.random();
             const mock_new_event_name = `new_event_${Math.random()}`;
-            new_mock_event = new Event(mock_new_event_name, mock_event_data);
             which_handlers.forEach(which_handler => {
               which_handler.dispatch = function(data) {
-                this.emit('enqueue_event', new_mock_event);
+                this.emit('enqueue_event', mock_new_event_name, mock_event_data);
               }
             });
             return dispatcher.dispatch_event(mock_event).then(() => {

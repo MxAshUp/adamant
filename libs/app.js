@@ -224,9 +224,7 @@ class App extends EventEmitter {
   }
 
   _handle_collector_event(collector, event_name, data) {
-    this.event_dispatcher.enqueue_event(
-      new Event(`${collector.model_name}.${event_name}`, data)
-    );
+    this.event_dispatcher.enqueue_event(`${collector.model_name}.${event_name}`, data);
   }
 
   _handle_collector_error(collector, error) {

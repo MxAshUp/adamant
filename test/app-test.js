@@ -400,10 +400,10 @@ describe('App', () => {
       const mock_event_data = Math.random();
       const mock_event_name = 'event' + Math.random();
       app._handle_collector_event(collectorInstanceMock, mock_event_name, mock_event_data);
-      const event = eventDispatcherInstanceMock.enqueue_event.lastCall.args[0];
-      expect(event.constructor.name).to.equal('Event');
-      expect(event.data).to.equal(mock_event_data);
-      expect(event.event_name).to.equal(`${model_mock_name}.${mock_event_name}`);
+      const event_name = eventDispatcherInstanceMock.enqueue_event.lastCall.args[0];
+      const event_data = eventDispatcherInstanceMock.enqueue_event.lastCall.args[1];
+      expect(event_data).to.equal(mock_event_data);
+      expect(event_name).to.equal(`${model_mock_name}.${mock_event_name}`);
     })
   });
 

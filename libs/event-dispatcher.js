@@ -120,7 +120,7 @@ class EventDispatcher extends EventEmitter {
           // enqueue EventComplete event w/ result data
           // Only enqueue it if the handler instructs us to, and if the event object isn't already an EventComplete event
           if(handler.enqueue_complete_event && !(event_obj instanceof EventComplete)) {
-            this.enqueue_event(new EventComplete(event_obj, dispatchResult));
+            this.enqueue_event(event_obj, dispatchResult, EventComplete);
           }
 
           // Emit dispatched event
@@ -183,13 +183,14 @@ class EventDispatcher extends EventEmitter {
   *
   * @memberOf EventDispatcher
   */
-  enqueue_event(event_obj) {
+  enqueue_event(event_name, event_data, constructor = Event) {
+    const event_obj = new constructor(event_name, event_data);
     // Create event id
     event_obj.queue_id = this.event_count++;
     // Add new event to queue
     this.event_queue.push(event_obj);
     // Return event id
-    return event_obj.queue_id;
+    return event_obj;
   }
 
   /**

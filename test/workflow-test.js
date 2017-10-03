@@ -186,23 +186,19 @@ describe('Workflow EventHandler', () => {
 
                 beforeEach(() => {
                   next_step = mock_event_steps[step_number + 1];
-                  event_data = handler_spy.lastCall.args[0];
-                });
-
-                it(`Should emit enqueue_event with event object`, () => {
-                  sinon.assert.called(handler_spy);
-                  expect(event_data.constructor.name).to.equal('Event');
+                  event_name = handler_spy.lastCall.args[0];
+                  event_data = handler_spy.lastCall.args[1];
                 });
 
                 it('Should emit enqueue event that has event name equal to next event name', () => {
-                  expect(event_data.event_name).to.equal(next_step.event_name);
+                  expect(event_name).to.equal(next_step.event_name);
                 });
 
                 it('Should emit enqueue event that has event data passed from previous event', () => {
                   if(mock_steps_no_transform_function.indexOf(step_number) === -1) {
-                    expect(event_data.data).to.equal(transform_return);
+                    expect(event_data).to.equal(transform_return);
                   } else {
-                    expect(event_data.data).to.equal(original_mock_data);
+                    expect(event_data).to.equal(original_mock_data);
                   }
                 });
 
