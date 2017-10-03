@@ -95,7 +95,7 @@ class Workflow extends EventHandler {
    * @param {String} event_name - Name of event
    * @param {Function} original_transform_function - Original function of the EventHandler
    * @param {any} data - Data passed
-   * @returns
+   * @returns {Promise} - resolves when transform_function is finished
    * @memberof Workflow
    */
   _transition_dispatch(event_name, original_transform_function, data) {
