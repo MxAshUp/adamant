@@ -61,8 +61,19 @@ const get_component_inheritance = (obj) => {
   return chain.map(d => d.constructor);
 };
 
+const throwIfMissing = (parameter_name) => {
+  const new_error = new Error(`Missing required parameter: ${parameter_name}`);
+
+  const stack_lines = new_error.stack.split("\n");
+  stack_lines.splice(1, 1);
+  new_error.stack = stack_lines.join("\n");
+
+  throw new_error;
+}
+
 module.exports = {
   defer_on_event,
   Counter,
-  get_component_inheritance
+  get_component_inheritance,
+  throwIfMissing,
 };

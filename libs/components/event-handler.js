@@ -1,4 +1,5 @@
 const Component = require('./component');
+const throwIfMissing = require('../utility').throwIfMissing;
 
 class EventHandler extends Component {
   /**
@@ -13,7 +14,7 @@ class EventHandler extends Component {
    * @memberof EventHandler
    */
   constructor({
-    event_name = '',
+    event_name = throwIfMissing`event_name`,
     should_handle = null,
     defer_dispatch = null, // {event_name = '', check_function = ()}
     enqueue_complete_event = false,
