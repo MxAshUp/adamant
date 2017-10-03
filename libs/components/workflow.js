@@ -17,7 +17,7 @@ class Workflow extends EventHandler {
    * @memberof Workflow
    */
   constructor({workflow_name} = {}) {
-    super(arguments);
+    super(...arguments);
 
     this.workflow_name = workflow_name ? workflow_name : Workflow.generate_workflow_name();
     this.event_handler_sequence = [this];
