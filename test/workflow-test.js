@@ -33,6 +33,17 @@ describe('Workflow EventHandler', () => {
         expect(instance.workflow_name).to.match(/workflow_[\d]+/);
       }
     });
+    it('Should pass EventHandler arguments to super constructor', () => {
+      const construct_args = {
+        event_name: Math.random(),
+        should_handle: Math.random(),
+        defer_dispatch: Math.random(),
+        enqueue_complete_event: Math.random(),
+        transform_function: Math.random(),
+      };
+      const instance = new Workflow(construct_args);
+      expect(instance).to.deep.include(construct_args);
+    })
   });
 
   describe('instance tests', () => {
