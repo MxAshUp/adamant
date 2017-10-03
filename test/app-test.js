@@ -267,7 +267,7 @@ describe('App', () => {
       eventDispatcherInstanceMock.load_event_handler = sinon.stub();
 
       // Event handler mock
-      eventHandlerInstanceMock = new EventHandler();
+      eventHandlerInstanceMock = new EventHandler({event_name: 'mock_event'});
 
       const mp_core_plugin = app.plugin_loader.get_plugin_by_name('mp-core');
 

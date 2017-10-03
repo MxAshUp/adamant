@@ -23,7 +23,7 @@ describe('Event System', () => {
   describe('Event Handler', () => {
 
     it('Should throw error if support_revert is false and revert() is called', () => {
-      const mock_handler_1 = new EventHandler();
+      const mock_handler_1 = new EventHandler({event_name: 'mock_event'});
       expect(mock_handler_1.revert.bind(mock_handler_1)).to.throw(
         'Handler does not support revert.'
       );
@@ -31,10 +31,12 @@ describe('Event System', () => {
 
     describe('Default behaviors of overridable methods', () => {
 
-      let instance = new EventHandler();
+      let instance = new EventHandler({event_name: 'mock_event'});
 
-      it('Should set event_name by default to \'\'', () => {
-        expect(instance.event_name).to.equal('');
+      it('Should throw error if no event_name provided', () => {
+        expect(() => {
+          new EventHandler();
+        }).to.throw(Error, `Missing required parameter: event_name`);
       });
 
       it('Should set should_handle by default to null', () => {
@@ -80,7 +82,7 @@ describe('Event System', () => {
 
       it('Should set should_handle to mock value', () => {
         mock_should_handle = sinon.stub().returns(true);
-        const instance = new EventHandler({should_handle: mock_should_handle});
+        const instance = new EventHandler({event_name: mock_event_name, should_handle: mock_should_handle});
         expect(instance.should_handle).to.equal(mock_should_handle);
       });
 
@@ -89,19 +91,19 @@ describe('Event System', () => {
           event_name: `event_${Math.random()}`,
           check_function: sinon.stub().resolves(true),
         };
-        const instance = new EventHandler({defer_dispatch: mock_defer_dispatch});
+        const instance = new EventHandler({event_name: mock_event_name, defer_dispatch: mock_defer_dispatch});
         expect(instance.defer_dispatch).to.equal(mock_defer_dispatch);
       });
 
       it('Should set enqueue_complete_event to mock value', () => {
         mock_enqueue_complete_event = true;
-        const instance = new EventHandler({enqueue_complete_event: mock_enqueue_complete_event});
+        const instance = new EventHandler({event_name: mock_event_name, enqueue_complete_event: mock_enqueue_complete_event});
         expect(instance.enqueue_complete_event).to.equal(mock_enqueue_complete_event);
       });
 
       it('Should set transform_function to mock value', () => {
         mock_transform_function = sinon.stub().returns();
-        const instance = new EventHandler({transform_function: mock_transform_function});
+        const instance = new EventHandler({event_name: mock_event_name, transform_function: mock_transform_function});
         expect(instance.transform_function).to.equal(mock_transform_function);
       });
 
