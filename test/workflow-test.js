@@ -10,13 +10,29 @@ const // Test tools
 
 describe('Workflow EventHandler', () => {
 
-  describe('constructor', () => {
+  describe('Function constructor', () => {
     it('Should create an instance', () => {
       const workflowInstance = new Workflow();
       expect(workflowInstance).to.be.instanceOf(Workflow);
     });
-    it('Should create several instances all with unique workflow_name');
-    it('Should create an instance and set the workflow_name');
+    it('Should create an instance and set the workflow_name', () => {
+      const workflowInstance = new Workflow();
+      expect(workflowInstance.workflow_name).to.not.be.empty;
+    });
+    it('Should create several instances all with unique workflow_name', () => {
+      const number_of_instances = 100;
+      const instance_array = [];
+      for(let i = 0; i < number_of_instances; i ++) {
+        instance_array.push(new Workflow());
+      }
+      expect(_.uniqBy(instance_array, 'workflow_name').length).to.equal(number_of_instances);
+    });
+    it('Should create several instances where workflow_name matches regex', () => {
+      for(let i = 0; i < 100; i ++) {
+        const instance = new Workflow();
+        expect(instance.workflow_name).to.match(/workflow_[\d]+/);
+      }
+    });
   });
 
   describe('instance tests', () => {
@@ -32,65 +48,160 @@ describe('Workflow EventHandler', () => {
       });
     });
 
-    describe('get_current_step', () => {
+    describe('Function get_current_step', () => {
       it('Should return 1', () => {
         expect(workflowInstance.get_current_step()).to.equal(1);
       });
 
       it('Should return 2 after registering a step', () => {
         const mock_next_step = new EventHandler();
-        workflowInstance.register_step(mock_next_step);
+        workflowInstance.step(mock_next_step);
         expect(workflowInstance.get_current_step()).to.equal(2);
       });
 
       it('Should return 3 after registering two steps', () => {
         const mock_next_step = new EventHandler();
-        workflowInstance.register_step(mock_next_step);
+        workflowInstance.step(mock_next_step);
         const mock_next_step_2 = new EventHandler();
-        workflowInstance.register_step(mock_next_step_2);
+        workflowInstance.step(mock_next_step_2);
         expect(workflowInstance.get_current_step()).to.equal(3);
       });
     });
 
-    describe('format_event_name', () => {
+    describe('Function format_event_name', () => {
       const mock_step_number = Math.floor(Math.random()*100); // Random int between 0 and 100
       const mock_event_name = `mock_event.${Math.random()}`;
       it(`Should return correct event_name`, () => {
         expect(workflowInstance.format_event_name(mock_step_number, mock_event_name)).to.equal(`${mock_workflow_name}.step_${mock_step_number}.${mock_event_name}`);
       });
-      it('Should return correct event_name - without event_name as param');
-      it('Should return correct event_name - without workflow_name');
+      it('Should return correct event_name - without event_name as param', () => {
+        expect(workflowInstance.format_event_name(mock_step_number)).to.equal(`${mock_workflow_name}.step_${mock_step_number}`);
+      });
+      it('Should return correct event_name - without workflow_name', () => {
+        workflowInstance.workflow_name = '';
+        expect(workflowInstance.format_event_name(mock_step_number, mock_event_name)).to.equal(`step_${mock_step_number}.${mock_event_name}`);
+      });
+      it('Should return correct event_name - without workflow_name and event_name', () => {
+        workflowInstance.workflow_name = '';
+        expect(workflowInstance.format_event_name(mock_step_number)).to.equal(`step_${mock_step_number}`);
+      });
     });
 
-    describe('register_step', () => {
-      let mock_second_step;
-      let mock_third_step;
-      const mock_third_step_name = `event_name${Math.random()}`;
+    describe('Function step', () => {
+      const mock_steps_count = 5;
+      const mock_steps_no_event_name = [2,3];
+      const mock_steps_no_transform_function = [2,4];
+      const mock_event_steps = Array(mock_steps_count);
+      const mock_event_step_names = Array(mock_steps_count);
+      const mock_event_step_transform_function = Array(mock_steps_count);
+
+      for(let step_number of mock_event_steps.keys()) {
+        if(mock_steps_no_event_name.indexOf(step_number) === -1) {
+          mock_event_step_names[step_number] = `event_name${Math.random()}`;
+        }
+      }
 
       beforeEach(() => {
-        mock_second_step = new EventHandler();
-        mock_third_step = new EventHandler({event_name: mock_third_step_name});
-        workflowInstance.register_step(mock_second_step);
-        workflowInstance.register_step(mock_third_step);
+        for(let step_number of mock_event_steps.keys()) {
+          const construct_args = {
+            event_name: mock_event_step_names[step_number],
+          };
+          if(mock_steps_no_transform_function.indexOf(step_number) === -1) {
+            mock_event_step_transform_function[step_number] = sinon.stub();
+            construct_args.transform_function = mock_event_step_transform_function[step_number];
+          }
+          mock_event_steps[step_number] = new EventHandler(construct_args);
+          workflowInstance.step(mock_event_steps[step_number]);
+        }
       });
 
-      it(`Should set handler event_name to ${mock_workflow_name}.step_1`, () => {
-        expect(mock_second_step.event_name).to.equal(`${mock_workflow_name}.step_1`);
+      for(let step_number of mock_event_steps.keys()) {
+        it(`Should reassigned handler event_name for step ${step_number + 1}`, () => {
+          if(mock_steps_no_event_name.indexOf(step_number) === -1) {
+            expect(mock_event_steps[step_number].event_name).to.equal(`${mock_workflow_name}.step_${step_number + 1}.${mock_event_step_names[step_number]}`);
+          } else {
+            expect(mock_event_steps[step_number].event_name).to.equal(`${mock_workflow_name}.step_${step_number + 1}`);
+          }
+        });
+      }
+
+      it('Should return self (to be chainable)', () => {
+        const mock_step = new EventHandler();
+        const returned_value = workflowInstance.step(mock_step);
+        expect(returned_value).to.equal(workflowInstance);
       });
 
-      it(`Should set handler event_name to ${mock_workflow_name}.step_1.${mock_third_step_name}`, () => {
-        expect(mock_third_step.event_name).to.equal(`${mock_workflow_name}.step_2.${mock_third_step_name}`);
+      describe('Calling wrapped transform_function', () => {
+
+        for(let step_number of mock_event_steps.keys()) {
+          const is_last_step = step_number == mock_event_steps.length - 1;
+
+          describe(`(Step #${step_number + 1})`, () => {
+            const handler_spy = sinon.spy();
+            const transform_return = Math.random();
+            const original_mock_data = Math.random();
+            let mock_return;
+
+            beforeEach(() => {
+              workflowInstance.addListener('enqueue_event', handler_spy);
+              if(mock_steps_no_transform_function.indexOf(step_number) === -1) {
+                mock_event_step_transform_function[step_number].returns(transform_return);
+              }
+              if(mock_event_steps[step_number].transform_function) {
+                mock_return = mock_event_steps[step_number].transform_function(original_mock_data);
+              } else {
+                mock_return = undefined;
+              }
+            });
+
+            if(mock_steps_no_transform_function.indexOf(step_number) === -1) {
+              it(`Should make call to original transform_function`, () => {
+                sinon.assert.calledWith(mock_event_step_transform_function[step_number], original_mock_data);
+              });
+
+              it('Should return data from original transform_function', () => {
+                expect(mock_return).to.equal(transform_return);
+              });
+            }
+
+            if(!is_last_step) {
+              describe('(Not last step)', () => {
+                let next_step;
+                let event_data;
+
+                beforeEach(() => {
+                  next_step = mock_event_steps[step_number + 1];
+                  event_data = handler_spy.lastCall.args[0];
+                });
+
+                it(`Should emit enqueue_event with event object`, () => {
+                  sinon.assert.called(handler_spy);
+                  expect(event_data.constructor.name).to.equal('Event');
+                });
+
+                it('Should emit enqueue event that has event name equal to next event name', () => {
+                  expect(event_data.event_name).to.equal(next_step.event_name);
+                });
+
+                it('Should emit enqueue event that has event data passed from previous event', () => {
+                  if(mock_steps_no_transform_function.indexOf(step_number) === -1) {
+                    expect(event_data.data).to.equal(transform_return);
+                  } else {
+                    expect(event_data.data).to.equal(original_mock_data);
+                  }
+                });
+
+              });
+            } else {
+              describe('(Last step)', () => {
+                it('Should not emit enqueue_event', () => {
+                  sinon.assert.notCalled(handler_spy);
+                });
+              });
+            }
+          });
+        }
       });
-
-      it('Should return self (to be chainable)');
-
-      describe('wrapped transform_function', () => {
-        it('Should set previous handler transform_function to wrapped function');
-        it('Should emit enqueue event when called');
-        it('Should emit enqueue event that has event name equal to next event name');
-        it('Should emit enqueue event that has event data passed from previous event');
-      });
-
     });
   });
 });

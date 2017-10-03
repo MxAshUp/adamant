@@ -2,6 +2,12 @@ let EventHandler = require('./event-handler');
 let Event = require('../event');
 let workflow_count = 0;
 
+/**
+ *
+ *
+ * @class Workflow
+ * @extends {EventHandler}
+ */
 class Workflow extends EventHandler {
 
   /**
@@ -14,18 +20,14 @@ class Workflow extends EventHandler {
 
     this.workflow_name = workflow_name ? workflow_name : Workflow.generate_workflow_name();
     this.event_handler_sequence = [this];
-    workflow_count ++;
   }
 
   static generate_workflow_name() {
+    workflow_count ++;
     return `workflow_${workflow_count}`;
   }
 
-  register_step(handler) {
-
-    if(!this.event_handler_sequence) {
-      this.event_handler_sequence = [this];
-    }
+  step(handler) {
 
     // Get the current step
     const current_step = this.get_current_step();
@@ -47,30 +49,6 @@ class Workflow extends EventHandler {
     return this;
   }
 
-  // _augment_handler_for_transition(previous_handler, current_handler, step_number) {
-  //   const original_transform_function = previous_handler.transform_function;
-  //   previous_handler.transform_function = this._transition_dispatch.bind(this, current_handler.event_name, original_transform_function);
-  // }
-
-  // _create_transition_handler(handler, step_number) {
-  //   const previous_step = step_number - 1;
-  //   const previous_step_handler = this.event_handler_sequence[previous_step];
-  //   const previous_step_handler_name = previous_step_handler.event_name;
-
-  //   const transition_handler_parameters = {
-  //     event_name: `${previous_step_handler_name}.complete`,
-  //     transform_function: this._transition_dispatch.bind(this, handler.event_name)
-  //   };
-
-  //   return this.load_component('EventHandler', transition_handler_parameters);
-  // }
-
-  _transition_dispatch(event_name, original_transform_function, data) {
-    const transition_event = new Event(event_name, data);
-    this.emit('enqueue_event', transition_event);
-    return original_transform_function(data);
-  }
-
   get_current_step() {
     return this.event_handler_sequence.length;
   }
@@ -79,6 +57,14 @@ class Workflow extends EventHandler {
     const name_parts = [this.workflow_name, `step_${step_number}`, event_name];
     const filtered_name_parts = name_parts.filter(part => part); // Remove parts of name that are empty
     return filtered_name_parts.join('.'); // Join parts with dot
+  }
+
+  _transition_dispatch(event_name, original_transform_function, data) {
+    original_transform_function = original_transform_function ? original_transform_function : d => d;
+    const new_data = original_transform_function(data);
+    const transition_event = new Event(event_name, new_data);
+    this.emit('enqueue_event', transition_event);
+    return new_data;
   }
 }
 
