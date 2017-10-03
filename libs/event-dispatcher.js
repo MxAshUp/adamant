@@ -114,6 +114,9 @@ class EventDispatcher extends EventEmitter {
             dispatchResult = handler.transform_function(dispatchResult)
           }
 
+          return dispatchResult;
+        })
+        .then(dispatchResult => {
           // enqueue EventComplete event w/ result data
           // Only enqueue it if the handler instructs us to, and if the event object isn't already an EventComplete event
           if(handler.enqueue_complete_event && !(event_obj instanceof EventComplete)) {

@@ -422,6 +422,65 @@ describe('Event System', () => {
                 });
               });
             });
+            describe('transform_function as async', () => {
+              const mock_event_pass_data = Math.random();
+              const mock_new_data = Math.random();
+              let resolve_callbacks = [];
+              let ret_promise;
+              beforeEach(() => {
+                spy_handler = sinon.spy();
+                dispatcher.addListener('dispatch', spy_handler);
+                which_handlers.forEach(which_handler => {
+                  which_handler.transform_function = sinon.stub()
+                    .resolves(
+                      Promise.resolve()
+                      .then(() => {
+                        return new Promise((resolve, reject) => {
+                          resolve_callbacks.push(resolve);
+                        });
+                      })
+                    );
+                  which_handler.enqueue_complete_event = true;
+                  which_handler.dispatch.resolves(mock_event_pass_data);
+                });
+                ret_promise = dispatcher.dispatch_event(mock_event);
+              });
+              it('Should enqueue EventComplete after transform_function resolves', () => {
+                const get_event_complete_events = () => {
+                  return dispatcher.event_queue.filter(event => event.constructor.name === 'EventComplete');
+                }
+                return immmediatePromise()
+                  .then(() => {
+                    expect(get_event_complete_events().length).to.equal(0);
+                    return immmediatePromise();
+                  })
+                  .then(() => {
+                    // Release transform_function
+                    resolve_callbacks.forEach(fn => fn()); // Call each resolve
+                    return immmediatePromise();
+                  })
+                  .then(() => {
+                    expect(get_event_complete_events().length).to.equal(which_handlers.length);
+                    return ret_promise;
+                  });
+              });
+              it('Should emit dispatch after transform_function resolves', () => {
+                return immmediatePromise()
+                  .then(() => {
+                    sinon.assert.callCount(spy_handler, 0);
+                    return immmediatePromise();
+                  })
+                  .then(() => {
+                    // Release transform_function
+                    resolve_callbacks.forEach(fn => fn()); // Call each resolve
+                    return immmediatePromise();
+                  })
+                  .then(() => {
+                    sinon.assert.callCount(spy_handler, which_handlers.length);
+                    return ret_promise;
+                  });
+              });
+            });
             it('Should call enqueue CompleteEvent with new event data', () => {
               const mock_event_pass_data = Math.random();
               const mock_new_data = Math.random();
