@@ -100,10 +100,13 @@ class Workflow extends EventHandler {
    */
   _transition_dispatch(event_name, original_transform_function, data) {
     original_transform_function = original_transform_function ? original_transform_function : d => d;
-    const new_data = original_transform_function(data);
-    const transition_event = new Event(event_name, new_data);
-    this.emit('enqueue_event', transition_event);
-    return new_data;
+    return Promise.resolve()
+      .then(() => original_transform_function(data))
+      .then((new_data) => {
+        const transition_event = new Event(event_name, new_data);
+        this.emit('enqueue_event', transition_event);
+        return new_data;
+      });
   }
 }
 

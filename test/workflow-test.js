@@ -156,11 +156,15 @@ describe('Workflow EventHandler', () => {
 
             if(mock_steps_no_transform_function.indexOf(step_number) === -1) {
               it(`Should make call to original transform_function`, () => {
-                sinon.assert.calledWith(mock_event_step_transform_function[step_number], original_mock_data);
+                return mock_return.then(() => {
+                  sinon.assert.calledWith(mock_event_step_transform_function[step_number], original_mock_data);
+                });
               });
 
               it('Should return data from original transform_function', () => {
-                expect(mock_return).to.equal(transform_return);
+                return mock_return.then((data) => {
+                  expect(data).to.equal(transform_return);
+                });
               });
             }
 
