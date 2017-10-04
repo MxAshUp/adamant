@@ -15,9 +15,9 @@
     "socket.io": "^1.7.3"
   },
   "devDependencies": {
+    "acorn-globals": "^4.0.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "local-acorn-globals": "^4.0.0",
     "mongoose-mock": "^0.4.0",
     "nyc": "^10.2.0",
     "rewire": "^2.5.2",
