@@ -1,5 +1,6 @@
 var Plugin = require('./plugin'),
   _ = require('lodash'),
+  semver = require('semver'),
   path = require('path');
 
 const core_module_info = require(`${__dirname}/../package.json`);
@@ -32,10 +33,10 @@ class PluginLoader {
       require_path = `./components`;
     }
 
-    //Load in the plugin
+    // Load in the plugin
     let plugin_args = require(require_path);
 
-    //Could not load it, or it's not a valid plugin_args
+    // Could not load it, or it's not a valid plugin_args
     if (typeof plugin_args !== 'object')
       throw new Error(
         `Error loading plugin: ${module_name} - Invalid index.js contents.`
@@ -59,18 +60,36 @@ class PluginLoader {
       ? plugin_info.license
       : '';
 
-    //Initialize plugin
+    // Check if core satisfies plugin core dependency
+    this.check_core_dependency_requirement(plugin_info);
+
+    // Initialize plugin
     const plugin = new Plugin(plugin_args);
 
-    //If all went well loading it...
+    // If all went well loading it...
     plugin.enabled = true;
 
     plugin.on_load(config);
 
-    //Add plugin to array
+    // Add plugin to array
     this.plugins.push(plugin);
 
     return plugin;
+  }
+
+  /**
+   * Throws error if plugin_info core dependency requirement is not met
+   *
+   * @param {Object} plugin_info - The plugin info provided by package.json
+   * @memberof PluginLoader
+   */
+  check_core_dependency_requirement(plugin_info) {
+    if(plugin_info.dependencies) {
+      const core_version_dependency = plugin_info.dependencies['local-mp-core'] || plugin_info.dependencies['mp-core'];
+      if(core_version_dependency && !semver.satisfies(core_module_info.version, core_version_dependency)) {
+        throw new Error(`Core version requirements (${core_version_dependency}) not met. Using core version ${core_module_info.version}.`);
+      }
+    }
   }
 
   /**

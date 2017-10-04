@@ -7,6 +7,8 @@ const rewire = require('rewire'),
   Plugin = require('../libs/plugin'),
   PluginLoader = rewire('../libs/plugin-loader');
 
+const core_module_info = require(`${__dirname}/../package.json`);
+
 describe('Plugin Loader', function() {
   let pl;
 
@@ -32,6 +34,7 @@ describe('Plugin Loader', function() {
       load_models: sinon.spy(),
     },
     plugin_c: 'BAD_PLUGIN',
+    plugin_bad_version: {},
   };
 
   const mock_plugin_a_pkg = {
@@ -41,6 +44,9 @@ describe('Plugin Loader', function() {
     main: 'index.js',
     author: 'Pro Q',
     license: 'ISC',
+    dependencies: {
+      "mp-core": "^0.3.0-dev",
+    }
   };
 
   const mock_plugin_b_pkg = {
@@ -48,6 +54,19 @@ describe('Plugin Loader', function() {
     version: '0.1.2',
     main: 'index.js',
     license: 'ISC',
+    dependencies: {
+      "mp-core": "^0.3.0-dev",
+    }
+  };
+
+  const plugin_bad_version = {
+    name: 'plugin_bad_version',
+    version: '0.1.2',
+    main: 'index.js',
+    license: 'ISC',
+    dependencies: {
+      "mp-core": "^0.0.1", // Old version
+    }
   };
 
   let plugin_a, plugin_b;
@@ -72,10 +91,19 @@ describe('Plugin Loader', function() {
     PluginLoader.get_module_info
       .withArgs('plugin_b')
       .returns(mock_plugin_b_pkg);
+    PluginLoader.get_module_info
+      .withArgs('plugin_bad_version')
+      .returns(plugin_bad_version);
 
     // Reset rewired require
     after(revert_1);
     after(PluginLoader.get_module_info.restore);
+
+    it('Should throw an error due to plugin core dependency not being satisfied', () => {
+      expect(() => {
+        pl.load_plugin('plugin_bad_version');
+      }).to.throw(Error, `Core version requirements (${plugin_bad_version.dependencies['mp-core']}) not met. Using core version ${core_module_info.version}.`);
+    });
 
     it('Should load plugin_a mock plugin', () => {
       const config = Math.random();
@@ -200,8 +228,6 @@ describe('Plugin Loader', function() {
   });
 
   describe('load core plugin components', () => {
-
-    const core_module_info = require(`${__dirname}/../package.json`);
 
     it('Should load core as a plugin', () => {
       const pl = new PluginLoader();
