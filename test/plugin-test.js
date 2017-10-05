@@ -88,59 +88,59 @@ describe('Abstract Plugin', () => {
 
     it('Should throw error cannot find component', () => {
       expect(() =>
-        pl.create_component('INVALID_COLLECTOR', {})
+        pl.create_component({name: 'INVALID_COLLECTOR', parameters: {}})
       ).to.throw(`Component not found: INVALID_COLLECTOR`);
     });
 
     it('Should create collector component', () => {
-      const args = Math.random();
-      component = pl.create_component('collector_a', args);
+      const parameters = Math.random();
+      component = pl.create_component({name: 'collector_a', parameters});
       expect(component).to.be.instanceof(collector_a);
-      sinon.assert.calledWith(component.construct_spy, args);
+      sinon.assert.calledWith(component.construct_spy, parameters);
     });
 
     it("Should throw error if require_version doesn't satisfy plugin version", () => {
-      const args = Math.random();
+      const parameters = Math.random();
       expect(() =>
-        pl.create_component('collector_b', args, '0.2.0')
+        pl.create_component({name: 'collector_b', parameters, version: '0.2.0'})
       ).to.throw(
         `Version requirements not met. Plugin version: ${pl.version} Semver requirement: 0.2.0.`
       );
     });
 
     it("Should throw error if require_version doesn't satisfy plugin version", () => {
-      const args = Math.random();
+      const parameters = Math.random();
       expect(() =>
-        pl.create_component('collector_b', args, '1.0.x')
+        pl.create_component({name: 'collector_b', parameters, version: '1.0.x'})
       ).to.throw(
         `Version requirements not met. Plugin version: ${pl.version} Semver requirement: 1.0.x.`
       );
     });
 
     it('Should throw error if require_version isn\t valid semver', () => {
-      const args = Math.random();
+      const parameters = Math.random();
       expect(() =>
-        pl.create_component('collector_b', args, '1')
+        pl.create_component({name: 'collector_b', parameters, version: '1'})
       ).to.throw(
         `Version requirements not met. Plugin version: ${pl.version} Semver requirement: 1.`
       );
     });
 
     it('Should not throw error if require_version satisfies plugin version', () => {
-      const args = Math.random();
-      pl.create_component('collector_b', args, '0.1.x');
+      const parameters = Math.random();
+      pl.create_component({name: 'collector_b', parameters, version: '0.1.x'});
     });
 
     it('Should not throw error if require_version satisfies not specified', () => {
-      const args = Math.random();
-      pl.create_component('collector_b', args, '>=0.0.1');
+      const parameters = Math.random();
+      pl.create_component({name: 'collector_b', parameters, version: '>=0.0.1'});
     });
 
     it('Should create event handler component', () => {
-      const args = Math.random();
-      component = pl.create_component('handler_b', args);
+      const parameters = Math.random();
+      component = pl.create_component({name: 'handler_b', parameters});
       expect(component).to.be.instanceof(handler_b);
-      sinon.assert.calledWith(component.construct_spy, args);
+      sinon.assert.calledWith(component.construct_spy, parameters);
     });
   });
 

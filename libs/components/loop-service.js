@@ -27,7 +27,7 @@ module.exports = class LoopService extends Component {
       retry_time_between = 0,
       errors_only_retry_on = [],
       errors_dont_retry_on = [],
-      name = ''
+      name = '',
     }) {
 
     super(...arguments);

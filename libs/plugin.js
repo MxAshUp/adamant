@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const semver = require('semver');
+const throwIfMissing = require('./utility').throwIfMissing;
 
 module.exports = class Plugin {
   /**
@@ -63,25 +64,26 @@ module.exports = class Plugin {
    *
    * @memberOf Plugin
    */
-  create_component(class_name, params, require_version = '') {
-    let component, component_constructor;
+  create_component({
+    name = throwIfMissing`name`,
+    version = '',
+    parameters = {},
+  }) {
 
     // Find component in plugin
-    component_constructor = _.find(this.components, { name: class_name });
-    if (!component_constructor) throw new Error(`Component not found: ${class_name}`);
+    const component_constructor = _.find(this.components, { name });
+    if (!component_constructor) throw new Error(`Component not found: ${name}`);
 
     // Check version
-    if (require_version && !semver.satisfies(this.version, require_version)) {
+    if (version && !semver.satisfies(this.version, version)) {
       throw new Error(
         `Version requirements not met. Plugin version: ${this
-          .version} Semver requirement: ${require_version}.`
+          .version} Semver requirement: ${version}.`
       );
     }
 
     // Create component instance
-    component = new component_constructor(params);
-
-    return component;
+    return new component_constructor(parameters);
   }
 
   /**

@@ -7,6 +7,7 @@ const EventEmitter = require('events');
 const http = require('http');
 const socketio = require('socket.io');
 const express = require('express');
+const throwIfMissing = require('./utility').throwIfMissing;
 let mongoose = require('mongoose'); // This is not const, because it needs to be rewired during testing
 
 /**
@@ -36,9 +37,12 @@ module.exports = class App extends EventEmitter {
 
     // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
-    this.event_dispatcher_service = this.load_component('LoopService', {
-      run_callback: this.event_dispatcher.run.bind(this.event_dispatcher),
-      name: 'Event dispatcher service'
+    this.event_dispatcher_service = this.load_component({
+      name: 'LoopService',
+      parameters: {
+        run_callback: this.event_dispatcher.run.bind(this.event_dispatcher),
+        name: 'Event dispatcher service',
+      }
     });
     this.event_dispatcher.on('error', console.log);
     this.express_app = express();
@@ -117,26 +121,35 @@ module.exports = class App extends EventEmitter {
    * @returns {Component} - The component created
    * @memberof App
    */
-  load_component(component_name, parameters = {}, version = '') {
+  load_component({
+    name = throwIfMissing`name`,
+    version = '',
+    parameters = {},
+  }) {
+
     let plugin_name = 'mp-core';
 
     // This allows config to specify plugin and component name in single argument.
-    if(component_name.indexOf('/') !== -1) {
+    if(name.indexOf('/') !== -1) {
       // Split name up by /
-      const parsed_component_name = component_name.split('/');
+      const parsed_component_name = name.split('/');
 
       // Plugin name is the first element
       plugin_name = parsed_component_name.shift();
 
       // Component name is the last element
-      component_name = parsed_component_name.pop();
+      name = parsed_component_name.pop();
     }
 
     // Find the plugin
     const plugin = this.plugin_loader.get_plugin_by_name(plugin_name);
 
     // Create the component
-    const component = plugin.create_component(component_name, parameters, version);
+    const component = plugin.create_component({
+      name,
+      version,
+      parameters,
+    });
 
     // Find out what kind of component this is
     const component_constructors = get_component_inheritance(component).map(c => c.name);
@@ -172,7 +185,10 @@ module.exports = class App extends EventEmitter {
     if (parameters.service_run_min_time_between)
       service_config.run_min_time_between = parameters.service_run_min_time_between;
 
-    const service = this.load_component('LoopService', service_config);
+    const service = this.load_component({
+      name: 'LoopService',
+      parameters: service_config
+    });
 
     // Bind events
     collector.on('error', this._handle_collector_error.bind(this, collector));
