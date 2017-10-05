@@ -4,7 +4,8 @@ var Component = require('./component'),
   CollectorInitializeError = require('../errors').CollectorInitializeError,
   CollectorDatabaseError = require('../errors').CollectorDatabaseError,
   Counter = require('../utility').Counter,
-  util = require('util');
+  util = require('util'),
+  throwIfMissing = require('../utility').throwIfMissing;
 
 class Collector extends Component {
   /**
@@ -15,16 +16,13 @@ class Collector extends Component {
 	 *
 	 * @memberOf Collector
 	 */
-  constructor() {
+  constructor({model_name = throwIfMissing`model_name`}) {
     super();
 
-    //Default object properties
-    const defaults = {
-      model_name: '',
-    };
-
     // Merge config and assign properties to this
-    Object.assign(this, defaults);
+    Object.assign(this, {
+      model_name
+    });
 
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
