@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const semver = require('semver');
 
-class Plugin {
+module.exports = class Plugin {
   /**
 	 * Creates an instance of Plugin.
 	 *
@@ -115,5 +115,3 @@ class Plugin {
 
   on_unload() {}
 }
-
-module.exports = Plugin;

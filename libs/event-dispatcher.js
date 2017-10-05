@@ -11,7 +11,7 @@ const utility = require('../libs/utility');
  * @class EventDispatcher
  * @extends {EventEmitter}
  */
-class EventDispatcher extends EventEmitter {
+module.exports = class EventDispatcher extends EventEmitter {
   constructor() {
     super();
     this.event_handlers = [];
@@ -233,5 +233,3 @@ class EventDispatcher extends EventEmitter {
     return this.event_queue.length;
   }
 }
-
-module.exports = EventDispatcher;

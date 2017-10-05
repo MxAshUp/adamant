@@ -1,6 +1,6 @@
 const Component = require('./component');
 
-class LoopService extends Component {
+module.exports = class LoopService extends Component {
   /**
    *
 	 * Creates a LoopService object
@@ -231,5 +231,3 @@ class LoopService extends Component {
     this.loop_function_resolve_cb();
   }
 }
-
-module.exports = LoopService;

@@ -10,7 +10,7 @@ let workflow_count = 0;
  * @class Workflow
  * @extends {EventHandler}
  */
-class Workflow extends EventHandler {
+module.exports = class Workflow extends EventHandler {
 
   /**
    * Creates an instance of Workflow.
@@ -110,5 +110,3 @@ class Workflow extends EventHandler {
       });
   }
 }
-
-module.exports = Workflow;

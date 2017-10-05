@@ -16,7 +16,7 @@ let mongoose = require('mongoose'); // This is not const, because it needs to be
  *
  * @class App
  */
-class App extends EventEmitter {
+module.exports = class App extends EventEmitter {
   constructor(config) {
     super();
     // Establish some defaults
@@ -273,5 +273,3 @@ class App extends EventEmitter {
     process.exit(0);
   }
 }
-
-module.exports = App;

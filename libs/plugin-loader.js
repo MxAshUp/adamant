@@ -4,7 +4,7 @@ const semver = require('semver');
 const path = require('path');
 const core_module_info = require(`${__dirname}/../package.json`);
 
-class PluginLoader {
+module.exports = class PluginLoader {
   /**
    * Creates a new PluginLoader object.
    * A PluginLoader loads plugin files into memory, and provide factory for creating instances of plugin components.
@@ -170,5 +170,3 @@ class PluginLoader {
     return pkg_contents;
   }
 }
-
-module.exports = PluginLoader;

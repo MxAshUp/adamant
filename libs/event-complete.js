@@ -1,6 +1,6 @@
 const Event = require('./event');
 
-class EventComplete extends Event {
+module.exports = class EventComplete extends Event {
   /**
    * Creates an instance of Event.
    * @param {Event} event_object - the event object that is being completed
@@ -18,5 +18,3 @@ class EventComplete extends Event {
     this.revert_data;
   }
 }
-
-module.exports = EventComplete;

@@ -1,7 +1,7 @@
 const Component = require('./component');
 const throwIfMissing = require('../utility').throwIfMissing;
 
-class EventHandler extends Component {
+module.exports = class EventHandler extends Component {
   /**
    * Creates an instance of EventHandler.
    * @param {Object} [{
@@ -64,7 +64,4 @@ class EventHandler extends Component {
       throw Error('Handler does not support revert.');
     }
   }
-
 }
-
-module.exports = EventHandler;

@@ -7,7 +7,7 @@ const util = require('util');
 const throwIfMissing = require('../utility').throwIfMissing;
 let mongoose = require('mongoose'); // This is not const, because it needs to be rewired during testing
 
-class Collector extends Component {
+module.exports = class Collector extends Component {
   /**
 	 * Creates an instance of Collector.
 	 *
@@ -314,5 +314,3 @@ class Collector extends Component {
       .catch(err => Promise.reject(new CollectorDatabaseError(err)));
   }
 }
-
-module.exports = Collector;

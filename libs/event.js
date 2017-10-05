@@ -1,4 +1,4 @@
-class Event {
+module.exports = class Event {
   /**
    * Creates an instance of Event.
    * @param {String} event_name
@@ -14,5 +14,3 @@ class Event {
     this.revert_data;
   }
 }
-
-module.exports = Event;
