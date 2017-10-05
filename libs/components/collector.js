@@ -38,7 +38,9 @@ class Collector extends Component {
 	 *
 	 * @memberOf Collector
    */
-  initialize() {}
+  initialize() {
+    return;
+  }
 
   /**
    * Check an API for data that we might need to insert, update, or delete from the db
