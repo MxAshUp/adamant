@@ -51,7 +51,7 @@ describe('App', () => {
       });
     });
 
-    it('Should return a promise that resolves and call lugin_loader.load_plugin_routes', () => {
+    it('Should return a promise that resolves and call plugin_loader.load_plugin_routes', () => {
       app.plugin_loader.load_plugin_routes = sinon.stub();
       return app.init().then(() => {
         sinon.assert.calledWith(app.plugin_loader.load_plugin_routes, app.express_app);
