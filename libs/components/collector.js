@@ -16,12 +16,14 @@ class Collector extends Component {
 	 *
 	 * @memberOf Collector
 	 */
-  constructor({model_name = throwIfMissing`model_name`} = {}) {
+  constructor({
+    model_name = throwIfMissing`model_name`
+  } = {}) {
     super();
 
     // Merge config and assign properties to this
     Object.assign(this, {
-      model_name
+      model_name,
     });
 
     // Set some initial variables
