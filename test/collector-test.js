@@ -28,16 +28,19 @@ describe('Collector Class', () => {
   // Test Subclass of Collector
   class TestCollectorClass extends Collector {
     constructor() {
-      super();
-
-      // Collector properties
-      this.model_name = 'test.test_model';
+      super({model_name: 'test.test_model'});
     }
   }
 
 
   it('Should construct an instance', () => {
     new TestCollectorClass();
+  });
+
+  it('Should throw error if model_name not specified', () => {
+    expect(() => {
+      new Collector();
+    }).to.throw(Error, 'Missing required parameter: model_name');
   });
 
   describe('Default behavior of override functions', () => {

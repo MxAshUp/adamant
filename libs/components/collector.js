@@ -16,7 +16,7 @@ class Collector extends Component {
 	 *
 	 * @memberOf Collector
 	 */
-  constructor({model_name = throwIfMissing`model_name`}) {
+  constructor({model_name = throwIfMissing`model_name`} = {}) {
     super();
 
     // Merge config and assign properties to this
@@ -26,41 +26,37 @@ class Collector extends Component {
 
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
-    this.args = {};
     this.run_results = {};
   }
 
   /**
    * Assemble the data needed to establish an API connection
 	 * Should be O(1)
-   * @param  {object} args
    * @return {Promise}
 	 *
 	 * @memberOf Collector
    */
-  initialize(_args) {}
+  initialize() {}
 
   /**
    * Check an API for data that we might need to insert, update, or delete from the db
 	 * Should be O(n)
-   * @param  {object} args
    * @return {Promise}
 	 *
 	 * @memberOf Collector
    */
-  prepare(_args) {
+  prepare() {
     return;
   }
 
   /**
 	 * Collect and insert or update data
 	 * @param  {object} prepared_data
-	 * @param  {object} _args
 	 * @return {Promise}
 	 *
 	 * @memberOf Collector
 	 */
-  collect(prepared_data, _args) {
+  collect(prepared_data) {
     for (let i in prepared_data) {
       this.emit('data', prepared_data[i]);
     }
@@ -70,12 +66,11 @@ class Collector extends Component {
   /**
 	 * Remove data which needs to be removed
 	 * @param  {object} prepared_data
-	 * @param  {object} _args
 	 * @return {Promise}
 	 *
 	 * @memberOf Collector
 	 */
-  garbage(prepared_data, _args) {
+  garbage(prepared_data) {
     return;
   }
 
@@ -102,12 +97,12 @@ class Collector extends Component {
         // If not initialized, then try to initialize
         .then(() => this.initialize_flag
             ? Promise.resolve()
-            : this.initialize.call(this, this.args)
+            : this.initialize.call(this)
         )
         // Reformat possible error
         .catch(err => Promise.reject(new CollectorInitializeError(err)))
         // Prepare to collect and remove data
-        .then(this.prepare.bind(this, this.args))
+        .then(this.prepare.bind(this))
         // Data is prepared
         .then((res) => {
           this.prepared_data = res;
@@ -143,10 +138,10 @@ class Collector extends Component {
    * @memberof Collector
    */
   _polyfill_generator_collect(collect_fn) {
-    return util.deprecate((prepared_data, _args) => {
+    return util.deprecate((prepared_data) => {
       const promises = [];
 
-      for(let to_collect of collect_fn(prepared_data, _args)) {
+      for(let to_collect of collect_fn(prepared_data)) {
         promises.push(
           Promise.resolve(to_collect)
           .then(this.emit.bind(this, 'data'))
@@ -178,7 +173,7 @@ class Collector extends Component {
     };
 
     return Promise.resolve()
-      .then(this.garbage.bind(this, this.prepared_data,this.args))
+      .then(this.garbage.bind(this, this.prepared_data))
       .then(to_remove => Promise.all(_.map(to_remove, remove_fn)))
       .then(() => counter);
   }
@@ -221,7 +216,7 @@ class Collector extends Component {
     this.addListener('data', insert_fn);
 
     return Promise.resolve()
-    .then(collect_fn.bind(this, this.prepared_data, this.args))
+    .then(collect_fn.bind(this, this.prepared_data))
     // The data resolved from collect will also be used for inserting into database
     // This makes things backwards compatible
     .then(res_data => typeof res_data !== 'undefined' && insert_fn(res_data))

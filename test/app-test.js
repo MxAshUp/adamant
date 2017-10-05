@@ -133,8 +133,7 @@ describe('App', () => {
     beforeEach(() => {
       app = new App();
       // Collector Instance Mock
-      collectorInstanceMock = new Collector();
-      collectorInstanceMock.model_name = model_mock_name;
+      collectorInstanceMock = new Collector({model_name: model_mock_name});
       const mp_core_plugin = app.plugin_loader.get_plugin_by_name('mp-core');
       sinon.stub(app.plugin_loader, 'get_plugin_by_name');
       app.plugin_loader.get_plugin_by_name.returns(mp_core_plugin);
@@ -390,8 +389,7 @@ describe('App', () => {
       eventDispatcherInstanceMock.enqueue_event = sinon.stub();
 
       // Mock collector
-      collectorInstanceMock = new Collector();
-      collectorInstanceMock.model_name = model_mock_name;
+      collectorInstanceMock = new Collector({model_name: model_mock_name});
 
       app.event_dispatcher = eventDispatcherInstanceMock;
     });
@@ -417,8 +415,7 @@ describe('App', () => {
       app = new App();
 
       // Mock collector
-      collectorInstanceMock = new Collector();
-      collectorInstanceMock.model_name = model_mock_name;
+      collectorInstanceMock = new Collector({model_name: model_mock_name});
 
       sinon.stub(app, 'debug_message');
     });
