@@ -1,3 +1,4 @@
+// Test tools
 const chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
@@ -9,10 +10,8 @@ const Component = require('../libs/components/component');
 const EventHandler = require('../libs/components/event-handler');
 const EventDispatcher = require('../libs/event-dispatcher');
 const Plugin = require('../libs/plugin');
-// components to test
+// Modules to test
 const App = rewire('../libs/app');
-
-
 
 describe('App', () => {
 

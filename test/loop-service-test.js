@@ -1,10 +1,10 @@
-const sinon = require('sinon'),
-  chai = require('chai'),
-  expect = chai.expect,
-  assert = chai.assert,
-  rewire = require('rewire'),
-  // Modules to test
-  LoopService = rewire('../libs/components/loop-service');
+// Test tools
+const sinon = require('sinon');
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+// Modules to test
+const LoopService = require('../libs/components/loop-service');
 
 describe('Loop Service', () => {
   function async_fn_spy_wrapper(timeout) {

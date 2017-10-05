@@ -1,11 +1,11 @@
-const rewire = require('rewire'),
-  sinon = require('sinon'),
-  chai = require('chai'),
-  expect = chai.expect,
-  assert = chai.assert,
-  mongooseMock = require('mongoose'),
-  // components to test
-  Plugin = rewire('../libs/plugin');
+// Test tools
+const sinon = require('sinon');
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+const mongooseMock = require('mongoose');
+// Modules to test
+const Plugin = require('../libs/plugin');
 
 describe('Abstract Plugin', () => {
   it('Should construct without throwing error', () => {

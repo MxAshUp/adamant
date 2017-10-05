@@ -1,6 +1,8 @@
-let EventHandler = require('./event-handler');
-let Event = require('../event');
-let workflow_count = 0; // Used in generate_workflow_name
+const EventHandler = require('./event-handler');
+const Event = require('../event');
+
+// Static var used in generate_workflow_name
+let workflow_count = 0;
 
 /**
  * Workflow is an EventHandler that chains EventHandlers together, passing data between each "step."

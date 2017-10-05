@@ -1,17 +1,17 @@
-const // Test tools
-  chai = require('chai'),
-  expect = chai.expect,
-  assert = chai.assert,
-  rewire = require('rewire'),
-  sinon = require('sinon'),
-  _ = require('lodash'),
-  // Modules to test
-  EventHandleError = require('../libs/errors').EventHandleError,
-  EventHandler = rewire('../libs/components/event-handler'),
-  EventDispatcher = rewire('../libs/event-dispatcher'),
-  Event = rewire('../libs/event'),
-  EventComplete = require('../libs/event-complete');
+// Test tools
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+const sinon = require('sinon');
+const _ = require('lodash');
+// Modules to test
+const EventHandleError = require('../libs/errors').EventHandleError;
+const EventHandler = require('../libs/components/event-handler');
+const EventDispatcher = require('../libs/event-dispatcher');
+const Event = require('../libs/event');
+const EventComplete = require('../libs/event-complete');
 
+// Helpers
 const immmediatePromise = () => {
   return new Promise(resolve => {
     setImmediate(resolve);

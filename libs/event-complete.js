@@ -1,4 +1,4 @@
-let Event = require('./event');
+const Event = require('./event');
 
 class EventComplete extends Event {
   /**

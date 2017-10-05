@@ -1,16 +1,16 @@
-const // Test tools
-  chai = require('chai'),
-  expect = chai.expect,
-  assert = chai.assert,
-  chaiAsPromised = require('chai-as-promised'),
-  rewire = require('rewire'),
-  sinon = require('sinon'),
-  _ = require('lodash'),
-  errors = require('../libs/errors'),
-  mongooseMock = require('mongoose-mock'),
-  // Modules to test
-  CollectorDatabaseError = require('../libs/errors').CollectorDatabaseError,
-  Collector = rewire('../libs/components/collector');
+// Test tools
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+const chaiAsPromised = require('chai-as-promised');
+const rewire = require('rewire');
+const sinon = require('sinon');
+const _ = require('lodash');
+const errors = require('../libs/errors');
+const mongooseMock = require('mongoose-mock');
+// Modules to test
+const CollectorDatabaseError = require('../libs/errors').CollectorDatabaseError;
+const Collector = rewire('../libs/components/collector');
 
 chai.use(chaiAsPromised);
 chai.should();

@@ -1,8 +1,7 @@
-var Plugin = require('./plugin'),
-  _ = require('lodash'),
-  semver = require('semver'),
-  path = require('path');
-
+const Plugin = require('./plugin');
+const _ = require('lodash');
+const semver = require('semver');
+const path = require('path');
 const core_module_info = require(`${__dirname}/../package.json`);
 
 class PluginLoader {

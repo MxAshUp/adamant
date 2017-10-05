@@ -1,13 +1,13 @@
-let PluginLoader = require('./plugin-loader'),
-  mongoose = require('mongoose'),
-  _ = require('lodash'),
-  get_component_inheritance = require('./utility').get_component_inheritance,
-  EventDispatcher = require('./event-dispatcher'),
-  Event = require('./event'),
-  EventEmitter = require('events'),
-  http = require('http'),
-  socketio = require('socket.io'),
-  express = require('express');
+const PluginLoader = require('./plugin-loader');
+const _ = require('lodash');
+const get_component_inheritance = require('./utility').get_component_inheritance;
+const EventDispatcher = require('./event-dispatcher');
+const Event = require('./event');
+const EventEmitter = require('events');
+const http = require('http');
+const socketio = require('socket.io');
+const express = require('express');
+let mongoose = require('mongoose'); // This is not const, because it needs to be rewired during testing
 
 /**
  * App class for connecting everything together

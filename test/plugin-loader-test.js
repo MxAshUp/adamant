@@ -1,11 +1,12 @@
-const rewire = require('rewire'),
-  sinon = require('sinon'),
-  chai = require('chai'),
-  expect = chai.expect,
-  assert = chai.assert,
-  // components to test
-  Plugin = require('../libs/plugin'),
-  PluginLoader = rewire('../libs/plugin-loader');
+// Test tools
+const rewire = require('rewire');
+const sinon = require('sinon');
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+// Components to test
+const Plugin = require('../libs/plugin');
+const PluginLoader = rewire('../libs/plugin-loader');
 
 const core_module_info = require(`${__dirname}/../package.json`);
 

@@ -1,12 +1,12 @@
-const chai = require('chai'),
-  expect = chai.expect,
-  assert = chai.assert,
-  chaiAsPromised = require('chai-as-promised'),
-  sinon = require('sinon'),
-  rewire = require('rewire'),
-  EventEmitter = require('events').EventEmitter,
-  // components to test
-  utility = rewire('../libs/utility');
+// Test tools
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+const chaiAsPromised = require('chai-as-promised');
+const sinon = require('sinon');
+const EventEmitter = require('events').EventEmitter;
+// Modules to test
+const utility = require('../libs/utility');
 
 chai.use(chaiAsPromised);
 chai.should();

@@ -1,4 +1,4 @@
-var EventEmitter = require('events');
+const EventEmitter = require('events');
 
 class Component extends EventEmitter {
 

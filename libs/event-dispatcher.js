@@ -1,9 +1,9 @@
-const _ = require('lodash'),
-  EventHandleError = require('../libs/errors').EventHandleError,
-  EventEmitter = require('events'),
-  Event = require('./event'),
-  EventComplete = require('./event-complete'),
-  utility = require('../libs/utility');
+const _ = require('lodash');
+const EventHandleError = require('../libs/errors').EventHandleError;
+const EventEmitter = require('events');
+const Event = require('./event');
+const EventComplete = require('./event-complete');
+const utility = require('../libs/utility');
 
 /**
  * Handles enqueing of events, loading of event handlers, and dispatching events to handlers

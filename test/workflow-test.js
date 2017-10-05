@@ -1,12 +1,12 @@
-const // Test tools
-  chai = require('chai'),
-  expect = chai.expect,
-  assert = chai.assert,
-  sinon = require('sinon'),
-  _ = require('lodash'),
-  // Modules to test
-  EventHandler = require('../libs/components/event-handler'),
-  Workflow = require('../libs/components/workflow');
+// Test tools
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+const sinon = require('sinon');
+const _ = require('lodash');
+// Modules to test
+const EventHandler = require('../libs/components/event-handler');
+const Workflow = require('../libs/components/workflow');
 
 describe('Workflow EventHandler', () => {
 

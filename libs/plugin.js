@@ -1,5 +1,5 @@
-var _ = require('lodash'),
-  semver = require('semver');
+const _ = require('lodash');
+const semver = require('semver');
 
 class Plugin {
   /**

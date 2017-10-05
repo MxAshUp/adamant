@@ -1,11 +1,11 @@
-var Component = require('./component'),
-  mongoose = require('mongoose'),
-  _ = require('lodash'),
-  CollectorInitializeError = require('../errors').CollectorInitializeError,
-  CollectorDatabaseError = require('../errors').CollectorDatabaseError,
-  Counter = require('../utility').Counter,
-  util = require('util'),
-  throwIfMissing = require('../utility').throwIfMissing;
+const Component = require('./component');
+const _ = require('lodash');
+const CollectorInitializeError = require('../errors').CollectorInitializeError;
+const CollectorDatabaseError = require('../errors').CollectorDatabaseError;
+const Counter = require('../utility').Counter;
+const util = require('util');
+const throwIfMissing = require('../utility').throwIfMissing;
+let mongoose = require('mongoose'); // This is not const, because it needs to be rewired during testing
 
 class Collector extends Component {
   /**
