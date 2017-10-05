@@ -30,7 +30,7 @@ class LoopService extends Component {
       name = ''
     }) {
 
-    super();
+    super(...arguments);
 
     //Set initial variables
     this.run_status = false;

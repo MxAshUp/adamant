@@ -19,7 +19,8 @@ class Collector extends Component {
   constructor({
     model_name = throwIfMissing`model_name`
   } = {}) {
-    super();
+
+    super(...arguments);
 
     // Merge config and assign properties to this
     Object.assign(this, {

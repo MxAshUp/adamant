@@ -20,7 +20,8 @@ class EventHandler extends Component {
     enqueue_complete_event = false,
     transform_function = null,
   } = {}) {
-    super();
+
+    super(...arguments);
 
     //Default object properties
     const defaults = {
