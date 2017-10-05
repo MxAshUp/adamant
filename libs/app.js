@@ -125,7 +125,7 @@ module.exports = class App extends EventEmitter {
     name = throwIfMissing`name`,
     version = '',
     parameters = {},
-  }) {
+  } = {}) {
 
     let plugin_name = 'mp-core';
 

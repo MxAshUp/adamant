@@ -100,6 +100,12 @@ describe('App', () => {
       app.load_component({name: `${mock_plugin_name}/testComponent`});
       sinon.assert.calledWith(app.plugin_loader.get_plugin_by_name, mock_plugin_name);
     });
+
+    it('Should throw error if name not specified', () => {
+      expect(() =>
+        app.load_component()
+      ).to.throw(Error, 'Missing required parameter: name');
+    });
   });
 
   describe('load_collector', () => {

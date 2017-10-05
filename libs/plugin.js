@@ -68,7 +68,7 @@ module.exports = class Plugin {
     name = throwIfMissing`name`,
     version = '',
     parameters = {},
-  }) {
+  } = {}) {
 
     // Find component in plugin
     const component_constructor = _.find(this.components, { name });

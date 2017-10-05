@@ -88,8 +88,14 @@ describe('Abstract Plugin', () => {
 
     it('Should throw error cannot find component', () => {
       expect(() =>
-        pl.create_component({name: 'INVALID_COLLECTOR', parameters: {}})
+        pl.create_component({name: 'INVALID_COLLECTOR'})
       ).to.throw(`Component not found: INVALID_COLLECTOR`);
+    });
+
+    it('Should throw an error if no component name specified', () => {
+      expect(() =>
+        pl.create_component()
+      ).to.throw(Error, 'Missing required parameter: name');
     });
 
     it('Should create collector component', () => {
