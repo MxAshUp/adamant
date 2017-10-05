@@ -9,13 +9,13 @@ let mongoose = require('mongoose'); // This is not const, because it needs to be
 
 module.exports = class Collector extends Component {
   /**
-	 * Creates an instance of Collector.
-	 *
-	 * @param {object} config - An object of properties to initialize this class with
-	 * @param {object} args - An object of run args
-	 *
-	 * @memberOf Collector
-	 */
+   * Creates an instance of Collector.
+   *
+   * @param {object} config - An object of properties to initialize this class with
+   * @param {object} args - An object of run args
+   *
+   * @memberOf Collector
+   */
   constructor({
     model_name = throwIfMissing`model_name`
   } = {}) {
@@ -34,10 +34,10 @@ module.exports = class Collector extends Component {
 
   /**
    * Assemble the data needed to establish an API connection
-	 * Should be O(1)
+   * Should be O(1)
    * @return {Promise}
-	 *
-	 * @memberOf Collector
+   *
+   * @memberOf Collector
    */
   initialize() {
     return;
@@ -45,22 +45,22 @@ module.exports = class Collector extends Component {
 
   /**
    * Check an API for data that we might need to insert, update, or delete from the db
-	 * Should be O(n)
+   * Should be O(n)
    * @return {Promise}
-	 *
-	 * @memberOf Collector
+   *
+   * @memberOf Collector
    */
   prepare() {
     return;
   }
 
   /**
-	 * Collect and insert or update data
-	 * @param  {object} prepared_data
-	 * @return {Promise}
-	 *
-	 * @memberOf Collector
-	 */
+   * Collect and insert or update data
+   * @param  {object} prepared_data
+   * @return {Promise}
+   *
+   * @memberOf Collector
+   */
   collect(prepared_data) {
     for (let i in prepared_data) {
       this.emit('data', prepared_data[i]);
@@ -69,22 +69,22 @@ module.exports = class Collector extends Component {
   }
 
   /**
-	 * Remove data which needs to be removed
-	 * @param  {object} prepared_data
-	 * @return {Promise}
-	 *
-	 * @memberOf Collector
-	 */
+   * Remove data which needs to be removed
+   * @param  {object} prepared_data
+   * @return {Promise}
+   *
+   * @memberOf Collector
+   */
   garbage(prepared_data) {
     return;
   }
 
   /**
-	 * Run through the collector functions (initialize, prepare, collect, garbage)
-	 * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
-	 *
-	 * @memberOf Collector
-	 */
+   * Run through the collector functions (initialize, prepare, collect, garbage)
+   * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
+   *
+   * @memberOf Collector
+   */
   run() {
 
     // If not initialized, then get model
@@ -236,12 +236,12 @@ module.exports = class Collector extends Component {
   }
 
   /**
-	 * Insert data into the database
-	 * @param  {object} data_row
-	 * @return {Promise} Promise resolves when success or rejects when error
-	 *
-	 * @memberOf Collector
-	 */
+   * Insert data into the database
+   * @param  {object} data_row
+   * @return {Promise} Promise resolves when success or rejects when error
+   *
+   * @memberOf Collector
+   */
   _insert_data(data_row) {
 
     if (typeof data_row !== 'object') {
@@ -279,28 +279,28 @@ module.exports = class Collector extends Component {
   }
 
   /**
-	 * Handles errors when collecting a single document
-	 *
-	 * @param {any} err
-	 *
-	 * @memberOf Collector
-	 */
+   * Handles errors when collecting a single document
+   *
+   * @param {any} err
+   *
+   * @memberOf Collector
+   */
   _handle_collect_error(err) {
     if (err instanceof CollectorDatabaseError) {
       /**
-			 * @todo - Decide how to handle database errors
-			 */
+       * @todo - Decide how to handle database errors
+       */
     }
     this.emit('error', err);
   }
 
   /**
-	 * Loop through items to remove, and remove them
-	 * @param  {object} lookup - Mongoose Lookup
-	 * @return {Promise}
-	 *
-	 * @memberOf Collector
-	 */
+   * Loop through items to remove, and remove them
+   * @param  {object} lookup - Mongoose Lookup
+   * @return {Promise}
+   *
+   * @memberOf Collector
+   */
   _remove_data(lookup) {
     // Find doc by lookup and remove it
     return this.model.findOneAndRemove(lookup)

@@ -3,12 +3,12 @@ const semver = require('semver');
 
 module.exports = class Plugin {
   /**
-	 * Creates an instance of Plugin.
-	 *
-	 * @param {object} args
-	 *
-	 * @memberOf Plugin
-	 */
+   * Creates an instance of Plugin.
+   *
+   * @param {object} args
+   *
+   * @memberOf Plugin
+   */
   constructor(config) {
     config = _.isUndefined(config) ? {} : config;
 
@@ -55,14 +55,14 @@ module.exports = class Plugin {
   }
 
   /**
-	 * Abstract way to create a component from a plugin
-	 *
-	 * @param {String} class_name Name of class of componenet to look for and construct
-	 * @param {any} params Passed to constructor of component
-	 * @returns
-	 *
-	 * @memberOf Plugin
-	 */
+   * Abstract way to create a component from a plugin
+   *
+   * @param {String} class_name Name of class of componenet to look for and construct
+   * @param {any} params Passed to constructor of component
+   * @returns
+   *
+   * @memberOf Plugin
+   */
   create_component(class_name, params, require_version = '') {
     let component, component_constructor;
 

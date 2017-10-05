@@ -3,9 +3,9 @@ const Component = require('./component');
 module.exports = class LoopService extends Component {
   /**
    *
-	 * Creates a LoopService object
-	 * A LoopService object will run a function continuously when start() is triggered.
-	 * It will stop when stop() is called, an error is caught, or has reached a run limit.
+   * Creates a LoopService object
+   * A LoopService object will run a function continuously when start() is triggered.
+   * It will stop when stop() is called, an error is caught, or has reached a run limit.
    *
    * @param {Object} {
    *       run_callback,
@@ -53,19 +53,19 @@ module.exports = class LoopService extends Component {
   }
 
   /**
-	 * Checks if the LoopService object is running
-	 *
-	 * @return {boolean} True if running, False if not
-	 */
+   * Checks if the LoopService object is running
+   *
+   * @return {boolean} True if running, False if not
+   */
   get is_running() {
     return this.run_status;
   }
 
   /**
-	 * Checks if LoopService object should proceed to execute run_callback
-	 *
-	 * @return {boolean} True if running, False if not
-	 */
+   * Checks if LoopService object should proceed to execute run_callback
+   *
+   * @return {boolean} True if running, False if not
+   */
   get _should_stop() {
     // Should stop if stop_on_run count is reached
     if (this.stop_on_run && this.run_count >= this.stop_on_run) {
@@ -77,10 +77,10 @@ module.exports = class LoopService extends Component {
   }
 
   /**
-	 * Checks if LoopService object should retry
-	 *
-	 * @return {Promise} resolves if can retry, rejects with error otherwise
-	 */
+   * Checks if LoopService object should retry
+   *
+   * @return {Promise} resolves if can retry, rejects with error otherwise
+   */
   _maybe_retry(err) {
     // We're not allowed to retry
     if (this.retry_max_attempts === 0) {
@@ -120,11 +120,11 @@ module.exports = class LoopService extends Component {
   }
 
   /**
-	 * Initiates the LoopService to begin running.
-	 *
-	 * @param {boolean} run_once - If True, LoopService will only execute run_callback once, and not continuously.
-	 * @return {Promise} Resolves or rejects when LoopService stops
-	 */
+   * Initiates the LoopService to begin running.
+   *
+   * @param {boolean} run_once - If True, LoopService will only execute run_callback once, and not continuously.
+   * @return {Promise} Resolves or rejects when LoopService stops
+   */
   start(run_once = false) {
     // Don't start if already running
     if (this.is_running) {
@@ -220,11 +220,11 @@ module.exports = class LoopService extends Component {
   }
 
   /**
-	 * Initiates the LoopService to stop running.
-	 *
-	 * @todo Implement promise return
-	 * @return {Promise} Resolves or rejects when LoopService complete the stop
-	 */
+   * Initiates the LoopService to stop running.
+   *
+   * @todo Implement promise return
+   * @return {Promise} Resolves or rejects when LoopService complete the stop
+   */
   stop() {
     // Loop_function might be running, we need to resolve and clear potential timeout
     clearTimeout(this.loop_function_timeout_id);
