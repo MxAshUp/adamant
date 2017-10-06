@@ -18,7 +18,7 @@ describe('Abstract Plugin', () => {
   });
   it('Should construct and throw error if name not specified', () => {
     expect(() => new Plugin()).to.throw(
-      `A valid name is required for Plugin object.`
+      `Missing required parameter: name`
     );
   });
   it('Should construct and assign models', () => {
@@ -30,23 +30,14 @@ describe('Abstract Plugin', () => {
 
     expect(pl.models).to.deep.equal(models);
   });
-  it('Should construct and assign collectors', () => {
-    const collectors = [Math.random(), Math.random(), Math.random()];
+  it('Should construct and assign components', () => {
+    const components = [Math.random(), Math.random(), Math.random()];
     let pl = new Plugin({
       name: '_test_plugin',
-      collectors: collectors,
+      components: components,
     });
 
-    expect(pl.collectors).to.deep.equal(collectors);
-  });
-  it('Should construct and assign event handlers', () => {
-    const event_handlers = [Math.random(), Math.random(), Math.random()];
-    let pl = new Plugin({
-      name: '_test_plugin',
-      event_handlers: event_handlers,
-    });
-
-    expect(pl.event_handlers).to.deep.equal(event_handlers);
+    expect(pl.components).to.deep.equal(components);
   });
 
   describe('Creating plugin components', () => {

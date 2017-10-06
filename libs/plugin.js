@@ -10,26 +10,38 @@ module.exports = class Plugin {
    *
    * @memberOf Plugin
    */
-  constructor(config) {
-    config = _.isUndefined(config) ? {} : config;
-
-    //Default object properties
-    const defaults = {
-      components: [],
-      models: [],
-      enabled: false,
-      name: '',
-      version: '',
-      description: '',
-      author: '',
-      license: '',
-    };
-
-    if (!config.hasOwnProperty('name'))
-      throw new Error(`A valid name is required for Plugin object.`);
+  constructor({
+      name = throwIfMissing`name`,
+      components = [],
+      models = [],
+      enabled = false,
+      version = '',
+      description = '',
+      author = '',
+      license = '',
+      load_routes = null,
+      map_events = null,
+      on_load = null,
+      on_unload = null,
+      load_models = null,
+    } = {}) {
 
     // Merge config and assign properties to this
-    Object.assign(this, defaults, config);
+    Object.assign(this, {
+      name,
+      components,
+      models,
+      enabled,
+      version,
+      description,
+      author,
+      license,
+      load_routes: load_routes ? load_routes : this.load_routes,
+      map_events: map_events ? map_events : this.map_events,
+      on_load: on_load ? on_load : this.on_load,
+      on_unload: on_unload ? on_unload : this.on_unload,
+      load_models: load_models ? load_models : this.load_models,
+    });
   }
 
   /**
