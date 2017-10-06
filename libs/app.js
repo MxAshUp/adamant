@@ -21,7 +21,6 @@ module.exports = class App extends EventEmitter {
   constructor(config) {
     super();
     // Establish some defaults
-    this.config = {};
     this.plugin_loader = new PluginLoader();
     this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
@@ -29,11 +28,12 @@ module.exports = class App extends EventEmitter {
 
     // Load some some config from environment variables
     // @todo - abstract this feature out, eg config_from_env
-    this.config.mongodb_url = process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '';
-    this.config.web_port = process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '';
-
     // Override config from parameters
-    Object.assign(this.config, config);
+    this.config = {
+      mongodb_url: process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '',
+      web_port: process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '',
+      ...config,
+    };
 
     // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
