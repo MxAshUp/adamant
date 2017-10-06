@@ -73,7 +73,7 @@ describe('Abstract Plugin', () => {
     const event_handlers = [handler_a, handler_b];
     let pl = new Plugin({
       name: '_test_plugin',
-      components: collectors.concat(event_handlers),
+      components: [...collectors, ...event_handlers],
       version: '0.1.0',
     });
 
