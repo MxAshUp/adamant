@@ -6,7 +6,7 @@
  * @param {EventEmitter} event_emitter
  * @returns
  */
-const defer_on_event = (event_name, defer_fn, event_emitter) => {
+module.exports.defer_on_event = (event_name, defer_fn, event_emitter) => {
   return new Promise((resolve, reject) => {
     const handle_fn = (event_data) => {
       Promise.resolve()
@@ -37,6 +37,7 @@ class Counter {
     this.counters[index]++;
   }
 };
+module.exports.Counter = Counter;
 
 /**
  * Gets the inheritance chain for a Component starting with Component
@@ -44,7 +45,7 @@ class Counter {
  * @param {Component} obj
  * @returns
  */
-const get_component_inheritance = (obj) => {
+module.exports.get_component_inheritance = (obj) => {
   var chain = [obj];
 
   var prototype = obj;
@@ -61,7 +62,7 @@ const get_component_inheritance = (obj) => {
   return chain.map(d => d.constructor);
 };
 
-const throwIfMissing = (parameter_name) => {
+module.exports.throwIfMissing = (parameter_name) => {
   const new_error = new Error(`Missing required parameter: ${parameter_name}`);
 
   const stack_lines = new_error.stack.split("\n");
@@ -70,10 +71,3 @@ const throwIfMissing = (parameter_name) => {
 
   throw new_error;
 }
-
-module.exports = {
-  defer_on_event,
-  Counter,
-  get_component_inheritance,
-  throwIfMissing,
-};
