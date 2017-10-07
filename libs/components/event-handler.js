@@ -13,15 +13,17 @@ module.exports = class EventHandler extends Component {
    *   }]
    * @memberof EventHandler
    */
-  constructor({
-    event_name = throwIfMissing`event_name`,
-    should_handle = null,
-    defer_dispatch = null, // {event_name = '', check_function = ()}
-    enqueue_complete_event = false,
-    transform_function = null,
-  } = {}) {
+  constructor(args = {}) {
 
-    super(...arguments);
+    let {
+      event_name = throwIfMissing`event_name`,
+      should_handle = null,
+      defer_dispatch = null, // {event_name = '', check_function = ()}
+      enqueue_complete_event = false,
+      transform_function = null,
+    } = args;
+
+    super(args);
 
     //Default object properties
     const defaults = {

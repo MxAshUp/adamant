@@ -16,11 +16,13 @@ module.exports = class Collector extends Component {
    *
    * @memberOf Collector
    */
-  constructor({
-    model_name = throwIfMissing`model_name`
-  } = {}) {
+  constructor(args = {}) {
 
-    super(...arguments);
+    let {
+      model_name = throwIfMissing`model_name`
+    } = args;
+
+    super(args);
 
     // Merge config and assign properties to this
     Object.assign(this, {

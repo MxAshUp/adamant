@@ -18,8 +18,13 @@ module.exports = class Workflow extends EventHandler {
    * @param - For other parameters, see EventHandler Class. Normal EventHandler arguments are allowed.
    * @memberof Workflow
    */
-  constructor({workflow_name}) {
-    super(...arguments);
+  constructor(args = {}) {
+
+    let {
+      workflow_name
+    } = args;
+
+    super(args);
 
     this.workflow_name = workflow_name ? workflow_name : Workflow.generate_workflow_name();
     this.event_handler_sequence = [this];

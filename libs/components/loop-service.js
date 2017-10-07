@@ -19,7 +19,9 @@ module.exports = class LoopService extends Component {
    *     }
    * @memberof LoopService
    */
-  constructor({
+  constructor(args = {}) {
+
+    let {
       run_callback,
       run_min_time_between = 0,
       retry_attempts = 0,
@@ -28,9 +30,9 @@ module.exports = class LoopService extends Component {
       errors_only_retry_on = [],
       errors_dont_retry_on = [],
       name = '',
-    }) {
+    } = args;
 
-    super(...arguments);
+    super(args);
 
     //Set initial variables
     this.run_status = false;
