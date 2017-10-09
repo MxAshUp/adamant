@@ -62,9 +62,9 @@ module.exports = class Plugin {
     }
     // Save a copy of original schema
     if(_.isUndefined(model_config._original_schema)) {
-      model_config._original_schema = {...model_config.schema};
+      model_config._original_schema = Object.assign({}, model_config.schema);
     }
-    model_config.schema = {...model_config.schema, ...extend_schema};
+    model_config.schema = Object.assign({}, model_config.schema, extend_schema);
   }
 
   /**

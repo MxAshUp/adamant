@@ -29,11 +29,10 @@ module.exports = class App extends EventEmitter {
     // Load some some config from environment variables
     // @todo - abstract this feature out, eg config_from_env
     // Override config from parameters
-    this.config = {
+    this.config = Object.assign({}, {
       mongodb_url: process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '',
       web_port: process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '',
-      ...config,
-    };
+    }, config);
 
     // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
