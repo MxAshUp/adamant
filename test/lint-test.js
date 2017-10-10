@@ -10,14 +10,22 @@ const skip_files = ['libs/app.js']; // example: libs/index.js
 const blacklist_globals = ['console'];
 
 // Generate globs and find files
-const glob_paths = paths_to_search.map(path => `${__dirname}/../${path}/**/*.js`);
-const glob_pattern = `{${glob_paths.join(',')}}`;
+const glob_paths = paths_to_search.map(file_path => path.resolve(__dirname, `../${file_path}/**/*.js`));
+let glob_pattern = glob_paths.join(',');
+if(paths_to_search.length > 1) {
+  glob_pattern = `{${glob_pattern}}`;
+}
 const files = glob.sync(glob_pattern);
 const files_to_test = files.filter(file => {
   return (skip_files.indexOf(path.relative(`${__dirname}/..`, file)) === -1)
 });
 
 describe('Linting source file', () => {
+  it('Should have some files to test', () => {
+    if(files_to_test.length <= 0) {
+      throw new Error('No files found to lint.');
+    }
+  });
   files_to_test.forEach(source_file => {
     // Get relative file name being parsed
     const print_file = path.relative(`${__dirname}/..`, source_file);
