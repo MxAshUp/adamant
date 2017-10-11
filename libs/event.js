@@ -4,7 +4,7 @@ module.exports = class Event {
    * @param {String} event_name
    * @param {any} data
    *
-   * @memberOf Event
+   * @memberof Event
    */
   constructor(event_name, data) {
     this.event_name = event_name;

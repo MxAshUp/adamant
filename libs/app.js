@@ -13,12 +13,15 @@ let mongoose = require('mongoose'); // This is not const, because it needs to be
 /**
  * App class for connecting everything together
  *
- * @param {Object} config - App config. Example:
- *
  * @class App
  */
 module.exports = class App extends EventEmitter {
-  constructor(config) {
+  /**
+   * Creates an instance of App.
+   * @param {String} mongodb_url - The mongo connection url.
+   * @param {String} web_port - The port to use for Express.
+   */
+  constructor(config = {}) {
     super();
     // Establish some defaults
     this.plugin_loader = new PluginLoader();
@@ -56,7 +59,7 @@ module.exports = class App extends EventEmitter {
   }
 
   /**
-   * Runs app initialize functions
+   * Loads mongo models, express routes, and sockets.
    *
    * @returns {Promise}
    * @memberof App
@@ -100,9 +103,8 @@ module.exports = class App extends EventEmitter {
   /**
    * Loads plugins
    *
-   * @param {Array} plugin_dirs - Array of plugin names to be required
-   *
-   * @memberOf App
+   * @param {Array} plugin_dirs - Array of plugin or module names to be loaded
+   * @memberof App
    */
   load_plugins(plugin_dirs) {
     _.forEach(plugin_dirs, plugin_path => {
@@ -112,11 +114,12 @@ module.exports = class App extends EventEmitter {
 
 
   /**
-   * Loads a component into app
+   * Creates a component instance by calling Plugin.create_component.
+   * When component is created, App will emit event named `${constructor_name}.load` for every inheritance of the Component. For example, creating an EventHandler will emit `Component.load` then `EventHandler.load`.
    *
-   * @param {String} component_name - The name of the component (class name), including the plugin namespace. Example: 'mp-core/EventHandler'. If no plugin name is specified, mp-core is assumed.
-   * @param {Object} parameters - These are the parameters passed to the constructor of the component
+   * @param {String} name - The name of the component (class name), including the plugin namespace. Example: 'mp-core/EventHandler'. If no plugin name is specified, mp-core is assumed.
    * @param {String} version - Semver format of the version required. Plugin.create_component will throw error if version requirements not met.
+   * @param {Object} parameters - These are the parameters passed to the constructor of the component
    * @returns {Component} - The component created
    * @memberof App
    */
@@ -191,6 +194,7 @@ module.exports = class App extends EventEmitter {
 
     // Bind events
     collector.on('error', this._handle_collector_error.bind(this, collector));
+    // Emits `${collector.model_name}.done` each time a collector finishes a run.
     collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
 
     // Add event handling for collector
@@ -230,7 +234,7 @@ module.exports = class App extends EventEmitter {
    *
    * @param {LoopService} service
    *
-   * @memberOf App
+   * @memberof App
    */
   _handle_load_loop_service(service) {
     service.on('error', this._handle_service_error.bind(this, service));

@@ -6,7 +6,7 @@ module.exports = class EventComplete extends Event {
    * @param {Event} event_object - the event object that is being completed
    * @param {any} data
    *
-   * @memberOf Event
+   * @memberof Event
    */
   constructor(event_object, data) {
     super();

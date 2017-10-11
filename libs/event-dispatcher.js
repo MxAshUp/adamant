@@ -26,7 +26,7 @@ module.exports = class EventDispatcher extends EventEmitter {
   *
   * @param {EventHandler} handler
   * @returns {number} id of event handler as reference
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
   load_event_handler(handler) {
     // Assign an instance id
@@ -47,7 +47,7 @@ module.exports = class EventDispatcher extends EventEmitter {
    *
    * @param {number} handler_id
    * @returns {mixed} removed handler object if success, false if no event handler with handler_id found
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   remove_event_handler(handler_id) {
     // Remove by id
@@ -65,7 +65,7 @@ module.exports = class EventDispatcher extends EventEmitter {
    * @param {number} handler_instance_id - id of event handler
    * @returns {EventHandler}
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   get_event_handler(handler_instance_id) {
     return _.find(this.event_handlers, { instance_id: handler_instance_id });
@@ -78,7 +78,7 @@ module.exports = class EventDispatcher extends EventEmitter {
   * @param {handler_id} (Optional) - specify a specific event handler to dispatch event
   * @return {Promise} - Promise resolves when all callbacks finish
   *
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
   dispatch_event(event_obj, handler_id) {
 
@@ -149,7 +149,7 @@ module.exports = class EventDispatcher extends EventEmitter {
   * @param {Event} event - event to revert
   * @param {handler_id} (Optional) - specify a specific event handler to dispatch event
   * @return {Promise} - Promise resolves when all callbacks finish
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
   revert_event(event_obj, handler_id) {
     // Lookup event handler by id
@@ -181,7 +181,7 @@ module.exports = class EventDispatcher extends EventEmitter {
   *
   * @param {Event} event_obj - event to enqueue
   *
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
   enqueue_event(event_name, event_data, constructor = Event) {
     const event_obj = new constructor(event_name, event_data);
@@ -198,7 +198,7 @@ module.exports = class EventDispatcher extends EventEmitter {
    *
    * @return {object} - Event name and event data {event: {String}, data: {any}}
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   shift_event() {
     return this.event_queue.shift();
@@ -208,7 +208,7 @@ module.exports = class EventDispatcher extends EventEmitter {
    * Shifts and dispatches all enqueued events
    *
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   run() {
     let promises = [];
@@ -227,7 +227,7 @@ module.exports = class EventDispatcher extends EventEmitter {
    *
    * @readonly
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   get event_queue_count() {
     return this.event_queue.length;

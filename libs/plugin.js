@@ -3,12 +3,23 @@ const semver = require('semver');
 const throwIfMissing = require('./utility').throwIfMissing;
 
 module.exports = class Plugin {
+
   /**
    * Creates an instance of Plugin.
    *
-   * @param {object} args
-   *
-   * @memberOf Plugin
+   * @param {String} name - Name of plugin.
+   * @param {Array} [components=] - Component constructors.
+   * @param {Array} [models=] - Mongoose model definitions.
+   * @param {boolean} [enabled=false] - Whether or not to enable plugin.
+   * @param {String} [version=] - Plugin version.
+   * @param {String} [description=] - Description of plugin. Usually the same as what's in package.json.
+   * @param {String} [author=] - Author of plugin. Usually the same as what's in package.json.
+   * @param {String} [license=] - License of plugin. Usually the same as what's in package.json.
+   * @param {Function} [load_routes=] - Function to register Express routes. @todo - remove as parameter
+   * @param {Function} [map_events=] - Function to map docker.io events. @todo - remove as parameter
+   * @param {Function} [on_load=] - Function to call when plugin loads. @todo - remove as parameter
+   * @param {Function} [on_unload=] - Function to call when plugin is unloaded. @todo - remove as parameter
+   * @param {Function} [load_models=] - Function to call when plugin loads models. @todo - remove as parameter
    */
   constructor({
       name = throwIfMissing`name`,
@@ -45,12 +56,11 @@ module.exports = class Plugin {
   }
 
   /**
-   * Allows extending model schema before model is loaded
+   * Modifies a model's schema. To make sure schema is extended, extend_schema must be called before Plugin.load_models (this is called in App.init).
    *
-   * @param {String} plugin_name
-   * @param {String} model_name
-   * @param {Object} schema
-   * @memberof PluginLoader
+   * @param {String} model_name - The name of the model to modify.
+   * @param {Object} extend_schema - Schema definition that will be added to existing schema. See [http://mongoosejs.com/docs/guide.html] for more info.
+   * @memberof Plugin
    */
   extend_schema(model_name, extend_schema) {
     const model_config = _.find(this.models, {name: model_name});
@@ -68,13 +78,13 @@ module.exports = class Plugin {
   }
 
   /**
-   * Abstract way to create a component from a plugin
+   * Looks for a component in the plugins Components, creates and instance, and returns it.
    *
-   * @param {String} class_name Name of class of componenet to look for and construct
-   * @param {any} params Passed to constructor of component
-   * @returns
-   *
-   * @memberOf Plugin
+   * @param {String} name - Name of the component's class.
+   * @param {String} version - The semver requirement. If plugin's version doesn't satisfy version, then an error will be thrown calling this function.
+   * @param {any} parameters - Passed as arguments to the component constructor. See component constructor for reference.
+   * @returns {Component} - The Component created.
+   * @memberof Plugin
    */
   create_component({
     name = throwIfMissing`name`,
@@ -99,9 +109,10 @@ module.exports = class Plugin {
   }
 
   /**
-   * Loops through plugins and loads models
+   * Loops through models and creates them in mongoose.
    *
-   * @memberof PluginLoader
+   * @param {mongoose} mongoose - The mongoose instance to use.
+   * @memberof Plugin
    */
   load_models(mongoose) {
     // Look at each model

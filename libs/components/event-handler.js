@@ -4,13 +4,13 @@ const throwIfMissing = require('../utility').throwIfMissing;
 module.exports = class EventHandler extends Component {
   /**
    * Creates an instance of EventHandler.
-   * @param {Object} [{
-   *     event_name = '',
-   *     should_handle = null,
-   *     defer_dispatch = null, // {event_name = '', check_function = ()}
-   *     enqueue_complete_event = false,
-   *     transform_function = null,
-   *   }]
+   *
+   * @param {Object} args - Arguments object
+   * @param {String} args.event_name - Event name the EventHandler will listen for.
+   * @param {Function} [args.should_handle=] - Function to call to check if dispatch should be handled.
+   * @param {Object} [args.defer_dispatch=] - {event_name = '', check_function = ()}
+   * @param {boolean} [args.enqueue_complete_event=false] - Allows EventComplete to be enqueued after EventHandler dispatches this event.
+   * @param {Function} [args.transform_function=null] - The function to be called after dispatch to translate data before passing it on.
    * @memberof EventHandler
    */
   constructor(args = {}) {
@@ -47,7 +47,7 @@ module.exports = class EventHandler extends Component {
   *
   * @param {any} data
   *
-  * @memberOf EventHandler
+  * @memberof EventHandler
   */
   dispatch(data) {
     return data;
@@ -58,7 +58,7 @@ module.exports = class EventHandler extends Component {
   *
   * @param {any} data - Data returned from dispatch event
   *
-  * @memberOf EventHandler
+  * @memberof EventHandler
   */
   revert(data) {
     //If revert not supported, throw error if called

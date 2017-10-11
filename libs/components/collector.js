@@ -7,14 +7,18 @@ const util = require('util');
 const throwIfMissing = require('../utility').throwIfMissing;
 let mongoose = require('mongoose'); // This is not const, because it needs to be rewired during testing
 
+/**
+ *
+ *
+ * @class Collector
+ * @extends {Component}
+ */
 module.exports = class Collector extends Component {
   /**
    * Creates an instance of Collector.
    *
-   * @param {object} config - An object of properties to initialize this class with
-   * @param {object} args - An object of run args
-   *
-   * @memberOf Collector
+   * @param {String} model_name - The name of the model to use for inserting data.
+   * @memberof Collector
    */
   constructor(args = {}) {
 
@@ -39,7 +43,7 @@ module.exports = class Collector extends Component {
    * Should be O(1)
    * @return {Promise}
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   initialize() {
     return;
@@ -50,7 +54,7 @@ module.exports = class Collector extends Component {
    * Should be O(n)
    * @return {Promise}
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   prepare() {
     return;
@@ -61,7 +65,7 @@ module.exports = class Collector extends Component {
    * @param  {object} prepared_data
    * @return {Promise}
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   collect(prepared_data) {
     for (let i in prepared_data) {
@@ -75,7 +79,7 @@ module.exports = class Collector extends Component {
    * @param  {object} prepared_data
    * @return {Promise}
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   garbage(prepared_data) {
     return;
@@ -83,9 +87,11 @@ module.exports = class Collector extends Component {
 
   /**
    * Run through the collector functions (initialize, prepare, collect, garbage)
+   * When finished, will emit `done` event. If failed, `done` will be emitted with no parameters. Otherwise it will be emitted with details.
+   *
    * @return {Promise} Resolves when single run done, rejects when max retries reached from failure
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   run() {
 
@@ -242,7 +248,7 @@ module.exports = class Collector extends Component {
    * @param  {object} data_row
    * @return {Promise} Promise resolves when success or rejects when error
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   _insert_data(data_row) {
 
@@ -285,7 +291,7 @@ module.exports = class Collector extends Component {
    *
    * @param {any} err
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   _handle_collect_error(err) {
     if (err instanceof CollectorDatabaseError) {
@@ -301,7 +307,7 @@ module.exports = class Collector extends Component {
    * @param  {object} lookup - Mongoose Lookup
    * @return {Promise}
    *
-   * @memberOf Collector
+   * @memberof Collector
    */
   _remove_data(lookup) {
     // Find doc by lookup and remove it

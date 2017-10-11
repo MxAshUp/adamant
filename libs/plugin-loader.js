@@ -7,10 +7,9 @@ const core_module_info = require(`${__dirname}/../package.json`);
 module.exports = class PluginLoader {
   /**
    * Creates a new PluginLoader object.
-   * A PluginLoader loads plugin files into memory, and provide factory for creating instances of plugin components.
+   * A PluginLoader registers plugin information and provides an interface for accessing plugins.
    *
-   *
-   * @memberOf PluginLoader
+   * @memberof PluginLoader
    */
   constructor() {
     this.plugins = [];
@@ -19,9 +18,10 @@ module.exports = class PluginLoader {
   /**
    * Loads a plugin into memeory.
    *
-   * @param {String} path - Path to plugin directory to be loaded
-   * @param {Object} config - Configuration to pass to plugin on load
-   *
+   * @param {String} module_name - Module name or path to plugin to be loaded.
+   * @param {Object} config - Configuration to pass to plugin on_load.
+   * @returns {Plugin} - The plugin instance loaded.
+   * @memberof PluginLoader
    */
   load_plugin(module_name, config) {
 
@@ -92,11 +92,11 @@ module.exports = class PluginLoader {
   }
 
   /**
-   * Looks up plugin by plugin name, returns plugin instance
+   * Looks up plugin by plugin name. Throws error if not found.
    *
    * @param {String} plugin_name - Name of plugin, same name in package.json file
    * @param {boolean} [exclude_disabled=true] - If true, disabled plugins will not be searched through
-   * @returns
+   * @returns {Plugin} - The plugin found
    * @memberof PluginLoader
    */
   get_plugin_by_name(plugin_name, exclude_disabled = true) {
@@ -115,8 +115,9 @@ module.exports = class PluginLoader {
   }
 
   /**
-   * Loops through plugins and loads models
+   * Loops through plugins and calls loads_models
    *
+   * @param {mongoose} mongoose - The mongoose instance to use
    * @memberof PluginLoader
    */
   load_plugin_models(mongoose) {
@@ -127,6 +128,7 @@ module.exports = class PluginLoader {
   /**
    * Loops through plugins and intializes express routes
    *
+   * @param {express} express - The Express server to use
    * @memberof PluginLoader
    */
   load_plugin_routes(express) {
@@ -137,6 +139,7 @@ module.exports = class PluginLoader {
   /**
    * Loops through plugins and intializes sockets io events
    *
+   * @param {socket} socket - the socket.io object to use
    * @memberof PluginLoader
    */
   load_plugin_sockets(socket) {
@@ -145,13 +148,12 @@ module.exports = class PluginLoader {
   }
 
   /**
-   * Returns package.json contents for local module
+   * Returns parsed package.json contents
    *
    * @static
-   * @param {String} module_name
-   * @returns {Object} - Contents of package file
-   *
-   * @memberOf PluginLoader
+   * @param {String} module_name - the name or path of the module
+   * @returns {Object} - Contents of package file.
+   * @memberof PluginLoader
    */
   static get_module_info(module_name) {
 
