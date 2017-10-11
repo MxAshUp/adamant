@@ -8,6 +8,11 @@ const utility = require('../libs/utility');
 /**
  * Handles enqueing of events, loading of event handlers, and dispatching events to handlers
  *
+ * @event EventDispatcher#dispatch - When success dispatch
+ * @event EventDispatcher#error - When error on dispatch or revert
+ * @event EventDispatcher#revert - When success on revert
+ * @event EventDispatcher#[model_name].complete - Collector of model_name is finished
+ *
  * @class EventDispatcher
  * @extends {EventEmitter}
  */
@@ -43,7 +48,7 @@ module.exports = class EventDispatcher extends EventEmitter {
   }
 
   /**
-   * Removes an event handler from memeory
+   * Removes an event handler from memory
    *
    * @param {number} handler_id
    * @returns {mixed} removed handler object if success, false if no event handler with handler_id found
