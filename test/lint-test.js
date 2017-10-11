@@ -6,7 +6,8 @@ const path = require('path');
 
 // Config
 const paths_to_search = ['libs'];
-const skip_files = ['libs/app.js']; // example: libs/index.js
+const skip_files = []; // example: libs/index.js
+const pending_files = ['libs/app.js']
 const blacklist_globals = ['console'];
 
 // Generate globs and find files
@@ -15,21 +16,22 @@ let glob_pattern = glob_paths.join(',');
 if(paths_to_search.length > 1) {
   glob_pattern = `{${glob_pattern}}`;
 }
+
 const files = glob.sync(glob_pattern);
 const files_to_test = files.filter(file => {
   return (skip_files.indexOf(path.relative(`${__dirname}/..`, file)) === -1)
 });
 
 describe('Linting source file', () => {
-  it('Should have some files to test', () => {
-    if(files_to_test.length <= 0) {
-      throw new Error('No files found to lint.');
-    }
-  });
   files_to_test.forEach(source_file => {
     // Get relative file name being parsed
     const print_file = path.relative(`${__dirname}/..`, source_file);
     describe(`${print_file}`, () => {
+      if((pending_files.indexOf(print_file) !== -1)) {
+        it('Pending tests.');
+        return;
+      }
+
       let scope;
       const file_content = fs.readFileSync(source_file, 'utf8');
       it(`Should be valid JavaScript`, () => {
