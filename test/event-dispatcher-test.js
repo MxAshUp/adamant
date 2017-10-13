@@ -511,6 +511,7 @@ describe('Event System', () => {
 
           describe('defer_dispatch = ...', () => {
             const test_defer_event_name = `test_defer.${Math.random()}`;
+            const emit_mock_data = Math.random();
             beforeEach(() => {
               which_handlers.forEach(which_handler => {
                 which_handler.defer_dispatch = {
@@ -533,14 +534,14 @@ describe('Event System', () => {
                 })
                 .then(() => {
                   // Triggering this event will allow defer_dispatch.check_function to be checked
-                  dispatcher.emit(test_defer_event_name, mock_event.data);
+                  dispatcher.emit(test_defer_event_name, emit_mock_data);
                   return immmediatePromise();
                 })
                 .then(() => {
                   // Should now be dispatched
                   which_handlers.forEach(which_handler => {
                     sinon.assert.calledWith(which_handler.dispatch, mock_event.data);
-                    sinon.assert.calledWith(which_handler.defer_dispatch.check_function, mock_event.data);
+                    sinon.assert.calledWith(which_handler.defer_dispatch.check_function, mock_event.data, emit_mock_data);
                   });
 
                   return promise;
@@ -572,7 +573,7 @@ describe('Event System', () => {
                   sinon.assert.calledWith(which_handlers[2].dispatch, mock_event.data);
                   // But all check_functions should have been called
                   which_handlers.forEach(handler => {
-                    sinon.assert.calledWith(handler.defer_dispatch.check_function, emit_mock_data);
+                    sinon.assert.calledWith(handler.defer_dispatch.check_function, mock_event.data, emit_mock_data);
                   });
                   return immmediatePromise();
                 })
@@ -586,7 +587,7 @@ describe('Event System', () => {
                   // Now all should now be dispatched
                   which_handlers.forEach(handler => {
                     sinon.assert.calledWith(handler.dispatch, mock_event.data);
-                    sinon.assert.calledWith(handler.defer_dispatch.check_function, emit_mock_data);
+                    sinon.assert.calledWith(handler.defer_dispatch.check_function, mock_event.data, emit_mock_data);
                   });
 
                   return promise;
@@ -628,7 +629,7 @@ describe('Event System', () => {
                   expect(error_thrown.event).to.equal(mock_event);
                   dont_throw_handlers.forEach(which_handler => {
                     sinon.assert.calledWith(which_handler.dispatch, mock_event.data);
-                    sinon.assert.calledWith(which_handler.defer_dispatch.check_function, mock_emit_data);
+                    sinon.assert.calledWith(which_handler.defer_dispatch.check_function, mock_event.data, mock_emit_data);
                   });
                 });
             });
