@@ -35,7 +35,7 @@ module.exports = class EventHandler extends Component {
       should_handle: should_handle,
       defer_dispatch: defer_dispatch,
       enqueue_complete_event: enqueue_complete_event,
-      transform_function: transform_function,
+      transform_function: transform_function ? transform_function.bind(this) : null,
     };
 
     // Merge config and assign properties to this
