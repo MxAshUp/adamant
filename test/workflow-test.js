@@ -39,7 +39,6 @@ describe('Workflow EventHandler', () => {
         should_handle: Math.random(),
         defer_dispatch: Math.random(),
         enqueue_complete_event: Math.random(),
-        transform_function: Math.random(),
       };
       const instance = new Workflow(construct_args);
       expect(instance).to.deep.include(construct_args);
