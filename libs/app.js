@@ -42,7 +42,11 @@ module.exports = class App extends EventEmitter {
     this.event_dispatcher_service = this.load_component({
       name: 'LoopService',
       parameters: {
-        run_callback: this.event_dispatcher.run.bind(this.event_dispatcher),
+        run_callback: () => {
+          // We are intentionally not returning the promise from event_dispatcher.run, because it will not finish until even the deferred events are finished
+          // @todo - figure out better way around this.
+          this.event_dispatcher.run()
+        },
         name: 'Event dispatcher service',
       }
     });
