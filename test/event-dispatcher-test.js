@@ -101,10 +101,19 @@ describe('Event System', () => {
         expect(instance.enqueue_complete_event).to.equal(mock_enqueue_complete_event);
       });
 
-      it('Should set transform_function to mock value', () => {
+      it('Should set transform_function', () => {
         mock_transform_function = sinon.stub().returns();
         const instance = new EventHandler({event_name: mock_event_name, transform_function: mock_transform_function});
-        expect(instance.transform_function).to.equal(mock_transform_function);
+        const mock_data = Math.random();
+        instance.transform_function(mock_data);
+        sinon.assert.calledWith(mock_transform_function, mock_data);
+      });
+
+      it('Should set transform_function and bind to eventHandler', () => {
+        mock_transform_function = sinon.stub().returns();
+        const instance = new EventHandler({event_name: mock_event_name, transform_function: mock_transform_function});
+        instance.transform_function();
+        sinon.assert.calledOn(mock_transform_function, instance);
       });
 
     });
