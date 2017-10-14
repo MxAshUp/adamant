@@ -1,7 +1,7 @@
 {
   "name": "local-mp-core",
   "description": "Core code for Metrics Platform",
-  "version": "0.3.0-rc.6",
+  "version": "0.3.0-rc.7",
   "author": {
     "name": "Pro Q",
     "email": "development@proqsolutions.com",
