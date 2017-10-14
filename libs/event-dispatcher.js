@@ -77,7 +77,7 @@ module.exports = class EventDispatcher extends EventEmitter {
   }
 
   /**
-  * Runs all callbacks for event asynchronously
+  * Finds registered event handlers matching event_obj.name and calls dispatch for each.
   *
   * @param {Event} event - event to dispatch
   * @param {handler_id} (Optional) - specify a specific event handler to dispatch event
@@ -145,7 +145,7 @@ module.exports = class EventDispatcher extends EventEmitter {
     }
 
     // Create promise return
-    return;// Promise.all(ret_promises);
+    return Promise.all(ret_promises);
   }
 
   /**
