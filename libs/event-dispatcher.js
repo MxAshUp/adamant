@@ -145,7 +145,7 @@ module.exports = class EventDispatcher extends EventEmitter {
     }
 
     // Create promise return
-    return Promise.all(ret_promises);
+    return;// Promise.all(ret_promises);
   }
 
   /**
