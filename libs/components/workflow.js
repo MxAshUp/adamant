@@ -110,7 +110,11 @@ module.exports = class Workflow extends EventHandler {
     return Promise.resolve()
       .then(() => original_transform_function(data))
       .then((new_data) => {
-        this.emit('enqueue_event', event_name, new_data);
+        // Only enqueue next event if data was passed.
+        // If no data was passed, it's break
+        if(!!new_data) {
+          this.emit('enqueue_event', event_name, new_data);
+        }
         return new_data;
       });
   }

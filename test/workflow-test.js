@@ -141,6 +141,24 @@ describe('Workflow EventHandler', () => {
         expect(returned_value).to.equal(workflowInstance);
       });
 
+      describe('When transform function returns falsey', () => {
+        const handler_spy = sinon.spy();
+        const original_mock_data = Math.random();
+        let mock_return;
+        beforeEach(() => {
+          workflowInstance.addListener('enqueue_event', handler_spy);
+          // Set second step to return nothing
+          mock_event_step_transform_function[1].returns();
+          mock_return = mock_event_steps[1].transform_function(original_mock_data);
+        });
+
+        it('Should not enqueue next event', () => {
+          return mock_return.then(() => {
+            sinon.assert.notCalled(handler_spy);
+          });
+        });
+      });
+
       describe('Calling wrapped transform_function', () => {
 
         for(let step_number of mock_event_steps.keys()) {
