@@ -1,13 +1,10 @@
-
-
-class Event {
-
+module.exports = class Event {
   /**
    * Creates an instance of Event.
    * @param {String} event_name
    * @param {any} data
    *
-   * @memberOf Event
+   * @memberof Event
    */
   constructor(event_name, data) {
     this.event_name = event_name;
@@ -16,7 +13,4 @@ class Event {
     this.queue_id;
     this.revert_data;
   }
-
 }
-
-module.exports = Event;

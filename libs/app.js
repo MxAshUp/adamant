@@ -1,156 +1,236 @@
-const PluginLoader = require('./plugin-loader'),
-  mongoose_util = require('./mongoose-utilities'),
-  _ = require('lodash'),
-  LoopService = require('./loop-service'),
-  EventDispatcher = require('./event-dispatcher'),
-  EventHandler = require('./event-handler'),
-  Event = require('./event'),
-  chalk = require('chalk'),
-  express = require('express')(),
-  server = require('http').createServer(express),
-  io = require('socket.io')(server);
+const PluginLoader = require('./plugin-loader');
+const _ = require('lodash');
+const get_component_inheritance = require('./utility').get_component_inheritance;
+const EventDispatcher = require('./event-dispatcher');
+const Event = require('./event');
+const EventEmitter = require('events');
+const http = require('http');
+const socketio = require('socket.io');
+const express = require('express');
+const throwIfMissing = require('./utility').throwIfMissing;
+let mongoose = require('mongoose'); // This is not const, because it needs to be rewired during testing
 
 /**
- * A singleton class
+ * App class for connecting everything together
  *
  * @class App
  */
-class App {
-  constructor(config) {
-    this._config = config;
+module.exports = class App extends EventEmitter {
+  /**
+   * Creates an instance of App.
+   * @param {String} mongodb_url - The mongo connection url.
+   * @param {String} web_port - The port to use for Express.
+   */
+  constructor(config = {}) {
+    super();
+    // Establish some defaults
     this.plugin_loader = new PluginLoader();
+    this.plugin_loader.load_plugin('mp-core');
     this.collect_services = [];
+    this.components = [];
+
+    // Load some some config from environment variables
+    // @todo - abstract this feature out, eg config_from_env
+    // Override config from parameters
+    this.config = Object.assign({}, {
+      mongodb_url: process.env.MP_MONGODB_URL ? process.env.MP_MONGODB_URL : '',
+      web_port: process.env.MP_WEB_PORT ? process.env.MP_WEB_PORT: '',
+    }, config);
+
+    // Set up event dispatcher loop service
     this.event_dispatcher = new EventDispatcher();
-    this.event_dispatcher_service = new LoopService(
-      this.event_dispatcher.run.bind(this.event_dispatcher)
-    );
-    this.event_dispatcher_service.name = 'Event dispatcher';
+    this.event_dispatcher_service = this.load_component({
+      name: 'LoopService',
+      parameters: {
+        run_callback: () => {
+          // We are intentionally not returning the promise from event_dispatcher.run, because it will not finish until even the deferred events are finished
+          // @todo - figure out better way around this.
+          this.event_dispatcher.run()
+        },
+        name: 'Event dispatcher service',
+      }
+    });
     this.event_dispatcher.on('error', console.log);
-    this.bind_service_events(this.event_dispatcher_service);
-    this.express = express;
-    this.server = server;
-    this.io = io;
-    this.load_routes(this.express);
-    this.bind_socketio_events(this.io);
+    this.express_app = express();
+    this.server = http.createServer(this.express_app);
+    this.io = socketio(this.server);
+
+    // Set component hooks
+    this.on('Collector.load', this._handle_load_collector);
+    this.on('EventHandler.load', this._handle_load_event_handler);
+    this.on('Component.load', this._handle_load_component);
+    this.on('LoopService.load', this._handle_load_loop_service);
   }
 
+  /**
+   * Loads mongo models, express routes, and sockets.
+   *
+   * @returns {Promise}
+   * @memberof App
+   */
   init() {
-    return mongoose_util.mongoose.connect(this._config.mongodb.uri);
+    return Promise.resolve()
+    .then(this._load_database.bind(this))
+    .then(this._load_routes.bind(this))
+    .then(this._load_sockets.bind(this));
   }
 
-  load_routes(express) {
-    express.get('/', (req, res) => {
-      res.send('Metric platform!');
-    });
-    express.get('/login', (req, res) => {
-      res.send('Login!');
-    });
+  /**
+   * Conencts to mongodb, loads mongoose, and loads plugin models
+   *
+   * @memberof App
+   */
+  _load_database() {
+    return Promise.resolve()
+    .then(mongoose.connect.bind(mongoose, this.config.mongodb_url))
+    .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose));
   }
 
-  bind_socketio_events(io) {
-    io.on('connection', socket => {
-      socket.on('event', data => {
-        console.log('Socket.io client event!', data);
-      });
-      socket.on('disconnect', () => {
-        console.log('Socket.io client disconnect!');
-      });
-    });
+  /**
+   * Loads express endpoints for app and plugins
+   *
+   * @memberof App
+   */
+  _load_routes() {
+    this.plugin_loader.load_plugin_routes(this.express_app);
+  }
+
+  /**
+   * Binds socket events for app and plugins
+   *
+   * @memberof App
+   */
+  _load_sockets() {
+    this.io.on('connection', this.plugin_loader.load_plugin_sockets.bind(this.plugin_loader));
   }
 
   /**
    * Loads plugins
    *
-   *
-   * @memberOf App
+   * @param {Array} plugin_dirs - Array of plugin or module names to be loaded
+   * @memberof App
    */
   load_plugins(plugin_dirs) {
     _.forEach(plugin_dirs, plugin_path => {
-      this.plugin_loader.load_plugin(plugin_path, this._config);
+      this.plugin_loader.load_plugin(plugin_path, this.config);
     });
   }
 
-  load_plugin_event_handlers() {
-    // Look at each plugin
-    _.each(this.plugin_loader.plugins, plugin => {
-      // Look at each event handler
-      _.each(plugin.event_handlers, event_handler => {
-        let handler = new EventHandler(event_handler);
-        this.event_dispatcher.load_event_handler(handler);
-      });
-    });
-  }
 
-  load_plugin_routes() {
-    // Look at each plugin
-    _.each(this.plugin_loader.plugins, plugin => {
-      // Load plugin routes (if any)
-      plugin.load_routes(this.express);
-    });
-  }
+  /**
+   * Creates a component instance by calling Plugin.create_component.
+   * When component is created, App will emit event named `${constructor_name}.load` for every inheritance of the Component. For example, creating an EventHandler will emit `Component.load` then `EventHandler.load`.
+   *
+   * @param {String} name - The name of the component (class name), including the plugin namespace. Example: 'mp-core/EventHandler'. If no plugin name is specified, mp-core is assumed.
+   * @param {String} version - Semver format of the version required. Plugin.create_component will throw error if version requirements not met.
+   * @param {Object} parameters - These are the parameters passed to the constructor of the component
+   * @returns {Component} - The component created
+   * @memberof App
+   */
+  load_component({
+    name = throwIfMissing`name`,
+    version = '',
+    parameters = {},
+  } = {}) {
 
-  map_plugin_events() {
-    // Look at each plugin
-    _.each(this.plugin_loader.plugins, plugin => {
-      // Load plugin routes (if any)
-      plugin.map_events(this);
+    let plugin_name = 'mp-core';
+
+    // This allows config to specify plugin and component name in single argument.
+    if(name.indexOf('/') !== -1) {
+      // Split name up by /
+      const parsed_component_name = name.split('/');
+
+      // Plugin name is the first element
+      plugin_name = parsed_component_name.shift();
+
+      // Component name is the last element
+      name = parsed_component_name.pop();
+    }
+
+    // Find the plugin
+    const plugin = this.plugin_loader.get_plugin_by_name(plugin_name);
+
+    // Create the component
+    const component = plugin.create_component({
+      name,
+      version,
+      parameters,
     });
+
+    // Find out what kind of component this is
+    const component_constructors = get_component_inheritance(component).map(c => c.name);
+
+    // Apply component hooks to created component
+    // These hooks are added with add_component_hook
+    component_constructors.forEach(constructor_name => {
+      this.emit(`${constructor_name}.load`, component, parameters);
+    });
+
+    return component;
   }
 
   /**
-   * Loads a collector from config, creates a service
+   * Loads a collector instance into the app
    *
-   *
-   * @memberOf App
+   * @param {Collector} collector - The instance loaded
+   * @param {Object} parameters - Parameters used for loading
+   * @memberof App
    */
-  load_collector(config) {
-    const collector = this.plugin_loader.create_collector(config);
-    const service = new LoopService(collector.run.bind(collector));
+  _handle_load_collector(collector, parameters) {
 
-    if (config.service_retry_max_attempts)
-      service.retry_max_attempts = config.service_retry_max_attempts;
+    const service_config = {};
+    service_config.run_callback = collector.run.bind(collector);
+    service_config.name = `${collector.model_name} collector`;
 
-    if (config.service_retry_time_between)
-      service.retry_time_between = config.service_retry_time_between;
+    if (parameters.service_retry_max_attempts)
+      service_config.retry_max_attempts = parameters.service_retry_max_attempts;
 
-    service.name = `${collector.model_name} collector`;
-    this.bind_service_events(service);
-    this.bind_model_events(collector);
+    if (parameters.service_retry_time_between)
+      service_config.retry_time_between = parameters.service_retry_time_between;
+
+    if (parameters.service_run_min_time_between)
+      service_config.run_min_time_between = parameters.service_run_min_time_between;
+
+    const service = this.load_component({
+      name: 'LoopService',
+      parameters: service_config
+    });
+
+    // Bind events
+    collector.on('error', this._handle_collector_error.bind(this, collector));
+    // Emits `${collector.model_name}.done` each time a collector finishes a run.
+    collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
+
+    // Add event handling for collector
+    _.each(['create', 'update', 'remove'], event => {
+      collector.on(event, this._handle_collector_event.bind(this, collector, event));
+    });
+
     this.collect_services.push(service);
   }
 
   /**
-   * Loads an event handler instance into event dispatcher
+   * Loads a event handler instance into the app
    *
-   * @param {object} config
-   *
-   * @memberOf App
+   * @param {EventHandler} event_handler - The instance loaded
+   * @param {Object} parameters - Parameters used for loading
+   * @memberof App
    */
-  load_event_handler(config) {
-    const handler = this.plugin_loader.create_event_handler(config);
-    this.event_dispatcher.load_event_handler(handler);
+  _handle_load_event_handler(event_handler, parameters) {
+    // Add event handler to event dispatcher
+    this.event_dispatcher.load_event_handler(event_handler);
   }
 
   /**
-   * Binds model data events in colelctor to event dispatcher queue
+   * Handles loading a component instance into the app
    *
-   *  @param {Collector} collector
-   *
-   * @memberOf App
+   * @param {Component} component - The instance loaded
+   * @param {Object} parameters - Parameters used for loading
+   * @memberof App
    */
-  bind_model_events(collector) {
-    //Add event handling
-    _.each(['create', 'update', 'remove'], event => {
-      collector.on(event, data => {
-        this.event_dispatcher.enqueue_event(
-          new Event(`${collector.model_name}.${event}`, data)
-        );
-      });
-    });
-
-    collector.on('error', err => {
-      console.log(`${chalk.red('error')}: ${chalk.grey(err.stack)}`);
-    });
+  _handle_load_component(component, parameters) {
+    // Add component to internal array
+    this.components.push(component);
   }
 
   /**
@@ -158,30 +238,61 @@ class App {
    *
    * @param {LoopService} service
    *
-   * @memberOf App
+   * @memberof App
    */
-  bind_service_events(service) {
-    service.on('error', e => {
-      console.log(`${chalk.bgCyan(service.name)} service ${chalk.red('error')}: ${chalk.grey(e.stack)}`);
-      if (e.culprit) {
-        console.log(`${chalk.red('error details')}: ${chalk.grey(e.culprit)}`);
-      }
-    });
-    service.on('started', () =>
-      console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('started')}.`)
-    );
-    service.on('stopped', () =>
-      console.log(`${chalk.bgCyan(service.name)} service ${chalk.bold('stopped')}.`)
-    );
+  _handle_load_loop_service(service) {
+    service.on('error', this._handle_service_error.bind(this, service));
+    service.on('start', this.debug_message.bind(this, `${service.name} service`, 'started'));
+    service.on('stop', this.debug_message.bind(this, `${service.name} service`, 'stopped'));
   }
 
+  _handle_collector_event(collector, event_name, data) {
+    this.event_dispatcher.enqueue_event(`${collector.model_name}.${event_name}`, data);
+  }
+
+  _handle_collector_error(collector, error) {
+    this.debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
+  }
+
+  _handle_service_error(service, error) {
+    this.debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
+  }
+
+  debug_message(name, message, details) {
+    console.log(`[${name}] ${message}`);
+    if (details) {
+      console.log(`More Details: ${details}`);
+    }
+  }
+
+  /**
+   * Starts loop services and event dispatcher.
+   *
+   * @memberof App
+   */
   run() {
-    this.event_dispatcher_service.start().catch(console.log);
+
+    // graceful shutdown
+    process.on('SIGTERM', this.stop.bind(this));
+
+    this.event_dispatcher_service.start();
+    _.each(this.collect_services, service => service.start());
+    this.server.listen(this.config.web_port);
+  }
+
+  stop() {
+    // halt web server
+    this.server.close();
+
+    // stop collector services
     _.each(this.collect_services, service =>
-      service.start().catch(console.log)
+      service.stop()
     );
-    this.server.listen(this._config.web.port);
+
+    // stop event dispatcher service
+    this.event_dispatcher_service.stop();
+
+    // terminate app process
+    process.exit(0);
   }
 }
-
-module.exports = App;

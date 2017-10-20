@@ -1,15 +1,22 @@
-const _ = require('lodash'),
-  EventHandleError = require('../libs/errors').EventHandleError,
-	EventEmitter = require('events');
+const _ = require('lodash');
+const EventHandleError = require('../libs/errors').EventHandleError;
+const EventEmitter = require('events');
+const Event = require('./event');
+const EventComplete = require('./event-complete');
+const utility = require('../libs/utility');
 
 /**
  * Handles enqueing of events, loading of event handlers, and dispatching events to handlers
  *
+ * @event EventDispatcher#dispatch - When success dispatch
+ * @event EventDispatcher#error - When error on dispatch or revert
+ * @event EventDispatcher#revert - When success on revert
+ * @event EventDispatcher#[model_name].complete - Collector of model_name is finished
+ *
  * @class EventDispatcher
  * @extends {EventEmitter}
  */
-class EventDispatcher extends EventEmitter {
-
+module.exports = class EventDispatcher extends EventEmitter {
   constructor() {
     super();
     this.event_handlers = [];
@@ -24,7 +31,7 @@ class EventDispatcher extends EventEmitter {
   *
   * @param {EventHandler} handler
   * @returns {number} id of event handler as reference
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
   load_event_handler(handler) {
     // Assign an instance id
@@ -41,15 +48,15 @@ class EventDispatcher extends EventEmitter {
   }
 
   /**
-   * Removes an event handler from memeory
+   * Removes an event handler from memory
    *
    * @param {number} handler_id
    * @returns {mixed} removed handler object if success, false if no event handler with handler_id found
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   remove_event_handler(handler_id) {
     // Remove by id
-    const removed_handlers = _.remove(this.event_handlers, (handler) => {
+    const removed_handlers = _.remove(this.event_handlers, handler => {
       return handler.instance_id == handler_id;
     });
 
@@ -63,47 +70,78 @@ class EventDispatcher extends EventEmitter {
    * @param {number} handler_instance_id - id of event handler
    * @returns {EventHandler}
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   get_event_handler(handler_instance_id) {
     return _.find(this.event_handlers, { instance_id: handler_instance_id });
   }
 
   /**
-  * Runs all callbacks for event asynchronously
+  * Finds registered event handlers matching event_obj.name and calls dispatch for each.
   *
   * @param {Event} event - event to dispatch
   * @param {handler_id} (Optional) - specify a specific event handler to dispatch event
   * @return {Promise} - Promise resolves when all callbacks finish
   *
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
   dispatch_event(event_obj, handler_id) {
-    // Loop through handlers listening to event
-    // Trigger each callback
-    // @todo: Maybe emit errors
-    // @todo: Maybe emit event Enqueues
-    // @todo: Emit event to confirm event was handled (ie, for updating db)
 
     // Create handler search args
-    let search = {event_name: event_obj.event_name};
-    if(!_.isUndefined(handler_id)) {
+    const search = { event_name: event_obj.event_name };
+    if (!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
 
-    // Create array of return promises
-    let ret_promises = _.map(
-      _.filter(this.event_handlers, search),
-      handler => Promise.resolve().then(handler.dispatch.bind(handler, event_obj.data, event_obj.queue_id)).then(() => {
-        this.emit('dispatched', event_obj, handler);
-      }).catch((e) => {
-        this.emit('error', new EventHandleError(e, event_obj, handler));
-      })
+    // Filter event handlers
+    const filtered_event_handlers = _.filter(
+      _.filter(this.event_handlers, handler => !handler.should_handle || handler.should_handle(event_obj)),
+      search
     );
 
-    if(!ret_promises.length && this.error_on_unhandled_events) {
+    // Create array of return promises
+    const ret_promises = _.map(filtered_event_handlers, handler =>
+      Promise.resolve()
+        .then(() => {
+          if (handler.defer_dispatch) {
+            return utility.defer_on_event(
+              handler.defer_dispatch.event_name,
+              handler.defer_dispatch.check_function.bind(null, event_obj.data),
+              this
+            );
+          }
+        })
+        .then(handler.dispatch.bind(handler, event_obj.data))
+        .then(dispatchResult => {
+
+          // If the handler defines a transform_function, then use it to transform return data
+          if(typeof handler.transform_function === 'function') {
+            dispatchResult = handler.transform_function(dispatchResult)
+          }
+
+          return dispatchResult;
+        })
+        .then(dispatchResult => {
+          // enqueue EventComplete event w/ result data
+          // Only enqueue it if the handler instructs us to, and if the event object isn't already an EventComplete event
+          if(handler.enqueue_complete_event && !(event_obj instanceof EventComplete)) {
+            this.enqueue_event(event_obj, dispatchResult, EventComplete);
+          }
+
+          // Emit dispatched event
+          this.emit('dispatch', event_obj, handler);
+        })
+        .catch(e => {
+          this.emit('error', new EventHandleError(e, event_obj, handler));
+        })
+    );
+
+    if (!ret_promises.length && this.error_on_unhandled_events) {
       // No handlers for dispatched event
-      this.emit('error', new Error(`No handlers found for event ${event_obj.event_name}.`));
+      this.emit(
+        'error',
+        new Error(`No handlers found for event ${event_obj.event_name}.`)
+      );
     }
 
     // Create promise return
@@ -116,27 +154,29 @@ class EventDispatcher extends EventEmitter {
   * @param {Event} event - event to revert
   * @param {handler_id} (Optional) - specify a specific event handler to dispatch event
   * @return {Promise} - Promise resolves when all callbacks finish
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
   revert_event(event_obj, handler_id) {
     // Lookup event handler by id
     // Run revert with args
 
     // Create handler search args
-    let search = {event_name: event_obj.event_name};
-    if(!_.isUndefined(handler_id)) {
+    let search = { event_name: event_obj.event_name };
+    if (!_.isUndefined(handler_id)) {
       search.instance_id = handler_id;
     }
 
     // Create promise return
     return Promise.all(
-      _.map(
-        _.filter(this.event_handlers, search),
-        handler => Promise.resolve().then(handler.revert.bind(handler, event_obj.data)).then(() => {
-          this.emit('reverted', event_obj, handler);
-        }).catch((e) => {
-          this.emit('error', new EventHandleError(e, event_obj, handler));
-        })
+      _.map(_.filter(this.event_handlers, search), handler =>
+        Promise.resolve()
+          .then(handler.revert.bind(handler, event_obj.data))
+          .then(() => {
+            this.emit('reverted', event_obj, handler);
+          })
+          .catch(e => {
+            this.emit('error', new EventHandleError(e, event_obj, handler));
+          })
       )
     );
   }
@@ -144,19 +184,18 @@ class EventDispatcher extends EventEmitter {
   /**
   * Enqueues an event to be handled
   *
-  * @param {EVent} event_obj - event to enqueue
+  * @param {Event} event_obj - event to enqueue
   *
-  * @memberOf EventDispatcher
+  * @memberof EventDispatcher
   */
-  enqueue_event(event_obj) {
+  enqueue_event(event_name, event_data, constructor = Event) {
+    const event_obj = new constructor(event_name, event_data);
     // Create event id
     event_obj.queue_id = this.event_count++;
-
     // Add new event to queue
     this.event_queue.push(event_obj);
-
     // Return event id
-    return event_obj.queue_id;
+    return event_obj;
   }
 
   /**
@@ -164,7 +203,7 @@ class EventDispatcher extends EventEmitter {
    *
    * @return {object} - Event name and event data {event: {String}, data: {any}}
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   shift_event() {
     return this.event_queue.shift();
@@ -174,12 +213,12 @@ class EventDispatcher extends EventEmitter {
    * Shifts and dispatches all enqueued events
    *
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   run() {
     let promises = [];
 
-    while(this.event_queue_count > 0) {
+    while (this.event_queue_count > 0) {
       promises.push(this.dispatch_event(this.shift_event()));
     }
 
@@ -193,12 +232,9 @@ class EventDispatcher extends EventEmitter {
    *
    * @readonly
    *
-   * @memberOf EventDispatcher
+   * @memberof EventDispatcher
    */
   get event_queue_count() {
     return this.event_queue.length;
   }
-
 }
-
-module.exports = EventDispatcher;

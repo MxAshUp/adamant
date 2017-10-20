@@ -1,108 +1,166 @@
-var Plugin = require('./plugin'),
-  _ = require('lodash'),
-  path = require('path');
+const Plugin = require('./plugin');
+const _ = require('lodash');
+const semver = require('semver');
+const path = require('path');
+const core_module_info = require(`${__dirname}/../package.json`);
 
-
-class PluginLoader {
-
+module.exports = class PluginLoader {
   /**
    * Creates a new PluginLoader object.
-   * A PluginLoader loads plugin files into memory, and provide factory for creating instances of plugin components.
+   * A PluginLoader registers plugin information and provides an interface for accessing plugins.
    *
-   *
-   * @memberOf PluginLoader
+   * @memberof PluginLoader
    */
   constructor() {
     this.plugins = [];
   }
 
-
   /**
    * Loads a plugin into memeory.
    *
-   * @param {String} path - Path to plugin directory to be loaded
-   * @param {Object} config - Configuration to pass to plugin on load
-   *
+   * @param {String} module_name - Module name or path to plugin to be loaded.
+   * @param {Object} config - Configuration to pass to plugin on_load.
+   * @returns {Plugin} - The plugin instance loaded.
+   * @memberof PluginLoader
    */
-  load_plugin(module_name, _config) {
-    //Load in the plugin
-    let plugin_args = require(module_name);
+  load_plugin(module_name, config) {
 
-    //Could not load it, or it's not a valid plugin_args
-    if(typeof plugin_args !== 'object') throw new Error(`Error loading plugin: ${module_name} - Invalid index.js contents.`);
+    let require_path = module_name;
+
+    // Special path for mp-core components
+    if(module_name == 'mp-core' || module_name == 'local-mp-core') {
+      require_path = `./components`;
+    }
+
+    // Load in the plugin
+    let plugin_args = require(require_path);
+
+    // Could not load it, or it's not a valid plugin_args
+    if (typeof plugin_args !== 'object')
+      throw new Error(
+        `Error loading plugin: ${module_name} - Invalid index.js contents.`
+      );
 
     // Get some module info
-    let plugin_info = PluginLoader.get_module_info(module_name);
+    const plugin_info = PluginLoader.get_module_info(module_name);
 
     // Plugin name is now the same as module
     plugin_args.name = plugin_info.name;
     plugin_args.version = plugin_info.version;
 
     // These aren't required
-    plugin_args.description = plugin_info.description ? plugin_info.description : '';
-    plugin_args.author = plugin_info.author ? plugin_info.author : '';
-    plugin_args.license = plugin_info.license ? plugin_info.license : '';
+    plugin_args.description = plugin_info.description
+      ? plugin_info.description
+      : '';
+    plugin_args.author = plugin_info.author
+      ? plugin_info.author
+      : '';
+    plugin_args.license = plugin_info.license
+      ? plugin_info.license
+      : '';
 
-    //Initialize plugin
+    // Check if core satisfies plugin core dependency
+    this.check_core_dependency_requirement(plugin_info);
+
+    // Initialize plugin
     const plugin = new Plugin(plugin_args);
 
-    //If all went well loading it...
+    // If all went well loading it...
     plugin.enabled = true;
 
-    plugin.on_load(_config);
-    plugin.load_models();
+    plugin.on_load(config);
 
-    //Add plugin to array
+    // Add plugin to array
     this.plugins.push(plugin);
 
     return plugin;
   }
 
   /**
-   * After plugins are loaded into memeory, a collector service can be initialized.
+   * Throws error if plugin_info core dependency requirement is not met
    *
-   * @param {any} collector_config - Configuration used for initializing collector instance
-   * @returns {Collector}
+   * @param {Object} plugin_info - The plugin info provided by package.json
+   * @memberof PluginLoader
    */
-  create_collector(collector_config) {
-    return this.get_plugin_by_name(collector_config.plugin_name)
-      .create_component('collectors', collector_config.collector_name, collector_config.config, collector_config.version);
+  check_core_dependency_requirement(plugin_info) {
+    if(plugin_info.dependencies) {
+      const core_version_dependency = plugin_info.dependencies['local-mp-core'] || plugin_info.dependencies['mp-core'];
+      if(core_version_dependency && !semver.satisfies(core_module_info.version, core_version_dependency)) {
+        throw new Error(`Core version requirements (${core_version_dependency}) not met. Using core version ${core_module_info.version}.`);
+      }
+    }
   }
 
   /**
-   * Creates an event handler instance. First looks up plugin, then event handler class by name
+   * Looks up plugin by plugin name. Throws error if not found.
    *
-   * @param {object} handler_config
-   * @returns {EventHandler}
-   *
-   * @memberOf PluginLoader
+   * @param {String} plugin_name - Name of plugin, same name in package.json file
+   * @param {boolean} [exclude_disabled=true] - If true, disabled plugins will not be searched through
+   * @returns {Plugin} - The plugin found
+   * @memberof PluginLoader
    */
-  create_event_handler(handler_config) {
-    return this.get_plugin_by_name(handler_config.plugin_name)
-      .create_component('event_handlers', handler_config.handler_name, handler_config.config, handler_config.version);
-  }
-
   get_plugin_by_name(plugin_name, exclude_disabled = true) {
     // Find plugin
-    const find = {name: plugin_name};
-    if(exclude_disabled) {
+
+    // Set plugin name if core
+    if(plugin_name == 'mp-core') plugin_name = core_module_info.name;
+
+    const find = { name: plugin_name };
+    if (exclude_disabled) {
       find.enabled = true;
     }
     const plugin = _.find(this.plugins, find);
-    if(!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
+    if (!plugin) throw new Error(`Plugin not loaded: ${plugin_name}`);
     return plugin;
   }
 
   /**
-   * Returns package.json contents for local module
+   * Loops through plugins and calls loads_models
+   *
+   * @param {mongoose} mongoose - The mongoose instance to use
+   * @memberof PluginLoader
+   */
+  load_plugin_models(mongoose) {
+    // Look at each plugin
+    _.each(this.plugins, plugin => plugin.load_models(mongoose));
+  }
+
+  /**
+   * Loops through plugins and intializes express routes
+   *
+   * @param {express} express - The Express server to use
+   * @memberof PluginLoader
+   */
+  load_plugin_routes(express) {
+    // Look at each plugin
+    _.each(this.plugins, plugin => plugin.load_routes(express));
+  }
+
+  /**
+   * Loops through plugins and intializes sockets io events
+   *
+   * @param {socket} socket - the socket.io object to use
+   * @memberof PluginLoader
+   */
+  load_plugin_sockets(socket) {
+    // Look at each plugin
+    _.each(this.plugins, plugin => plugin.map_events(socket));
+  }
+
+  /**
+   * Returns parsed package.json contents
    *
    * @static
-   * @param {String} module_name
-   * @returns {Object} - Contents of package file
-   *
-   * @memberOf PluginLoader
+   * @param {String} module_name - the name or path of the module
+   * @returns {Object} - Contents of package file.
+   * @memberof PluginLoader
    */
   static get_module_info(module_name) {
+
+    // Get mp-core package.json
+    if(module_name == 'mp-core' || module_name == 'local-mp-core') {
+      return core_module_info;
+    }
 
     let module_path = require.resolve(module_name);
     module_path = path.dirname(module_path);
@@ -113,7 +171,4 @@ class PluginLoader {
 
     return pkg_contents;
   }
-
 }
-
-module.exports = PluginLoader;
