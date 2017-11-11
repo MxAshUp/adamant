@@ -434,14 +434,14 @@ describe('App', () => {
     it('Should call debug_message with collector name and error stack', () => {
       const mock_error = new Error(Math.random());
       app._handle_collector_error(collectorInstanceMock, mock_error);
-      sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.stack}`);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.message} ${mock_error.stack}`);
     });
 
     it('Should call debug_message with cuplrit as details', () => {
       const mock_error = new Error(Math.random());
       mock_error.culprit = new Error('Culprit error!');
       app._handle_collector_error(collectorInstanceMock, mock_error);
-      sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.stack}`, `${mock_error.culprit.stack}`);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} collector`, `error: ${mock_error.message} ${mock_error.stack}`, `${mock_error.culprit.stack}`);
     });
   });
 
@@ -464,14 +464,14 @@ describe('App', () => {
     it('Should call debug_message with collector name and error stack', () => {
       const mock_error = new Error(Math.random());
       app._handle_service_error(serviceInstanceMock, mock_error);
-      sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.stack}`);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.message} ${mock_error.stack}`);
     });
 
     it('Should call debug_message with cuplrit as details', () => {
       const mock_error = new Error(Math.random());
       mock_error.culprit = new Error('Culprit error!');
       app._handle_service_error(serviceInstanceMock, mock_error);
-      sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.stack}`, `${mock_error.culprit.stack}`);
+      sinon.assert.calledWith(app.debug_message, `${model_mock_name} service`, `error: ${mock_error.message} ${mock_error.stack}`, `${mock_error.culprit.stack}`);
     });
   });
 
