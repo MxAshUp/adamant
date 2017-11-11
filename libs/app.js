@@ -251,11 +251,11 @@ module.exports = class App extends EventEmitter {
   }
 
   _handle_collector_error(collector, error) {
-    this.debug_message(`${collector.model_name} collector`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
+    this.debug_message(`${collector.model_name} collector`, `error: ${error.message ? error.message : ''} ${error.stack ? error.stack : ''}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
   }
 
   _handle_service_error(service, error) {
-    this.debug_message(`${service.name} service`, `error: ${error.stack}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
+    this.debug_message(`${service.name} service`, `error: ${error.message ? error.message : ''} ${error.stack ? error.stack : ''}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
   }
 
   debug_message(name, message, details) {
