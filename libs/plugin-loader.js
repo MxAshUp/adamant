@@ -27,8 +27,8 @@ module.exports = class PluginLoader {
 
     let require_path = module_name;
 
-    // Special path for mp-core components
-    if(module_name == 'mp-core' || module_name == 'local-mp-core') {
+    // Special path for adamant components
+    if(module_name == 'adamant' || module_name == 'local-adamant') {
       require_path = `./components`;
     }
 
@@ -84,7 +84,7 @@ module.exports = class PluginLoader {
    */
   check_core_dependency_requirement(plugin_info) {
     if(plugin_info.dependencies) {
-      const core_version_dependency = plugin_info.dependencies['local-mp-core'] || plugin_info.dependencies['mp-core'];
+      const core_version_dependency = plugin_info.dependencies['local-adamant'] || plugin_info.dependencies['adamant'];
       if(core_version_dependency && !semver.satisfies(core_module_info.version, core_version_dependency)) {
         throw new Error(`Core version requirements (${core_version_dependency}) not met. Using core version ${core_module_info.version}.`);
       }
@@ -103,7 +103,7 @@ module.exports = class PluginLoader {
     // Find plugin
 
     // Set plugin name if core
-    if(plugin_name == 'mp-core') plugin_name = core_module_info.name;
+    if(plugin_name == 'adamant') plugin_name = core_module_info.name;
 
     const find = { name: plugin_name };
     if (exclude_disabled) {
@@ -157,8 +157,8 @@ module.exports = class PluginLoader {
    */
   static get_module_info(module_name) {
 
-    // Get mp-core package.json
-    if(module_name == 'mp-core' || module_name == 'local-mp-core') {
+    // Get adamant package.json
+    if(module_name == 'adamant' || module_name == 'local-adamant') {
       return core_module_info;
     }
 

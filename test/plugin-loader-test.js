@@ -46,7 +46,7 @@ describe('Plugin Loader', function() {
     author: 'Pro Q',
     license: 'ISC',
     dependencies: {
-      "mp-core": "^0.3.0-dev",
+      "adamant": "^0.3.0-dev",
     }
   };
 
@@ -56,7 +56,7 @@ describe('Plugin Loader', function() {
     main: 'index.js',
     license: 'ISC',
     dependencies: {
-      "mp-core": "^0.3.0-dev",
+      "adamant": "^0.3.0-dev",
     }
   };
 
@@ -66,7 +66,7 @@ describe('Plugin Loader', function() {
     main: 'index.js',
     license: 'ISC',
     dependencies: {
-      "mp-core": "^0.0.1", // Old version
+      "adamant": "^0.0.1", // Old version
     }
   };
 
@@ -103,7 +103,7 @@ describe('Plugin Loader', function() {
     it('Should throw an error due to plugin core dependency not being satisfied', () => {
       expect(() => {
         pl.load_plugin('plugin_bad_version');
-      }).to.throw(Error, `Core version requirements (${plugin_bad_version.dependencies['mp-core']}) not met. Using core version ${core_module_info.version}.`);
+      }).to.throw(Error, `Core version requirements (${plugin_bad_version.dependencies['adamant']}) not met. Using core version ${core_module_info.version}.`);
     });
 
     it('Should load plugin_a mock plugin', () => {
@@ -232,7 +232,7 @@ describe('Plugin Loader', function() {
 
     it('Should load core as a plugin', () => {
       const pl = new PluginLoader();
-      pl.load_plugin('mp-core');
+      pl.load_plugin('adamant');
       const plugin = pl.get_plugin_by_name(core_module_info.name);
       expect(plugin.name).to.equal(core_module_info.name);
       expect(plugin.version).to.equal(core_module_info.version);
@@ -241,12 +241,12 @@ describe('Plugin Loader', function() {
       expect(plugin.license).to.equal(core_module_info.license);
     });
 
-    it('Should return core package info for mp-core', () => {
-      expect(PluginLoader.get_module_info('mp-core')).to.deep.equal(core_module_info);
+    it('Should return core package info for adamant', () => {
+      expect(PluginLoader.get_module_info('adamant')).to.deep.equal(core_module_info);
     });
 
-    it('Should return core package info for local-mp-core', () => {
-      expect(PluginLoader.get_module_info('local-mp-core')).to.deep.equal(core_module_info);
+    it('Should return core package info for local-adamant', () => {
+      expect(PluginLoader.get_module_info('local-adamant')).to.deep.equal(core_module_info);
     });
   });
 

@@ -1,7 +1,7 @@
 {
-  "name": "local-mp-core",
-  "description": "Core code for Metrics Platform",
-  "version": "0.3.1",
+  "name": "local-adamant",
+  "description": "Core code for Adamant Platform",
+  "version": "0.4.0",
   "author": {
     "name": "Pro Q",
     "email": "development@proqsolutions.com",
@@ -45,7 +45,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://i.proqsolutions.com/git/proq/mp-core"
+    "url": "https://github.com/ProQSolutions/adamant"
   },
   "scripts": {
     "test": "mocha test/*-test.js",

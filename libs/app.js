@@ -25,7 +25,7 @@ module.exports = class App extends EventEmitter {
     super();
     // Establish some defaults
     this.plugin_loader = new PluginLoader();
-    this.plugin_loader.load_plugin('mp-core');
+    this.plugin_loader.load_plugin('adamant');
     this.collect_services = [];
     this.components = [];
 
@@ -121,7 +121,7 @@ module.exports = class App extends EventEmitter {
    * Creates a component instance by calling Plugin.create_component.
    * When component is created, App will emit event named `${constructor_name}.load` for every inheritance of the Component. For example, creating an EventHandler will emit `Component.load` then `EventHandler.load`.
    *
-   * @param {String} name - The name of the component (class name), including the plugin namespace. Example: 'mp-core/EventHandler'. If no plugin name is specified, mp-core is assumed.
+   * @param {String} name - The name of the component (class name), including the plugin namespace. Example: 'adamant/EventHandler'. If no plugin name is specified, adamant is assumed.
    * @param {String} version - Semver format of the version required. Plugin.create_component will throw error if version requirements not met.
    * @param {Object} parameters - These are the parameters passed to the constructor of the component
    * @returns {Component} - The component created
@@ -133,7 +133,7 @@ module.exports = class App extends EventEmitter {
     parameters = {},
   } = {}) {
 
-    let plugin_name = 'mp-core';
+    let plugin_name = 'adamant';
 
     // This allows config to specify plugin and component name in single argument.
     if(name.indexOf('/') !== -1) {

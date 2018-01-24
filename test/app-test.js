@@ -139,7 +139,7 @@ describe('App', () => {
       app = new App();
       // Collector Instance Mock
       collectorInstanceMock = new Collector({model_name: model_mock_name});
-      const mp_core_plugin = app.plugin_loader.get_plugin_by_name('mp-core');
+      const mp_core_plugin = app.plugin_loader.get_plugin_by_name('adamant');
       sinon.stub(app.plugin_loader, 'get_plugin_by_name');
       app.plugin_loader.get_plugin_by_name.returns(mp_core_plugin);
       app.plugin_loader.get_plugin_by_name.withArgs('mock_plugin').returns(mockPlugin);
@@ -279,7 +279,7 @@ describe('App', () => {
       // Event handler mock
       eventHandlerInstanceMock = new EventHandler({event_name: 'mock_event'});
 
-      const mp_core_plugin = app.plugin_loader.get_plugin_by_name('mp-core');
+      const mp_core_plugin = app.plugin_loader.get_plugin_by_name('adamant');
 
       app.event_dispatcher = eventDispatcherInstanceMock;
       sinon.stub(app.plugin_loader, 'get_plugin_by_name');

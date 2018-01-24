@@ -4,6 +4,6 @@ const glob = require('glob');
 const components = glob.sync(`${__dirname}/*.js`, {ignore: __filename}).map(require);
 
 module.exports = {
-  // mp-core components
+  // adamant components
   components,
 };
