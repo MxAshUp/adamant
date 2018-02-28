@@ -137,14 +137,14 @@ module.exports = class App extends EventEmitter {
 
     // This allows config to specify plugin and component name in single argument.
     if(name.indexOf('/') !== -1) {
-      // Split name up by /
-      const parsed_component_name = name.split('/');
+      // Get last slash
+      let split_pos = name.lastIndexOf('/');
 
       // Plugin name is the first element
-      plugin_name = parsed_component_name.shift();
+      plugin_name = name.slice(0, split_pos);
 
       // Component name is the last element
-      name = parsed_component_name.pop();
+      name = name.slice(split_pos + 1, name.length);
     }
 
     // Find the plugin
