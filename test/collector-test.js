@@ -54,6 +54,39 @@ describe('Collector Class', () => {
     it('Garbage should garbage nothing', () => {
       expect(instance.garbage()).to.be.undefined;
     });
+    it('Compare should deep match two objects, return true', () => {
+      expect(instance.compare({
+        someField: '12312',
+        anItem: [
+          2,
+          1,
+          3
+        ]
+      }, {
+        someField: '12312',
+        anItem: [
+          1,
+          2,
+          3
+        ]
+      })).to.be.true;
+    });
+    it('Compare should deep match two objects, return flase', () => {
+      expect(instance.compare({
+        someField: '12312',
+        anItem: [
+          'a',
+          'v'
+        ]
+      }, {
+        someField: 23,
+        anItem: [
+          1,
+          2,
+          3
+        ]
+      })).to.be.false;
+    });
     it('Should return a promise that resolves after events are emitted for data', () => {
       const arr = [Math.random(), Math.random(), Math.random()];
       let count = 0;

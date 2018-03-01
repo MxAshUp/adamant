@@ -86,6 +86,16 @@ module.exports = class Collector extends Component {
   }
 
   /**
+   * Compares old and new doc to see if a changed occured. Can be overidden for custom behavior
+   *
+   * @param {Model} old_doc
+   * @param {Model} new_doc
+   */
+  compare(old_doc, new_doc) {
+    return _.isMatch(old_doc, new_doc);
+  }
+
+  /**
    * Run through the collector functions (initialize, prepare, collect, garbage)
    * When finished, will emit `done` event. If failed, `done` will be emitted with no parameters. Otherwise it will be emitted with details.
    *
@@ -278,7 +288,7 @@ module.exports = class Collector extends Component {
         }
 
         // Changed document
-        if (!_.isNull(old_doc) && !_.isMatch(old_doc, new_doc.toObject())) {
+        if (!_.isNull(old_doc) && !this.compare(old_doc, new_doc.toObject())) {
           this.emit('update', new_doc);
         }
 
