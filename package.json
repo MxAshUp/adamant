@@ -49,8 +49,7 @@
   },
   "scripts": {
     "test": "mocha test/*-test.js",
-    "test-coverage": "nyc --reporter=html --all mocha test/*-test.js",
-    "test-watch": "mocha -w test/*-test.js",
-    "docker": "docker run --rm -it -v $PWD:/usr/src/app proq/docker-dev-node /bin/bash -c \"cd /usr/src/app && /bin/bash\""
+    "test:coverage": "nyc --reporter=html --all mocha test/*-test.js",
+    "test:watch": "mocha -w test/*-test.js"
   }
 }
