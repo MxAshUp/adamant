@@ -180,7 +180,7 @@ module.exports = class App extends EventEmitter {
 
     const service_config = {};
     service_config.run_callback = collector.run.bind(collector);
-    service_config.name = `${collector.model_name} collector`;
+    service_config.name = `${collector.identifier} collector`;
 
     if (parameters.service_retry_max_attempts)
       service_config.retry_max_attempts = parameters.service_retry_max_attempts;
@@ -251,7 +251,7 @@ module.exports = class App extends EventEmitter {
   }
 
   _handle_collector_error(collector, error) {
-    this.debug_message(`${collector.model_name} collector`, `error: ${error.message ? error.message : ''} ${error.stack ? error.stack : ''}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
+    this.debug_message(`${collector.identifier} collector`, `error: ${error.message ? error.message : ''} ${error.stack ? error.stack : ''}`, error.culprit && error.culprit.stack ? error.culprit.stack : '');
   }
 
   _handle_service_error(service, error) {

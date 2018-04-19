@@ -23,7 +23,8 @@ module.exports = class Collector extends Component {
   constructor(args = {}) {
 
     let {
-      model_name = throwIfMissing`model_name`
+      model_name = throwIfMissing`model_name`,
+      identifier = model_name,
     } = args;
 
     super(args);
@@ -31,6 +32,7 @@ module.exports = class Collector extends Component {
     // Merge config and assign properties to this
     Object.assign(this, {
       model_name,
+      identifier,
     });
 
     // Set some initial variables
