@@ -85,7 +85,7 @@ module.exports = class App extends EventEmitter {
     .then(mongoose.connect.bind(mongoose, this.config.mongodb_url))
     .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose))
     .then((models) => {
-      models.map((model) => this.emit(`model.${model.name}.load`, model));
+      models.map((model) => this.emit(`model.${model.modelName}.load`, model));
     });
   }
 
