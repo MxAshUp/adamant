@@ -180,7 +180,8 @@ module.exports = class App extends EventEmitter {
 
     // clear data on start if specified
     if(parameters.clear_on_start) {
-      collector.model.remove({});
+      const model = mongoose.model(collector.model_name);
+      model.remove({}).catch(this._handle_collector_error.bind(this, collector));
     }
 
     const service_config = {};
