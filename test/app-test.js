@@ -44,7 +44,7 @@ describe('App', () => {
     });
 
     it('Should return a promise that resolves and call plugin_loader.load_plugin_models', () => {
-      app.plugin_loader.load_plugin_models = sinon.stub().resolves();
+      app.plugin_loader.load_plugin_models = sinon.stub().resolves([]);
       return app.init().then(() => {
         sinon.assert.calledWith(app.plugin_loader.load_plugin_models, mongooseMock);
       });

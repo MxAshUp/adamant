@@ -122,7 +122,7 @@ module.exports = class PluginLoader {
    */
   load_plugin_models(mongoose) {
     // Look at each plugin
-    _.each(this.plugins, plugin => plugin.load_models(mongoose));
+    return _.flatMap(this.plugins, plugin => plugin.load_models(mongoose));
   }
 
   /**
@@ -133,7 +133,7 @@ module.exports = class PluginLoader {
    */
   load_plugin_routes(express) {
     // Look at each plugin
-    _.each(this.plugins, plugin => plugin.load_routes(express));
+    return _.flatMap(this.plugins, plugin => plugin.load_routes(express));
   }
 
   /**
@@ -144,7 +144,7 @@ module.exports = class PluginLoader {
    */
   load_plugin_sockets(socket) {
     // Look at each plugin
-    _.each(this.plugins, plugin => plugin.map_events(socket));
+    return _.flatMap(this.plugins, plugin => plugin.map_events(socket));
   }
 
   /**

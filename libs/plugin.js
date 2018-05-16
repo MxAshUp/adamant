@@ -116,7 +116,7 @@ module.exports = class Plugin {
    */
   load_models(mongoose) {
     // Look at each model
-    _.each(this.models, model_config => {
+    return this.models.map((model_config) => {
 
       model_config.schema = mongoose.Schema(model_config.schema);
 

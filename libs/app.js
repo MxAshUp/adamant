@@ -83,7 +83,10 @@ module.exports = class App extends EventEmitter {
   _load_database() {
     return Promise.resolve()
     .then(mongoose.connect.bind(mongoose, this.config.mongodb_url))
-    .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose));
+    .then(this.plugin_loader.load_plugin_models.bind(this.plugin_loader, mongoose))
+    .then((models) => {
+      models.map((model) => this.emit(`model.${model.name}.load`, model));
+    });
   }
 
   /**
@@ -180,8 +183,9 @@ module.exports = class App extends EventEmitter {
 
     // clear data on start if specified
     if(parameters.clear_on_start) {
-      const model = mongoose.model(collector.model_name);
-      model.remove({}).catch(this._handle_collector_error.bind(this, collector));
+      this.once(`model.${collector.model_name}.load`, (model) => {
+        model.remove({}).catch(this._handle_collector_error.bind(this, collector));
+      });
     }
 
     const service_config = {};
