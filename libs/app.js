@@ -178,6 +178,11 @@ module.exports = class App extends EventEmitter {
    */
   _handle_load_collector(collector, parameters) {
 
+    // clear data on start if specified
+    if(parameters.clear_on_start) {
+      collector.model.remove({});
+    }
+
     const service_config = {};
     service_config.run_callback = collector.run.bind(collector);
     service_config.name = `${collector.identifier} collector`;
