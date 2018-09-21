@@ -167,8 +167,10 @@ module.exports = class LoopService extends Component {
   }
 
   _set_loop_function_timer() {
-    this.loop_function_timeout_id = setTimeout(
-      this._loop_function.bind(this),
+    this.loop_function_timeout_id = setTimeout(() => {
+        this.loop_function_timeout_id = 0;
+        this._loop_function();
+      },
       this.run_min_time_between
     );
   }
