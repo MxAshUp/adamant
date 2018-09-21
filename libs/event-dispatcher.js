@@ -21,6 +21,7 @@ module.exports = class EventDispatcher extends EventEmitter {
     super();
     this.event_handlers = [];
     this.event_queue = [];
+    this.event_queue_dispatching = [];
     this.handler_count = 0;
     this.event_count = 0;
     this.error_on_unhandled_events = false;
@@ -219,7 +220,14 @@ module.exports = class EventDispatcher extends EventEmitter {
     let promises = [];
 
     while (this.event_queue_count > 0) {
-      promises.push(this.dispatch_event(this.shift_event()));
+      const event = this.shift_event();
+      this.event_queue_dispatching.push(event);
+      this.emit('dispatching', event);
+      promises.push(this.dispatch_event(event).then(() => {
+        const index = this.event_queue_dispatching.indexOf(event);
+        if(index === -1) return;
+        this.event_queue_dispatching.splice(index, 1);
+      }));
     }
 
     return Promise.all(promises);
