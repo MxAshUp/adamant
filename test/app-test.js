@@ -236,9 +236,19 @@ describe('App', () => {
       sinon.stub(app.event_dispatcher, 'emit');
       const collector = app.load_component(config);
       const mock_data = Math.random();
-      expect(collector.listenerCount('done')).to.equal(1);
       collector.listeners('done')[0](mock_data);
       sinon.assert.calledWith(app.event_dispatcher.emit, `${model_mock_name}.done`, mock_data);
+    });
+
+    it(`Should add listener to collector done that enqueues collector.done`, () => {
+      sinon.stub(app.event_dispatcher, 'emit');
+      const collector = app.load_component(config);
+      const mock_data = Math.random();
+      collector.listeners('done')[1](mock_data);
+      expect(app.event_dispatcher.event_queue).to.have.lengthOf(1)
+      const event = app.event_dispatcher.event_queue[0];
+      expect(event.data.collector).to.equal(collector);
+      expect(event.data.results).to.equal(mock_data);
     });
   });
 

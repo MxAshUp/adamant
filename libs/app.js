@@ -210,7 +210,10 @@ module.exports = class App extends EventEmitter {
     collector.on('error', this._handle_collector_error.bind(this, collector));
     // Emits `${collector.model_name}.done` each time a collector finishes a run.
     collector.on('done', this.event_dispatcher.emit.bind(this.event_dispatcher, `${collector.model_name}.done`));
-
+    // Equeues a collector.done event, and includes the collector as a paramter
+    collector.on('done', (results) => {
+      this.event_dispatcher.enqueue_event(`collector.done`, {collector, results});
+    });
     // Add event handling for collector
     _.each(['create', 'update', 'remove'], event => {
       collector.on(event, this._handle_collector_event.bind(this, collector, event));
