@@ -26,7 +26,7 @@ module.exports = class LoopService extends Component {
       run_min_time_between = 0,
       retry_attempts = 0,
       retry_max_attempts = 0,
-      retry_time_between = 0,
+      retry_time_between = null,
       errors_only_retry_on = [],
       errors_dont_retry_on = [],
       name = '',
@@ -43,7 +43,7 @@ module.exports = class LoopService extends Component {
     this.run_min_time_between = run_min_time_between;
     this.retry_attempts = retry_attempts;
     this.retry_max_attempts = retry_max_attempts;
-    this.retry_time_between = retry_time_between;
+    this.retry_time_between = retry_time_between !== null ? retry_time_between : run_min_time_between;
     this.errors_only_retry_on = errors_only_retry_on;
     this.errors_dont_retry_on = errors_dont_retry_on;
     this.name = name;
@@ -166,12 +166,13 @@ module.exports = class LoopService extends Component {
     return this.loop_function_promise;
   }
 
-  _set_loop_function_timer() {
+  _set_loop_function_timer(time) {
+    const wait_time = typeof time !== 'undefined' ? time : this.run_min_time_between;
     this.loop_function_timeout_id = setTimeout(() => {
         this.loop_function_timeout_id = 0;
         this._loop_function();
       },
-      this.run_min_time_between
+      wait_time
     );
   }
 
@@ -209,7 +210,7 @@ module.exports = class LoopService extends Component {
           this.emit('retry', attempt);
 
           // Set timeout for next loop_function run
-          this._set_loop_function_timer();
+          this._set_loop_function_timer(this.retry_time_between);
         }).catch((retry_error) => {
           // We're not good to retry
           if(retry_error !== callback_error) {
