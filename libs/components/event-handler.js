@@ -29,8 +29,7 @@ module.exports = class EventHandler extends Component {
     const defaults = {
       default_args: {},
       args: {},
-      event_name: event_name,
-      supports_revert: false,
+      event_name: Array.isArray(event_name) ? event_name : [event_name],
       instance_id: '',
       should_handle: should_handle,
       defer_dispatch: defer_dispatch,
@@ -51,20 +50,6 @@ module.exports = class EventHandler extends Component {
   */
   dispatch(data) {
     return data;
-  }
-
-  /**
-  * Method that reverts actions performed in dispatch
-  *
-  * @param {any} data - Data returned from dispatch event
-  *
-  * @memberof EventHandler
-  */
-  revert(data) {
-    //If revert not supported, throw error if called
-    if (!this.supports_revert) {
-      throw Error('Handler does not support revert.');
-    }
   }
 
   /**

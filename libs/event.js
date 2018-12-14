@@ -11,6 +11,5 @@ module.exports = class Event {
     this.data = data;
     this.handled = false;
     this.queue_id;
-    this.revert_data;
   }
 }

@@ -9,8 +9,7 @@ const utility = require('../libs/utility');
  * Handles enqueing of events, loading of event handlers, and dispatching events to handlers
  *
  * @event EventDispatcher#dispatch - When success dispatch
- * @event EventDispatcher#error - When error on dispatch or revert
- * @event EventDispatcher#revert - When success on revert
+ * @event EventDispatcher#error - When error on dispatch
  * @event EventDispatcher#[model_name].complete - Collector of model_name is finished
  *
  * @class EventDispatcher
@@ -141,39 +140,6 @@ module.exports = class EventDispatcher extends EventEmitter {
 
     // Create promise return
     return Promise.all(ret_promises);
-  }
-
-  /**
-  * Run revert for a particular event
-  *
-  * @param {Event} event - event to revert
-  * @param {handler_id} (Optional) - specify a specific event handler to dispatch event
-  * @return {Promise} - Promise resolves when all callbacks finish
-  * @memberof EventDispatcher
-  */
-  revert_event(event_obj, handler_id) {
-    // Lookup event handler by id
-    // Run revert with args
-
-    // Create handler search args
-    let search = { event_name: event_obj.event_name };
-    if (!_.isUndefined(handler_id)) {
-      search.instance_id = handler_id;
-    }
-
-    // Create promise return
-    return Promise.all(
-      _.map(_.filter(this.event_handlers, search), handler =>
-        Promise.resolve()
-          .then(handler.revert.bind(handler, event_obj.data))
-          .then(() => {
-            this.emit('reverted', event_obj, handler);
-          })
-          .catch(e => {
-            this.emit('error', new EventHandleError(e, event_obj, handler));
-          })
-      )
-    );
   }
 
   /**

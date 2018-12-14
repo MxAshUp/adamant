@@ -22,13 +22,6 @@ describe('Event System', () => {
 
   describe('Event Handler', () => {
 
-    it('Should throw error if support_revert is false and revert() is called', () => {
-      const mock_handler_1 = new EventHandler({event_name: 'mock_event'});
-      expect(mock_handler_1.revert.bind(mock_handler_1)).to.throw(
-        'Handler does not support revert.'
-      );
-    });
-
     describe('Default behaviors of overridable methods', () => {
 
       let instance = new EventHandler({event_name: 'mock_event'});
@@ -64,12 +57,6 @@ describe('Event System', () => {
         expect(instance.dispatch(mock_data)).to.equal(mock_data);
       });
 
-      it('Revert() should return nothing if support_revert = true', () => {
-        instance.supports_revert = true;
-        expect(instance.revert()).to.be.undefined;
-        expect(instance.revert.bind(instance)).to.not.throw();
-      });
-
     });
 
     describe('Settable properties', () => {
@@ -77,7 +64,7 @@ describe('Event System', () => {
       it('Should set event_name to mock value', () => {
         mock_event_name = `event_name_${Math.random()}`;
         const instance = new EventHandler({event_name: mock_event_name});
-        expect(instance.event_name).to.equal(mock_event_name);
+        expect(instance.event_name).to.deep.equal([mock_event_name]);
       });
 
       it('Should set should_handle to mock value', () => {
@@ -136,8 +123,6 @@ describe('Event System', () => {
         for(let index = 0; index < mock_handlers.length; index++) {
           mock_handlers[index] = new EventHandler({event_name: `test.event_${index}.random.${Math.random()}`});
           mock_handlers[index].dispatch = sinon.stub();
-          mock_handlers[index].revert = sinon.stub();
-          mock_handlers[index].supports_revert = true;
         }
       });
 
@@ -289,8 +274,6 @@ describe('Event System', () => {
         for(let index = 0; index < mock_handlers.length; index++) {
           mock_handlers[index] = new EventHandler({event_name: generate_event_name_for_handler(index)});
           mock_handlers[index].dispatch = sinon.stub();
-          mock_handlers[index].revert = sinon.stub();
-          mock_handlers[index].supports_revert = true;
           mock_handler_ids[index] = dispatcher.load_event_handler(mock_handlers[index]);
         }
 
@@ -663,41 +646,6 @@ describe('Event System', () => {
           }
         });
 
-        describe('Reverting event', () => {
-
-          beforeEach(() => {
-            dispatcher.on('reverted', spy_handler);
-          });
-
-          it('Should emit event when revert success', () => {
-            return dispatcher.revert_event(mock_event).then(() => {
-              sinon.assert.callCount(spy_handler, which_handlers.length);
-              which_handlers.forEach(which_handler => {
-                sinon.assert.calledWith(spy_handler, mock_event, which_handler);
-                sinon.assert.calledWith(which_handler.revert, mock_event.data);
-              });
-            });
-          });
-
-          for(let index = 0; index < which_handlers_slice_length; index++) {
-            it(`Should revert event only for specific handlers test #${index + 1}`, () => {
-              const which_handler = which_handlers[index];
-              const dont_fire_handlers = which_handlers.filter((handler) => handler !== which_handler);
-              const which_handler_id = mock_handler_ids[index];
-              return dispatcher.revert_event(mock_event, which_handler_id).then(() => {
-                // Event handler revert should have been called with correct args
-                sinon.assert.callCount(spy_handler, 1);
-                sinon.assert.calledWith(spy_handler, mock_event, which_handler);
-                sinon.assert.calledWith(which_handler.revert, mock_event.data);
-                dont_fire_handlers.forEach(dont_fire_handler => {
-                  sinon.assert.neverCalledWith(spy_handler, mock_event, dont_fire_handler);
-                  sinon.assert.neverCalledWith(dont_fire_handler.revert, mock_event.data);
-                });
-              });
-            });
-          }
-        });
-
         describe('Throwing errors', () => {
           let spy_catcher;
           beforeEach(() => {
@@ -730,39 +678,6 @@ describe('Event System', () => {
                   dont_throw_handlers.forEach(dont_throw_handler => {
                     sinon.assert.calledWith(spy_handler, mock_event, dont_throw_handler);
                     sinon.assert.calledWith(dont_throw_handler.dispatch, mock_event.data);
-                  });
-                });
-              });
-            }
-          });
-
-          describe('on revert', () => {
-            beforeEach(() => {
-              dispatcher.on('reverted', spy_handler);
-            });
-
-            for(let index = 0; index < which_handlers_slice_length; index++) {
-              it(`Should throw error for handler #${index + 1}`, () => {
-                const which_handler = which_handlers[index];
-                const dont_throw_handlers = which_handlers.filter((handler) => handler !== which_handler);
-                const which_handler_id = mock_handler_ids[index];
-                const mock_error = new Error(Math.random());
-                which_handler.revert.throws(mock_error);
-
-                return dispatcher.revert_event(mock_event).then(() => {
-                  sinon.assert.callCount(which_handler.revert, 1);
-                  sinon.assert.calledWith(which_handler.revert, mock_event.data);
-                  sinon.assert.neverCalledWith(spy_handler, mock_event, which_handler);
-                  sinon.assert.callCount(spy_catcher, 1);
-                  let error_thrown = spy_catcher.lastCall.args[0];
-                  expect(error_thrown).to.be.instanceof(EventHandleError);
-                  expect(error_thrown.event).to.deep.equal(mock_event);
-                  expect(error_thrown.handler).to.deep.equal(which_handler);
-                  expect(error_thrown.culprit).to.deep.equal(mock_error);
-
-                  dont_throw_handlers.forEach(dont_throw_handler => {
-                    sinon.assert.calledWith(spy_handler, mock_event, dont_throw_handler);
-                    sinon.assert.calledWith(dont_throw_handler.revert, mock_event.data);
                   });
                 });
               });

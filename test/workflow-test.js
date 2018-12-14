@@ -35,7 +35,7 @@ describe('Workflow EventHandler', () => {
     });
     it('Should pass EventHandler arguments to super constructor', () => {
       const construct_args = {
-        event_name: Math.random(),
+        event_name: [Math.random()],
         should_handle: Math.random(),
         defer_dispatch: Math.random(),
         enqueue_complete_event: Math.random(),
