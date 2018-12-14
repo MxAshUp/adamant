@@ -90,7 +90,7 @@ module.exports = class EventDispatcher extends EventEmitter {
 
     // Filter event handlers
     const filtered_event_handlers = this.event_handlers
-      .filter(({event_name}) => event_name === event_obj.event_name)
+      .filter((handler) => handler.event_name_compare(event_obj.event_name))
       .filter(({instance_id}) => _.isUndefined(handler_id) || handler_id === instance_id)
       .filter(({should_handle}) => !should_handle || should_handle(event_obj))
 

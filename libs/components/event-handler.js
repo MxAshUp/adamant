@@ -66,4 +66,13 @@ module.exports = class EventHandler extends Component {
       throw Error('Handler does not support revert.');
     }
   }
+
+  /**
+   * Checks if event_name matches one of this.event_name[]
+   *
+   * @param {String} event_name
+   */
+  event_name_compare(event_name) {
+    return this.event_name.indexOf(event_name) !== -1;
+  }
 }
