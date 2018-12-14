@@ -78,25 +78,6 @@ describe('Workflow EventHandler', () => {
       });
     });
 
-    describe('Function format_event_name', () => {
-      const mock_step_number = Math.floor(Math.random()*100); // Random int between 0 and 100
-      const mock_event_name = `mock_event.${Math.random()}`;
-      it(`Should return correct event_name`, () => {
-        expect(workflowInstance.format_event_name(mock_step_number, mock_event_name)).to.equal(`${mock_workflow_name}.step_${mock_step_number}.${mock_event_name}`);
-      });
-      it('Should return correct event_name - without event_name as param', () => {
-        expect(workflowInstance.format_event_name(mock_step_number)).to.equal(`${mock_workflow_name}.step_${mock_step_number}`);
-      });
-      it('Should return correct event_name - without workflow_name', () => {
-        workflowInstance.workflow_name = '';
-        expect(workflowInstance.format_event_name(mock_step_number, mock_event_name)).to.equal(`step_${mock_step_number}.${mock_event_name}`);
-      });
-      it('Should return correct event_name - without workflow_name and event_name', () => {
-        workflowInstance.workflow_name = '';
-        expect(workflowInstance.format_event_name(mock_step_number)).to.equal(`step_${mock_step_number}`);
-      });
-    });
-
     describe('Function step', () => {
       const mock_steps_count = 5;
       const mock_steps_no_event_name = [];//2,3];
@@ -127,11 +108,7 @@ describe('Workflow EventHandler', () => {
 
       for(let step_number of mock_event_steps.keys()) {
         it(`Should reassigned handler event_name for step ${step_number + 1}`, () => {
-          if(mock_steps_no_event_name.indexOf(step_number) === -1) {
-            expect(mock_event_steps[step_number].event_name).to.equal(`${mock_workflow_name}.step_${step_number + 1}.${mock_event_step_names[step_number]}`);
-          } else {
-            expect(mock_event_steps[step_number].event_name).to.equal(`${mock_workflow_name}.step_${step_number + 1}`);
-          }
+          expect(mock_event_steps[step_number].event_name).to.deep.equal([`${mock_workflow_name}.step_${step_number + 1}`]);
         });
       }
 
@@ -208,7 +185,7 @@ describe('Workflow EventHandler', () => {
                 });
 
                 it('Should emit enqueue event that has event name equal to next event name', () => {
-                  expect(event_name).to.equal(next_step.event_name);
+                  expect(event_name).to.equal(next_step.event_name[0]);
                 });
 
                 it('Should emit enqueue event that has event data passed from previous event', () => {
