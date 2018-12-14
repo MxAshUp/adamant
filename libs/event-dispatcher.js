@@ -88,17 +88,11 @@ module.exports = class EventDispatcher extends EventEmitter {
   */
   dispatch_event(event_obj, handler_id) {
 
-    // Create handler search args
-    const search = { event_name: event_obj.event_name };
-    if (!_.isUndefined(handler_id)) {
-      search.instance_id = handler_id;
-    }
-
     // Filter event handlers
-    const filtered_event_handlers = _.filter(
-      _.filter(this.event_handlers, handler => !handler.should_handle || handler.should_handle(event_obj)),
-      search
-    );
+    const filtered_event_handlers = this.event_handlers
+      .filter(({event_name}) => event_name === event_obj.event_name)
+      .filter(({instance_id}) => _.isUndefined(handler_id) || handler_id === instance_id)
+      .filter(({should_handle}) => !should_handle || should_handle(event_obj))
 
     // Create array of return promises
     const ret_promises = _.map(filtered_event_handlers, handler =>
