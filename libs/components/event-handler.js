@@ -18,7 +18,7 @@ module.exports = class EventHandler extends Component {
     let {
       event_name = throwIfMissing`event_name`,
       should_handle = null,
-      defer_dispatch = null, // {event_name = '', check_function = ()}
+      defer_dispatch = null,
       enqueue_complete_event = false,
       transform_function = null,
     } = args;
