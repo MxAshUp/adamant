@@ -43,6 +43,13 @@
       "**/*-test.js"
     ]
   },
+  "directories": {
+    "test": "test"
+  },
+  "files": [
+    "index.js",
+    "libs/"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ProQSolutions/adamant"
