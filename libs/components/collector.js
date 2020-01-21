@@ -272,6 +272,14 @@ module.exports = class Collector extends Component {
       throw new Error('Primary key not specified.');
     }
 
+    const tempDoc = new this.model(data_row);
+    if(tempDoc && tempDoc.validateSync) {
+      const validateError = tempDoc.validateSync();
+      if(validateError) {
+        throw new Error(validateError);
+      }
+    }
+
     const find = {_id: data_row._id};
     return this.model.findOne(find, '', { lean: true })
     .then(old_doc => this.model
