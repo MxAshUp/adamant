@@ -46,7 +46,7 @@ describe('Plugin Loader', function() {
     author: 'Pro Q',
     license: 'ISC',
     dependencies: {
-      "adamant": "^0.4.0",
+      "adamant": "^0.5.0",
     }
   };
 
@@ -56,7 +56,7 @@ describe('Plugin Loader', function() {
     main: 'index.js',
     license: 'ISC',
     dependencies: {
-      "adamant": "^0.4.0",
+      "adamant": "^0.5.0",
     }
   };
 
