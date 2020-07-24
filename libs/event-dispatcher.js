@@ -149,8 +149,8 @@ module.exports = class EventDispatcher extends EventEmitter {
   *
   * @memberof EventDispatcher
   */
-  enqueue_event(event_name, event_data, constructor = Event) {
-    const event_obj = new constructor(event_name, event_data);
+  enqueue_event(event_name, event_data, constructor = Event, originator) {
+    const event_obj = new constructor(event_name, event_data, originator);
     // Create event id
     event_obj.queue_id = this.event_count++;
     // Add new event to queue

@@ -6,10 +6,11 @@ module.exports = class Event {
    *
    * @memberof Event
    */
-  constructor(event_name, data) {
+  constructor(event_name, data, originator) {
     this.event_name = event_name;
     this.data = data;
     this.handled = false;
     this.queue_id;
+    this.originator = originator;
   }
 }

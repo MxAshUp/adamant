@@ -15,5 +15,6 @@ module.exports = class EventComplete extends Event {
     this.data = data;
     this.handled = false;
     this.queue_id;
+    this.originator = event_object;
   }
 }
