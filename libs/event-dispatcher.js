@@ -110,7 +110,7 @@ module.exports = class EventDispatcher extends EventEmitter {
 
           // If the handler defines a transform_function, then use it to transform return data
           if(typeof handler.transform_function === 'function') {
-            dispatchResult = handler.transform_function(dispatchResult)
+            dispatchResult = handler.transform_function(dispatchResult, event_obj)
           }
 
           return dispatchResult;
