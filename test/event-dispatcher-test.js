@@ -230,6 +230,7 @@ describe('Event System', () => {
       const mock_handlers = [];
       const mock_handler_ids = [];
       const mock_events = [];
+      const mock_originator = {SomeObjectProp: 'val'}
 
       const event_name_A = `test.event_A.random.${Math.random()}`;
       const event_name_B = `test.event_B.random.${Math.random()}`;
@@ -278,7 +279,7 @@ describe('Event System', () => {
         }
 
         for(let index = 0; index < mock_events.length; index++) {
-          mock_events[index] = dispatcher.enqueue_event(generate_event_name_for_event(index), Math.random());
+          mock_events[index] = dispatcher.enqueue_event(generate_event_name_for_event(index), Math.random(), Event, mock_originator);
         }
       });
 
@@ -341,7 +342,7 @@ describe('Event System', () => {
             const mock_new_event_name = `new_event_${Math.random()}`;
             which_handlers.forEach(which_handler => {
               which_handler.dispatch = function(data) {
-                this.emit('enqueue_event', mock_new_event_name, mock_event_data);
+                this.emit('enqueue_event', mock_new_event_name, mock_event_data, Event, mock_originator);
               }
             });
             return dispatcher.dispatch_event(mock_event).then(() => {
@@ -419,7 +420,7 @@ describe('Event System', () => {
               });
               return dispatcher.dispatch_event(mock_event).then(() => {
                 which_handlers.forEach(which_handler => {
-                  sinon.assert.calledWith(which_handler.transform_function, mock_event_pass_data);
+                  sinon.assert.calledWith(which_handler.transform_function, mock_event_pass_data, mock_event);
                 });
               });
             });
