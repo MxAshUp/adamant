@@ -105,7 +105,7 @@ module.exports = class Workflow extends EventHandler {
    * @returns {Promise} - resolves when transform_function is finished
    * @memberof Workflow
    */
-  _transition_dispatch(event_name, original_transform_function, data) {
+  _transition_dispatch(event_name, original_transform_function, data, originator) {
     original_transform_function = original_transform_function ? original_transform_function : d => d;
     return Promise.resolve()
       .then(() => original_transform_function(data))
@@ -113,7 +113,7 @@ module.exports = class Workflow extends EventHandler {
         // Only enqueue next event if data was passed.
         // If no data was passed, it's break
         if(!!new_data) {
-          this.emit('enqueue_event', event_name, new_data);
+          this.emit('enqueue_event', event_name, new_data, Event, originator);
         }
         return new_data;
       });
