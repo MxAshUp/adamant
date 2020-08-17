@@ -85,6 +85,8 @@ describe('Workflow EventHandler', () => {
       const mock_event_steps = Array(mock_steps_count);
       const mock_event_step_names = Array(mock_steps_count);
       const mock_event_step_transform_function = Array(mock_steps_count);
+      const mock_originator = {foo: 'bar123originator'};
+      const mock_data_obj = {originator: mock_originator};
 
       for(let step_number of mock_event_steps.keys()) {
         if(mock_steps_no_event_name.indexOf(step_number) === -1) {
@@ -126,7 +128,7 @@ describe('Workflow EventHandler', () => {
           workflowInstance.addListener('enqueue_event', handler_spy);
           // Set second step to return nothing
           mock_event_step_transform_function[1].returns();
-          mock_return = mock_event_steps[1].transform_function(original_mock_data);
+          mock_return = mock_event_steps[1].transform_function(original_mock_data, mock_data_obj);
         });
 
         it('Should not enqueue next event', () => {
@@ -153,7 +155,7 @@ describe('Workflow EventHandler', () => {
                 mock_event_step_transform_function[step_number].returns(transform_return);
               }
               if(mock_event_steps[step_number].transform_function) {
-                mock_return = mock_event_steps[step_number].transform_function(original_mock_data);
+                mock_return = mock_event_steps[step_number].transform_function(original_mock_data, mock_data_obj);
               } else {
                 mock_return = undefined;
               }
@@ -162,7 +164,7 @@ describe('Workflow EventHandler', () => {
             if(mock_steps_no_transform_function.indexOf(step_number) === -1) {
               it(`Should make call to original transform_function`, () => {
                 return mock_return.then(() => {
-                  sinon.assert.calledWith(mock_event_step_transform_function[step_number], original_mock_data);
+                  sinon.assert.calledWith(mock_event_step_transform_function[step_number], original_mock_data, mock_data_obj);
                 });
               });
 

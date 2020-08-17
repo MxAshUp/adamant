@@ -105,7 +105,7 @@ module.exports = class EventDispatcher extends EventEmitter {
             );
           }
         })
-        .then(handler.dispatch.bind(handler, event_obj.data))
+        .then(handler.dispatch.bind(handler, event_obj.data, event_obj))
         .then(dispatchResult => {
 
           // If the handler defines a transform_function, then use it to transform return data
