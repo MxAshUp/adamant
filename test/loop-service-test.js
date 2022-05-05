@@ -124,7 +124,7 @@ describe('Loop Service', () => {
   it('Should reject if already running', () => {
     let cb = sinon.spy();
     let loopy_mc_loopface = new LoopService({run_callback: cb});
-    loopy_mc_loopface.run_min_time_between = 10000; // Wait 10 seconds before 2nd run;
+    loopy_mc_loopface.run_min_time_between = 100; // Wait 100 ms before 2nd run;
 
     // Initial start
     loopy_mc_loopface.start();
