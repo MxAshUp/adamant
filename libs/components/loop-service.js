@@ -232,7 +232,11 @@ module.exports = class LoopService extends Component {
    */
   stop() {
     // Loop_function might be running, we need to resolve and clear potential timeout
-    clearTimeout(this.loop_function_timeout_id);
-    this.loop_function_resolve_cb();
+    if(this.loop_function_timeout_id > 0) {
+      clearTimeout(this.loop_function_timeout_id);
+      this.loop_function_resolve_cb();
+    } else {
+      this.stop_on_run = this.run_count + 1;
+    }
   }
 }
