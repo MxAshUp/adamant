@@ -64,6 +64,21 @@ describe('Loop Service', () => {
     });
   });
 
+  it('Should set next_run_time', (done) => {
+    let cb = async_fn_spy_wrapper(100);
+    let loopy_mc_loopface = new LoopService({run_callback: cb, run_min_time_between: 500});
+
+    loopy_mc_loopface.start();
+    loopy_mc_loopface.on('complete', () => {
+      setTimeout(() => {
+        expect(loopy_mc_loopface.next_run_time - Date.now()).to.be.below(500);
+        expect(loopy_mc_loopface.next_run_time - Date.now()).to.be.above(400);
+        done();
+        loopy_mc_loopface.stop();
+      }, 2);
+    });
+  });
+  
   it('Should by async even if run fn is not', done => {
     let cb = sinon.spy();
     let loopy_mc_loopface = new LoopService({run_callback: cb});

@@ -168,7 +168,9 @@ module.exports = class LoopService extends Component {
 
   _set_loop_function_timer(time) {
     const wait_time = typeof time !== 'undefined' ? time : this.run_min_time_between;
+    this.next_run_time = Date.now() + wait_time;
     this.loop_function_timeout_id = setTimeout(() => {
+        this.next_run_time = undefined;
         this.loop_function_timeout_id = 0;
         this._loop_function();
       },
