@@ -25,6 +25,8 @@ module.exports = class Collector extends Component {
     let {
       model_name = throwIfMissing`model_name`,
       identifier = model_name,
+      run_report_enabled = false,
+      run_report_now_fn = require('perf_hooks').performance.now,
     } = args;
 
     super(args);
@@ -33,11 +35,14 @@ module.exports = class Collector extends Component {
     Object.assign(this, {
       model_name,
       identifier,
+      run_report_enabled,
+      run_report_now_fn,
     });
 
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
     this.run_results = {};
+    this.run_report = undefined;
   }
 
   /**
@@ -97,6 +102,42 @@ module.exports = class Collector extends Component {
     return _.isMatch(old_doc, new_doc);
   }
 
+  // Puts item in run_report
+  _report_log(...context) {
+    if(this.run_report_enabled) {
+      this.run_report.push([
+        this.run_report_now_fn() - this.run_start,
+        ...context,
+      ]);
+    }
+  }
+
+  // Assists with start/stop events for report logging
+  // Wraps cb to measure the time cb takes
+  _report_log_wrap(...context) {
+    return (cb) => async (...args) => {
+      this._report_log(...context);
+      try {
+        return await cb(...args);
+      } catch(e) {
+        this._report_log(...context, 'error');
+        throw e;
+      } finally {
+        this._report_log(...context, 'done');
+      }
+    }
+  }
+
+  // Clears run_report in preparation
+  // Sets new start time for run
+  _start_report_log() {
+    if(this.run_report_enabled) {
+      this.run_report = [];
+      this.run_start = this.run_report_now_fn();
+      this.run_report.push([0, 'run']);
+    }
+  }
+
   /**
    * Run through the collector functions (initialize, prepare, collect, garbage)
    * When finished, will emit `done` event. If failed, `done` will be emitted with no parameters. Otherwise it will be emitted with details.
@@ -106,13 +147,19 @@ module.exports = class Collector extends Component {
    * @memberof Collector
    */
   run() {
+    
+    this._start_report_log();
 
     // If not initialized, then get model
     if(!this.initialize_flag) {
       try {
+        this._report_log('run','initialize-model');
         this.model = mongoose.model(this.model_name);
       } catch(e) {
+        this._report_log('run','initialize-model', 'error');
         return Promise.reject(new CollectorDatabaseError(e));
+      } finally {
+        this._report_log('run','initialize-model', 'done');
       }
     }
 
@@ -120,21 +167,21 @@ module.exports = class Collector extends Component {
     return (
       Promise.resolve()
         // If not initialized, then try to initialize
-        .then(() => this.initialize_flag
+        .then(this.initialize_flag
             ? Promise.resolve()
-            : this.initialize.call(this)
+            : this._report_log_wrap('run','initialize')(this.initialize.bind(this))
         )
         // Reformat possible error
         .catch(err => Promise.reject(new CollectorInitializeError(err)))
         // Prepare to collect and remove data
-        .then(this.prepare.bind(this))
+        .then(this._report_log_wrap('run','prepare')(this.prepare.bind(this)))
         // Data is prepared
         .then((res) => {
           this.prepared_data = res;
           return Promise.resolve();
         })
         // Collect data and insert it
-        .then(this._do_collect.bind(this))
+        .then(this._report_log_wrap('run','collect')(this._do_collect.bind(this)))
         // Add to results
         .then((counter) => this.run_results.collect = counter.counters)
         // Remove docs that may need to be removed
@@ -148,10 +195,22 @@ module.exports = class Collector extends Component {
         // If any error occurs during sync, we need to initialize again next time around
         .catch(err => {
           this.initialize_flag = false;
+          
+          this._report_log('run','error');
+          this._report_log('run','done');
+          this.removeAllListeners('log');
+
           this.emit('done');
           return Promise.reject(err); // We're not handling the error, throw it along
         })
-        .then(this.emit.bind(this, 'done', this.run_results))
+        .then(() => {
+          // When success without error
+          this._report_log('run','done');
+          this.removeAllListeners('log');
+        })
+        .then(() => {
+          this.emit('done', this.run_results, this.run_report);
+        })
     );
   }
 
@@ -227,12 +286,15 @@ module.exports = class Collector extends Component {
         promises.push(
           Promise.resolve(to_collect)
           .then(this._insert_data.bind(this))
-          .then(counter.increment.bind(counter,'success'))
+          .then((_id) => {
+            counter.increment('success');
+            this._report_log('run','collect',_id,'done');
+          })
           .catch(e => {
             counter.increment('fail');
-            return Promise.reject(e);
+            this._report_log('run','collect','error');
+            this._handle_collect_error(e);
           })
-          .catch(this._handle_collect_error.bind(this))
         );
       });
     };
@@ -251,6 +313,7 @@ module.exports = class Collector extends Component {
     })
     .then(() => {
       this.removeAllListeners('data');
+      // Wait for data to be inserted into mongo
       return Promise.all(promises);
     }).then(() => counter);
   }
@@ -302,6 +365,7 @@ module.exports = class Collector extends Component {
           this.emit('update', new_doc);
         }
 
+        return new_doc._id;
       })
     );
   }

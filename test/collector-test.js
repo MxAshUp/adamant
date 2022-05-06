@@ -28,7 +28,7 @@ describe('Collector Class', () => {
   // Test Subclass of Collector
   class TestCollectorClass extends Collector {
     constructor() {
-      super({model_name: 'test.test_model'});
+      super({model_name: 'test.test_model', run_report_enabled: true});
     }
   }
 
@@ -488,7 +488,7 @@ describe('Collector Class', () => {
           { _id: 'notfound' },
         ]);
 
-      const mock_error = new Error(Math.random);
+      const mock_error = new Error(Math.random() + '');
 
       testModel.findOneAndRemove
         .withArgs({ _id: remove_data[0]._id })
@@ -555,7 +555,7 @@ describe('Collector Class', () => {
     });
     describe('With error thrown in initialize()', () => {
       let test_collector_instance = new TestCollectorClass();
-      test_collector_instance.initialize = sinon.stub().throws();
+      test_collector_instance.initialize = sinon.stub().throws(new Error("No way jose"));
       test_collector_instance.prepare = sinon.spy();
       test_collector_instance.collect = sinon.spy();
       test_collector_instance.garbage = sinon.spy();
@@ -614,7 +614,7 @@ describe('Collector Class', () => {
       test_collector_instance.initialize = sinon
         .stub()
         .returns(Promise.resolve());
-      test_collector_instance.prepare = sinon.stub().throws();
+      test_collector_instance.prepare = sinon.stub().throws(new Error("Crud!"));
       test_collector_instance.collect = sinon.spy();
       test_collector_instance.garbage = sinon.spy();
 
@@ -687,7 +687,7 @@ describe('Collector Class', () => {
       test_collector_instance.prepare = sinon.stub().resolves({});
       test_collector_instance.collect = sinon
         .stub()
-        .returns([new_data[0], Promise.reject(new Error()), new_data[2]]);
+        .returns([new_data[0], Promise.reject(new Error("A nice error")), new_data[2]]);
       test_collector_instance.garbage = sinon.stub().resolves();
 
       testModel.findOne.returns(Promise.resolve(null));
@@ -737,6 +737,11 @@ describe('Collector Class', () => {
           sinon.assert.calledOnce(error_handle);
         });
       });
+      it('Should not throw error in run()', () => {
+        return ret_promise.then(() => {
+          sinon.assert.notCalled(error_spy);
+        });
+      });
       it('Should call garbage', () => {
         return ret_promise.then(() => {
           sinon.assert.calledOnce(test_collector_instance.garbage);
@@ -768,7 +773,7 @@ describe('Collector Class', () => {
       let test_collector_instance = new TestCollectorClass();
       test_collector_instance.initialize = sinon.spy();
       test_collector_instance.prepare = sinon.stub().resolves({});
-      test_collector_instance.collect = sinon.stub().throws();
+      test_collector_instance.collect = sinon.stub().throws(new Error("Nadda"));
       test_collector_instance.garbage = sinon.stub().resolves();
 
       let error_spy = sinon.spy();
@@ -825,6 +830,65 @@ describe('Collector Class', () => {
       it('Should emit done with correct counter parameter', () => {
         return ret_promise.then(() => {
           expect(done_handler.lastCall.args[0]).to.be.undefined;
+        });
+      });
+    });
+    describe('run_report', () => {
+
+      // Data to put in database
+      let new_data = [{ _id: '555', foo: 'bar2b' }, { _id: '333', foo: 'updatedb' }];
+
+      testModel.findOne.returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ _id: new_data[0]._id })
+        .returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ _id: new_data[1]._id })
+        .returns(Promise.resolve(null));
+
+      testModel.findOneAndUpdate
+        .withArgs({ _id: new_data[0]._id })
+        .returns(Promise.resolve(new_data[0]));
+      testModel.findOneAndUpdate
+          .withArgs({ _id: new_data[1]._id })
+          .returns(Promise.resolve(new_data[1]));
+
+      let test_collector_instance = new TestCollectorClass();
+      let timeri = 0;
+      // Fake date.now()
+      test_collector_instance.run_report_now_fn = () => timeri++;
+      test_collector_instance.initialize = sinon.spy();
+      test_collector_instance.prepare = sinon.stub().resolves({});
+      test_collector_instance.collect = sinon
+        .stub()
+        .returns(new_data);
+
+      let error_handle = sinon.spy();
+      let update_handler = sinon.spy();
+      let create_handler = sinon.spy();
+
+      test_collector_instance.on('update', update_handler);
+      test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('error', error_handle);
+
+      it('Should match report', () => {
+        return test_collector_instance.run().then(() => {
+          expect(test_collector_instance.run_report).to.deep.equal(
+            [
+              [ 0, 'run' ],
+              [ 1, 'run', 'initialize-model' ],
+              [ 2, 'run', 'initialize-model', 'done' ],
+              [ 3, 'run', 'initialize' ],
+              [ 4, 'run', 'initialize', 'done' ],
+              [ 5, 'run', 'prepare' ],
+              [ 6, 'run', 'prepare', 'done' ],
+              [ 7, 'run', 'collect' ],
+              [ 8, 'run', 'collect', '555', 'done' ],
+              [ 9, 'run', 'collect', '333', 'done' ],
+              [ 10, 'run', 'collect', 'done' ],
+              [ 11, 'run', 'done' ]
+            ]
+          );
         });
       });
     });
