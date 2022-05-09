@@ -107,6 +107,7 @@ module.exports = class Collector extends Component {
     if(this.run_report_enabled) {
       this.run_report.push([
         this.run_report_now_fn() - this.run_start,
+        'run',
         ...context,
       ]);
     }
@@ -153,13 +154,13 @@ module.exports = class Collector extends Component {
     // If not initialized, then get model
     if(!this.initialize_flag) {
       try {
-        this._report_log('run','initialize-model');
+        this._report_log('initialize-model');
         this.model = mongoose.model(this.model_name);
       } catch(e) {
-        this._report_log('run','initialize-model', 'error');
+        this._report_log('initialize-model', 'error');
         return Promise.reject(new CollectorDatabaseError(e));
       } finally {
-        this._report_log('run','initialize-model', 'done');
+        this._report_log('initialize-model', 'done');
       }
     }
 
@@ -169,19 +170,19 @@ module.exports = class Collector extends Component {
         // If not initialized, then try to initialize
         .then(this.initialize_flag
             ? Promise.resolve()
-            : this._report_log_wrap('run','initialize')(this.initialize.bind(this))
+            : this._report_log_wrap('initialize')(this.initialize.bind(this))
         )
         // Reformat possible error
         .catch(err => Promise.reject(new CollectorInitializeError(err)))
         // Prepare to collect and remove data
-        .then(this._report_log_wrap('run','prepare')(this.prepare.bind(this)))
+        .then(this._report_log_wrap('prepare')(this.prepare.bind(this)))
         // Data is prepared
         .then((res) => {
           this.prepared_data = res;
           return Promise.resolve();
         })
         // Collect data and insert it
-        .then(this._report_log_wrap('run','collect')(this._do_collect.bind(this)))
+        .then(this._report_log_wrap('collect')(this._do_collect.bind(this)))
         // Add to results
         .then((counter) => this.run_results.collect = counter.counters)
         // Remove docs that may need to be removed
@@ -196,8 +197,8 @@ module.exports = class Collector extends Component {
         .catch(err => {
           this.initialize_flag = false;
           
-          this._report_log('run','error');
-          this._report_log('run','done');
+          this._report_log('error');
+          this._report_log('done');
           this.removeAllListeners('log');
 
           this.emit('done');
@@ -205,7 +206,7 @@ module.exports = class Collector extends Component {
         })
         .then(() => {
           // When success without error
-          this._report_log('run','done');
+          this._report_log('done');
           this.removeAllListeners('log');
         })
         .then(() => {
@@ -288,11 +289,11 @@ module.exports = class Collector extends Component {
           .then(this._insert_data.bind(this))
           .then((_id) => {
             counter.increment('success');
-            this._report_log('run','collect',_id,'done');
+            this._report_log('collect',_id,'done');
           })
           .catch(e => {
             counter.increment('fail');
-            this._report_log('run','collect','error');
+            this._report_log('collect','error');
             this._handle_collect_error(e);
           })
         );
