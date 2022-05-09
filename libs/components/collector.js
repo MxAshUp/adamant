@@ -210,7 +210,12 @@ module.exports = class Collector extends Component {
           this.removeAllListeners('log');
         })
         .then(() => {
-          this.emit('done', this.run_results, this.run_report);
+          this.emit(
+            'done',
+            this.run_results,
+            // Deep copy run_report, otherwise it will disappear with a re-run
+            this.run_report_enabled ? [...this.run_report.map((a) => [...a])] : undefined
+          );
         })
     );
   }
