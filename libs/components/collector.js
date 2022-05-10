@@ -103,11 +103,11 @@ module.exports = class Collector extends Component {
   }
 
   // Puts item in run_report
-  _report_log(...context) {
+  report_mark(...context) {
     if(this.run_report_enabled) {
       this.run_report.push([
         this.run_report_now_fn() - this.run_start,
-        'run',
+        'run', // "run" is always top-most context
         ...context,
       ]);
     }
@@ -117,14 +117,14 @@ module.exports = class Collector extends Component {
   // Wraps cb to measure the time cb takes
   _report_log_wrap(...context) {
     return (cb) => async (...args) => {
-      this._report_log(...context);
+      this.report_mark(...context);
       try {
         return await cb(...args);
       } catch(e) {
-        this._report_log(...context, 'error');
+        this.report_mark(...context, 'error');
         throw e;
       } finally {
-        this._report_log(...context, 'done');
+        this.report_mark(...context, 'done');
       }
     }
   }
@@ -154,13 +154,13 @@ module.exports = class Collector extends Component {
     // If not initialized, then get model
     if(!this.initialize_flag) {
       try {
-        this._report_log('initialize-model');
+        this.report_mark('initialize-model');
         this.model = mongoose.model(this.model_name);
       } catch(e) {
-        this._report_log('initialize-model', 'error');
+        this.report_mark('initialize-model', 'error');
         return Promise.reject(new CollectorDatabaseError(e));
       } finally {
-        this._report_log('initialize-model', 'done');
+        this.report_mark('initialize-model', 'done');
       }
     }
 
@@ -197,8 +197,8 @@ module.exports = class Collector extends Component {
         .catch(err => {
           this.initialize_flag = false;
           
-          this._report_log('error');
-          this._report_log('done');
+          this.report_mark('error');
+          this.report_mark('done');
           this.removeAllListeners('log');
 
           this.emit('done');
@@ -206,7 +206,7 @@ module.exports = class Collector extends Component {
         })
         .then(() => {
           // When success without error
-          this._report_log('done');
+          this.report_mark('done');
           this.removeAllListeners('log');
         })
         .then(() => {
@@ -294,11 +294,11 @@ module.exports = class Collector extends Component {
           .then(this._insert_data.bind(this))
           .then((_id) => {
             counter.increment('success');
-            this._report_log('collect',_id,'done');
+            this.report_mark('collect',_id,'done');
           })
           .catch(e => {
             counter.increment('fail');
-            this._report_log('collect','error');
+            this.report_mark('collect','error');
             this._handle_collect_error(e);
           })
         );
