@@ -876,17 +876,15 @@ describe('Collector Class', () => {
           expect(test_collector_instance.run_report).to.deep.equal(
             [
               [ 0, 'run' ],
-              [ 1, 'run', 'initialize-model' ],
-              [ 2, 'run', 'initialize-model', 'done' ],
-              [ 3, 'run', 'initialize' ],
-              [ 4, 'run', 'initialize', 'done' ],
-              [ 5, 'run', 'prepare' ],
-              [ 6, 'run', 'prepare', 'done' ],
-              [ 7, 'run', 'collect' ],
-              [ 8, 'run', 'collect', '555', 'done' ],
-              [ 9, 'run', 'collect', '333', 'done' ],
-              [ 10, 'run', 'collect', 'done' ],
-              [ 11, 'run', 'done' ]
+              [ 1, 'run', 'initialize' ],
+              [ 2, 'run', 'initialize', 'done' ],
+              [ 3, 'run', 'prepare' ],
+              [ 4, 'run', 'prepare', 'done' ],
+              [ 5, 'run', 'collect' ],
+              [ 6, 'run', 'collect', '555', 'done' ],
+              [ 7, 'run', 'collect', '333', 'done' ],
+              [ 8, 'run', 'collect', 'done' ],
+              [ 9, 'run', 'done' ]
             ]
           );
         });

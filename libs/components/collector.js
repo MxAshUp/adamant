@@ -154,13 +154,9 @@ module.exports = class Collector extends Component {
     // If not initialized, then get model
     if(!this.initialize_flag) {
       try {
-        this.report_mark('initialize-model');
         this.model = mongoose.model(this.model_name);
       } catch(e) {
-        this.report_mark('initialize-model', 'error');
         return Promise.reject(new CollectorDatabaseError(e));
-      } finally {
-        this.report_mark('initialize-model', 'done');
       }
     }
 
@@ -198,8 +194,6 @@ module.exports = class Collector extends Component {
           this.initialize_flag = false;
           
           this.report_mark('error');
-          this.report_mark('done');
-          this.removeAllListeners('log');
 
           this.emit('done');
           return Promise.reject(err); // We're not handling the error, throw it along
@@ -207,7 +201,6 @@ module.exports = class Collector extends Component {
         .then(() => {
           // When success without error
           this.report_mark('done');
-          this.removeAllListeners('log');
         })
         .then(() => {
           this.emit(
