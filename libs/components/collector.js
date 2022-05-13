@@ -195,7 +195,10 @@ module.exports = class Collector extends Component {
           
           this.report_mark('error');
 
-          this.emit('done');
+          this.emit('done', undefined,
+          // Deep copy run_report, otherwise it will disappear with a re-run
+          this.run_report_enabled ? [...this.run_report.map((a) => [...a])] : undefined);
+
           return Promise.reject(err); // We're not handling the error, throw it along
         })
         .then(() => {
