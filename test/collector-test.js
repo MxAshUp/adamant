@@ -27,8 +27,8 @@ describe('Collector Class', () => {
 
   // Test Subclass of Collector
   class TestCollectorClass extends Collector {
-    constructor() {
-      super({model_name: 'test.test_model', run_report_enabled: true});
+    constructor(args) {
+      super({model_name: 'test.test_model', run_report_enabled: false, ...args});
     }
   }
 
@@ -853,7 +853,7 @@ describe('Collector Class', () => {
           .withArgs({ _id: new_data[1]._id })
           .returns(Promise.resolve(new_data[1]));
 
-      let test_collector_instance = new TestCollectorClass();
+      let test_collector_instance = new TestCollectorClass({run_report_enabled: true});
       let timeri = 0;
       // Fake date.now()
       test_collector_instance.run_report_now_fn = () => timeri++;
@@ -890,6 +890,90 @@ describe('Collector Class', () => {
         });
       });
     });
+
+    describe('run_report with create/update', () => {
+      // Data to put in database
+      let new_data = [
+        { _id: '9901', foo: 'bar' },
+        { _id: '9902', foo: 'bar2' },
+        { _id: '9903', foo: 'updated' },
+      ];
+
+      new_data.forEach(function(data) {
+        data.toObject = function () {
+          const ret = Object.assign({}, data);
+          delete ret.toObject;
+          return ret;
+        };
+      });
+
+      let new_data_expect = new_data.map((d, i) => ({...d, _run_report_id: i}));
+      
+      let test_collector_instance = new TestCollectorClass({run_report_enabled: true});
+      test_collector_instance.initialize = sinon.spy();
+      let timeri = 0;
+      test_collector_instance.run_report_now_fn = () => timeri++;
+      test_collector_instance.prepare = sinon.stub().resolves({});
+      test_collector_instance.collect = sinon.stub().onFirstCall().resolves([new_data[0]])
+                                                    .onSecondCall().resolves([new_data[1]])
+                                                    .onThirdCall().resolves([new_data[2]]);
+      test_collector_instance.garbage = sinon.stub().resolves();
+
+      testModel.findOne.returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ _id: new_data[0]._id })
+        .returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ _id: new_data[1]._id })
+        .returns(Promise.resolve(null));
+      testModel.findOne
+        .withArgs({ _id: new_data[2]._id })
+        .returns(Promise.resolve(null));
+      testModel.findOneAndUpdate
+        .withArgs({ _id: new_data[0]._id })
+        .returns(Promise.resolve(new_data[0]));
+      testModel.findOneAndUpdate
+        .withArgs({ _id: new_data[1]._id })
+        .returns(Promise.resolve(new_data[1]));
+      testModel.findOneAndUpdate
+        .withArgs({ _id: new_data[2]._id })
+        .returns(Promise.resolve(new_data[2]));
+
+      let error_spy = sinon.spy();
+
+      let update_handler = sinon.spy();
+      let create_handler = sinon.spy();
+      let error_handler = sinon.spy();
+
+      test_collector_instance.on('update', update_handler);
+      test_collector_instance.on('create', create_handler);
+      test_collector_instance.on('error', error_handler);
+
+      let ret_promise = test_collector_instance.run();
+
+      it('Should insert data and emit "create" with _run_report_id = 0', () => {
+        return ret_promise.then(() => {
+          expect(create_handler.getCall(0).args[0]._run_report_id).to.equal(0);
+        });
+      });
+
+      let ret_promiseB = ret_promise.then(() => test_collector_instance.run());
+
+      it('Should insert data and emit "create" with _run_report_id = 1', () => {
+        return ret_promiseB.then(() => {
+          expect(create_handler.getCall(1).args[0]._run_report_id).to.equal(1);
+        });
+      });
+
+      let ret_promiseC = ret_promiseB.then(() => test_collector_instance.run());
+
+      it('Should insert data and emit "create" with _run_report_id = 1', () => {
+        return ret_promiseC.then(() => {
+          expect(create_handler.getCall(2).args[0]._run_report_id).to.equal(2);
+        });
+      });
+    });
+
     describe('with non-objects returned in collect', () => {
 
       // Data to put in database. Clearly not objects

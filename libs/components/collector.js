@@ -42,6 +42,7 @@ module.exports = class Collector extends Component {
     // Set some initial variables
     this.initialize_flag = false; // If true, initialize will execute before run
     this.run_results = {};
+    this.run_report_count = -1; // Increments each time
     this.run_report = undefined;
   }
 
@@ -133,6 +134,7 @@ module.exports = class Collector extends Component {
   // Sets new start time for run
   _start_report_log() {
     if(this.run_report_enabled) {
+      this.run_report_count++;
       this.run_report = [];
       this.run_start = this.run_report_now_fn();
       this.run_report.push([0, 'run']);
@@ -356,6 +358,10 @@ module.exports = class Collector extends Component {
       })
       .catch(err => Promise.reject(new CollectorDatabaseError(err)))
       .then(new_doc => {
+
+        if(this.run_report_enabled) {
+          new_doc._run_report_id = this.run_report_count;
+        }
 
         // New document
         if (_.isNull(old_doc)) {
