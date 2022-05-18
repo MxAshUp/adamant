@@ -296,7 +296,6 @@ module.exports = class Collector extends Component {
           })
           .catch(e => {
             counter.increment('fail');
-            this.report_mark('collect','error');
             this._handle_collect_error(e);
           })
         );
