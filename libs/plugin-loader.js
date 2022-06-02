@@ -44,23 +44,26 @@ module.exports = class PluginLoader {
     // Get some module info
     const plugin_info = PluginLoader.get_module_info(module_name);
 
-    // Plugin name is now the same as module
-    plugin_args.name = plugin_info.name;
-    plugin_args.version = plugin_info.version;
-
-    // These aren't required
-    plugin_args.description = plugin_info.description
-      ? plugin_info.description
-      : '';
-    plugin_args.author = plugin_info.author
-      ? plugin_info.author
-      : '';
-    plugin_args.license = plugin_info.license
-      ? plugin_info.license
-      : '';
-
-    // Check if core satisfies plugin core dependency
-    this.check_core_dependency_requirement(plugin_info);
+    // Plugin_info is not defined if package.json was not found
+    if(plugin_info) {
+      // Plugin name is now the same as module
+      plugin_args.name = plugin_info.name;
+      plugin_args.version = plugin_info.version;
+  
+      // These aren't required
+      plugin_args.description = plugin_info.description
+        ? plugin_info.description
+        : '';
+      plugin_args.author = plugin_info.author
+        ? plugin_info.author
+        : '';
+      plugin_args.license = plugin_info.license
+        ? plugin_info.license
+        : '';
+  
+      // Check if core satisfies plugin core dependency
+      this.check_core_dependency_requirement(plugin_info);
+    }
 
     // Initialize plugin
     const plugin = new Plugin(plugin_args);
@@ -167,8 +170,17 @@ module.exports = class PluginLoader {
 
     let pkg_path = path.join(module_path, 'package.json');
 
-    let pkg_contents = require(pkg_path);
+    try {
+      let pkg_contents = require(pkg_path);
+      return pkg_contents;
+    } catch (e) {
+      // Don't throw error if package.json not found
+      if(/Cannot find module/i.test(e.message)) {
+        return;
+      } else {
+        throw e;
+      }
+    }
 
-    return pkg_contents;
   }
 }
