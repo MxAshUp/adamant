@@ -1,7 +1,7 @@
 {
   "name": "adamant",
   "description": "Core code for Adamant Platform",
-  "version": "0.7.7",
+  "version": "0.7.8",
   "author": {
     "name": "Ash Woods",
     "email": "dustin@whatup.email"
