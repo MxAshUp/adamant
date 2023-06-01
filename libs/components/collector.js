@@ -290,8 +290,13 @@ module.exports = class Collector extends Component {
         promises.push(
           Promise.resolve(to_collect)
           .then(this._insert_data.bind(this))
-          .then((_id) => {
+          .then(([_id, is_new]) => {
             counter.increment('success');
+            if(is_new) {
+              this.report_mark('collect',_id,'created');
+            } else {
+              this.report_mark('collect',_id,'updated');
+            }
             this.report_mark('collect',_id,'done');
           })
           .catch(e => {
@@ -362,17 +367,19 @@ module.exports = class Collector extends Component {
           new_doc._run_report_id = this.run_report_count;
         }
 
+        const is_new = _.isNull(old_doc);
+
         // New document
-        if (_.isNull(old_doc)) {
+        if (is_new) {
           this.emit('create', new_doc);
         }
 
         // Changed document
-        if (!_.isNull(old_doc) && !this.compare(old_doc, new_doc.toObject())) {
+        if (!is_new && !this.compare(old_doc, new_doc.toObject())) {
           this.emit('update', new_doc);
         }
 
-        return new_doc._id;
+        return [new_doc._id, is_new];
       })
     );
   }

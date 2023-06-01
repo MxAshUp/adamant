@@ -881,10 +881,12 @@ describe('Collector Class', () => {
               [ 3, 'run', 'prepare' ],
               [ 4, 'run', 'prepare', 'done' ],
               [ 5, 'run', 'collect' ],
-              [ 6, 'run', 'collect', '555', 'done' ],
-              [ 7, 'run', 'collect', '333', 'done' ],
-              [ 8, 'run', 'collect', 'done' ],
-              [ 9, 'run', 'done' ]
+              [ 6, 'run', 'collect', '555', 'created' ],
+              [ 7, 'run', 'collect', '555', 'done' ],
+              [ 8, 'run', 'collect', '333', 'created' ],
+              [ 9, 'run', 'collect', '333', 'done' ],
+              [ 10, 'run', 'collect', 'done' ],
+              [ 11, 'run', 'done' ]
             ]
           );
         });
