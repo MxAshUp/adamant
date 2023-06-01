@@ -3,9 +3,8 @@
   "description": "Core code for Adamant Platform",
   "version": "0.7.7",
   "author": {
-    "name": "Pro Q",
-    "email": "development@proqsolutions.com",
-    "url": "https://wwww.proqsolutions.com"
+    "name": "Ash Woods",
+    "email": "dustin@whatup.email"
   },
   "dependencies": {
     "express": "^4.15.4",
@@ -53,7 +52,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ProQSolutions/adamant"
+    "url": "https://github.com/DustinWoods/adamant"
   },
   "scripts": {
     "test": "mocha test/*-test.js",
