@@ -347,6 +347,7 @@ module.exports = class Collector extends Component {
     if(tempDoc && tempDoc.validateSync) {
       const validateError = tempDoc.validateSync();
       if(validateError) {
+        validateError.message = `_id ${data_row._id}: ${validateError.message}`;
         throw new Error(validateError);
       }
     }
